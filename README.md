@@ -6,6 +6,8 @@
 
 **Adaptive Smart Training Hub (ASTH)** ialah platform latihan digital TVET yang dibangunkan untuk Institut Teknologi Unggas, Jabatan Perkhidmatan Veterinar. Sistem ini direka sebagai **web app / Progressive Web App (PWA)** yang boleh dihoskan pada Raspberry Pi 5 dan digunakan melalui telefon, tablet atau komputer dalam rangkaian Wi-Fi tempatan.
 
+Perkakasan MVP yang disahkan ialah Raspberry Pi 5 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB**. Angka 32GB ialah kapasiti storan microSD, bukan RAM. Oleh sebab RAM terhad kepada 2GB, deployment MVP mesti kekal ringan dengan servis latar minimum dan penyejukan aktif disyorkan untuk operasi berpanjangan. Lihat [Hardware Baseline](docs/HARDWARE_BASELINE.md) untuk spesifikasi, batasan dan panduan deployment lengkap.
+
 ASTH menggabungkan:
 
 - modul pembelajaran interaktif;
@@ -52,10 +54,12 @@ Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan
 | Backend | Python FastAPI |
 | Database | SQLite |
 | Hosting tempatan | Raspberry Pi 5 |
-| Web server | Nginx / Uvicorn |
+| Web server | Nginx sebagai reverse proxy kepada FastAPI/Uvicorn |
 | Smart Tutor | Local knowledge base |
 | Internet | Tidak wajib |
 | Cloud AI/API | Pilihan dan terkawal |
+
+Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan SSD, servis luaran terkawal atau perkakasan Raspberry Pi dengan RAM lebih besar tanpa mengubah arah asas projek.
 
 ## Status
 
@@ -70,6 +74,7 @@ Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan
 - [Executive Summary](docs/EXECUTIVE_SUMMARY.md)
 - [MVP Scope](docs/MVP_SCOPE.md)
 - [Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Hardware Baseline](docs/HARDWARE_BASELINE.md)
 
 ## Pemilikan Projek
 

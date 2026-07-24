@@ -18,6 +18,8 @@ Latihan di ladang, bengkel atau lokasi luar juga boleh terjejas oleh sambungan i
 
 ASTH dicadangkan sebagai sebuah platform latihan digital yang menggabungkan kandungan pembelajaran, SOP, kuiz, Smart Tutor dan dashboard trainer dalam satu sistem yang dihoskan pada Raspberry Pi 5.
 
+Perkakasan MVP yang disahkan mempunyai **2GB LPDDR4X RAM** dan **kad microSD 32GB**. Angka 32GB merujuk kepada storan microSD sahaja, bukan RAM. Oleh sebab kapasiti RAM ialah 2GB, MVP mesti menggunakan seni bina ringan dan servis latar minimum. Rujuk [ASTH Raspberry Pi 5 Hardware Baseline](HARDWARE_BASELINE.md) untuk spesifikasi, batasan dan panduan deployment lengkap.
+
 ## 3. Pernyataan Masalah
 
 1. Bahan latihan tersimpan dalam pelbagai format dan lokasi.
@@ -145,14 +147,18 @@ Telefon / Tablet / Laptop
           |
     Raspberry Pi 5
           |
-  -------------------
-  |        |        |
- PWA    FastAPI   SQLite
-  |        |
- Modul   Smart Tutor
+        Nginx
           |
-   Knowledge Base
+  FastAPI / Uvicorn
+          |
+  -----------------
+  |       |       |
+ PWA   SQLite   Smart Tutor
+  |               |
+ Modul      Knowledge Base
 ```
+
+Deployment MVP menggunakan satu aplikasi modular, satu atau sejumlah kecil worker Uvicorn, SQLite dan servis latar minimum. Seni bina ini perlu kekal ringan agar sesuai dengan RAM 2GB.
 
 ## 13. Teknologi Teras
 
@@ -170,19 +176,21 @@ Telefon / Tablet / Laptop
 
 ## 14. Anggaran Kos MVP
 
-MVP menggunakan Raspberry Pi 5 dan SD card sedia ada.
+MVP menggunakan Raspberry Pi 5 dengan 2GB LPDDR4X RAM dan kad microSD 32GB sedia ada. Kapasiti 32GB ialah storan microSD sahaja.
 
 | Item | Status | Kos awal |
 |---|---|---:|
 | Raspberry Pi 5 | Sedia ada | RM0 |
-| SD card 32GB | Sedia ada | RM0 |
+| Kad microSD 32GB | Sedia ada | RM0 |
 | Raspberry Pi OS | Percuma | RM0 |
 | FastAPI / SQLite / Nginx | Sumber terbuka | RM0 |
 | Web app | Dibangunkan dalaman | RM0 |
-| Casing / cooling | Jika diperlukan | Opsyenal |
+| Casing / penyejukan aktif | Disyorkan untuk operasi berpanjangan | Tertakluk aksesori dipilih |
 | QR sticker / bahan booth | Jika diperlukan | Rendah |
 
 **Pendekatan rasmi:** proof of concept menggunakan aset sedia ada sebelum memohon peruntukan penambahbaikan.
+
+Pengembangan selepas MVP boleh menggunakan storan SSD atau microSD berkapasiti lebih besar, memindahkan workload berat kepada servis luaran terkawal, atau beralih kepada perkakasan dengan RAM lebih tinggi.
 
 ## 15. Kriteria Kejayaan MVP
 
@@ -205,7 +213,8 @@ MVP dianggap berjaya apabila:
 |---|---|---|
 | Skop terlalu besar | Lewat siap | Kunci skop MVP |
 | Kandungan modul lambat diterima | Smart Tutor tidak lengkap | Mulakan FAQ dan modul teras |
-| Pi terlalu panas | Sistem tidak stabil | Casing dan cooling aktif |
+| Pi terlalu panas | Sistem tidak stabil | Gunakan casing berventilasi dan penyejukan aktif |
+| RAM 2GB tidak mencukupi | Prestasi menurun apabila skop berkembang | Kekalkan MVP ringan; pindahkan servis berat atau gunakan perkakasan RAM lebih tinggi |
 | Wi-Fi tidak stabil | Peserta sukar akses | Ujian hotspot dan router pilihan |
 | Data rosak | Kehilangan rekod | Backup automatik SQLite |
 | AI disalahfaham | Ekspektasi terlalu tinggi | Jelaskan Smart Tutor knowledge-based |
