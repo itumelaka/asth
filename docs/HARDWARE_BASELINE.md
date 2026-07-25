@@ -14,7 +14,8 @@ Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment 
 | Status SSD | Desktop automount pada `/media/asthadmin/ROG`; belum mempunyai mount kekal berasaskan UUID |
 | Sistem operasi disahkan | Debian GNU/Linux 13 (Trixie), arm64/aarch64 |
 | Rangkaian berwayar | Gigabit Ethernet; aktif untuk deployment semasa |
-| Rangkaian tanpa wayar | Wi-Fi tersedia tetapi tidak aktif dalam deployment semasa |
+| Wi-Fi terbina dalam | `wlan0`; access point `ASTH-PORTABLE`, 2.4 GHz (`bg`), channel 6 |
+| Adapter Wi-Fi luaran | ALFA AWUS036NHV dikesan sebagai `wlan1` menggunakan `rtl8xxxu`; kegunaan client/uplink pilihan |
 | Sambungan periferal | Bluetooth 5.0 |
 | USB | Dua port USB 3.0 dan dua port USB 2.0 |
 | Paparan | Dua port micro HDMI dengan sokongan sehingga 4K60 |
@@ -34,6 +35,26 @@ SSD tersebut kini menyediakan destinasi berasingan untuk backup manual di:
 ```
 
 Mount desktop `/media/asthadmin/ROG` bergantung pada automount dan belum dijamin tersedia selepas reboot atau tanpa sesi desktop. Sebelum backup berjadual dianggap production-ready, SSD perlu dipasang secara kekal menggunakan UUID, diuji selepas reboot, dan dipantau untuk kegagalan mount.
+### Baseline hotspot mudah alih
+
+Wi-Fi terbina dalam Raspberry Pi ialah sebahagian daripada baseline dan kini disahkan sebagai interface hotspot:
+
+| Item | Konfigurasi disahkan |
+|---|---|
+| Connection / SSID | `ASTH-PORTABLE` |
+| Interface | `wlan0`, Wi-Fi terbina dalam Raspberry Pi |
+| Mode | Access point |
+| Radio | 2.4 GHz (`bg`), channel 6 |
+| Security | WPA-PSK; kata laluan tidak direkodkan dalam repository |
+| IPv4 | Shared, gateway `10.42.0.1/24` |
+| Portable URL | `http://10.42.0.1` |
+| Autoconnect | Ya, priority 100 |
+
+Ethernet dan hotspot boleh beroperasi serentak. DHCP hotspot telah memberikan alamat kepada telefon dan laptop, Nginx port 80 boleh dicapai melalui `wlan0`, dan hotspot kembali secara automatik selepas reboot penuh.
+
+Mode portable semasa ialah rangkaian tempatan offline. Paparan “connected without internet” pada client adalah normal selagi `http://10.42.0.1` boleh dicapai. DHCP UDP 67 dan DNS TCP/UDP 53 dibenarkan pada `wlan0` untuk operasi rangkaian setempat; SSH port 22 kekal tidak tersedia melalui hotspot.
+
+ALFA AWUS036NHV pada `wlan1` ialah aksesori pilihan, bukan keperluan hotspot. Di bawah driver `rtl8xxxu` semasa, ia ditujukan sebagai interface client untuk kemungkinan uplink masa hadapan. Internet sharing melalui `wlan1` belum dikonfigurasi.
 ## 2. Batasan Perkakasan Semasa
 
 - RAM 2GB mengehadkan bilangan servis, worker aplikasi, proses latar dan pengguna serentak yang boleh ditampung dengan selesa.
@@ -55,7 +76,7 @@ Mount desktop `/media/asthadmin/ROG` bergantung pada automount dan belum dijamin
 - FastAPI dengan satu atau sejumlah kecil worker Uvicorn.
 - SQLite untuk dataset MVP dan kadar transaksi rendah.
 - Smart Tutor ringan menggunakan carian kata kunci, topik atau indeks knowledge base tempatan yang kecil.
-- Akses offline melalui Ethernet atau Wi-Fi untuk kumpulan pengguna terkawal.
+- Akses offline melalui Ethernet atau hotspot `ASTH-PORTABLE` pada `wlan0` untuk kumpulan pengguna terkawal.
 
 ## 4. Workload yang Perlu Dielakkan
 
@@ -83,7 +104,7 @@ Gunakan seni bina satu nod yang ringan dan mengutamakan operasi offline:
 
 Aliran deployment yang disyorkan:
 
-`Peranti peserta → Ethernet/Wi-Fi LAN → Nginx → FastAPI/Uvicorn → SQLite dan kandungan tempatan`
+`Peranti peserta → Ethernet LAN atau ASTH-PORTABLE (wlan0, 10.42.0.1) → Nginx → FastAPI/Uvicorn → SQLite dan kandungan tempatan`
 
 Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular dengan bilangan proses minimum lebih sesuai dengan RAM 2GB.
 
@@ -128,9 +149,10 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 - Elakkan swap berlebihan kerana ia memperlahankan sistem dan menambah penulisan pada microSD.
 - Uji dengan bilangan peranti serentak yang dijangka, termasuk login, pembukaan modul, kuiz, dashboard dan Smart Tutor.
 - Gunakan aset termampat, pagination, caching dan query pangkalan data yang cekap.
-- Pilih Ethernet untuk laluan server apabila boleh dan sahkan liputan Wi-Fi di lokasi deployment.
+- Gunakan Ethernet untuk sambungan rangkaian utama apabila tersedia dan `ASTH-PORTABLE` pada `wlan0` untuk akses portable offline.
+- Kekalkan hotspot pada Wi-Fi terbina dalam; gunakan `wlan1` hanya sebagai client/uplink pilihan selepas reka bentuk internet sharing dan firewall diluluskan.
 - Gunakan bekalan 5V/5A untuk kestabilan terbaik, terutama apabila SSD, kipas atau periferal USB turut disambungkan.
 
 ## 9. Kesimpulan
 
-Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran semasa membuktikan backup dan recovery manual ke storan berasingan, tetapi masih perkakasan backup sementara sehingga mount UUID, jadual dan retensi production disahkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Ia tidak patut dianggap sebagai platform untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.
+Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran semasa membuktikan backup dan recovery manual ke storan berasingan, tetapi masih perkakasan backup sementara sehingga mount UUID, jadual dan retensi production disahkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Hotspot `ASTH-PORTABLE` membolehkan operasi portable offline tanpa router luaran. Internet uplink melalui `wlan1` masih pilihan dan belum dikonfigurasi. Platform ini tidak patut dianggap sesuai untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.

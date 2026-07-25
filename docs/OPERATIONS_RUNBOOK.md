@@ -20,6 +20,12 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 | Hostname | `asth-pi` |
 | Current LAN IP | `192.168.100.187` |
 | LAN subnet | `192.168.100.0/24` |
+| Portable SSID | `ASTH-PORTABLE` |
+| Hotspot interface | Built-in Wi-Fi `wlan0` |
+| Portable gateway/URL | `10.42.0.1/24`; `http://10.42.0.1` |
+| Hotspot mode | 2.4 GHz (`bg`), channel 6, WPA-PSK, IPv4 shared |
+| Hotspot autoconnect | Yes, priority 100 |
+| Optional uplink interface | ALFA AWUS036NHV `wlan1`, `rtl8xxxu`; client use only at present |
 | Administrator | `asthadmin` |
 | Application service | `asth.service` |
 | Application root | `/opt/asth` |
@@ -31,8 +37,135 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 | Backup directory | `/media/asthadmin/ROG/ASTH_BACKUP` |
 | Configuration snapshot | `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot` |
 
-The current IP may change until a DHCP reservation or another fixed-IP method is approved.
+The Ethernet IP may change until a DHCP reservation or another fixed-IP method is approved. The portable hotspot gateway remains `10.42.0.1` under the verified shared-mode connection.
 
+## Portable hotspot operation
+
+### Participant operating steps
+
+1. Power on the Raspberry Pi and wait for the system and hotspot to start.
+2. On the phone, tablet or laptop, connect to Wi-Fi network `ASTH-PORTABLE` using the hotspot credential provided separately by the authorized operator.
+3. Open `http://10.42.0.1` in a browser.
+
+Expected response from the current minimal root endpoint:
+
+```json
+{"service":"ASTH Lightweight MVP","status":"running"}
+```
+
+A client may report **“connected without internet.” This is expected**. `ASTH-PORTABLE` currently provides an offline local network for ASTH; internet sharing through `wlan1` has not been configured. Do not disconnect merely because the operating system reports no internet if `http://10.42.0.1` works.
+
+The hotspot password is managed separately and must never be written to this repository, command output captured for documentation, screenshots or support tickets.
+
+### Hotspot verification
+
+Read-only connection and interface checks:
+
+```bash
+nmcli connection show --active
+nmcli device status
+nmcli -f connection.id,connection.interface-name,connection.autoconnect,connection.autoconnect-priority,802-11-wireless.mode,802-11-wireless.band,802-11-wireless.channel,802-11-wireless-security.key-mgmt,ipv4.method connection show ASTH-PORTABLE
+nmcli -f GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS device show wlan0
+ip -brief address show wlan0
+iw dev wlan0 info
+```
+
+Expected values:
+
+- connection `ASTH-PORTABLE` active on `wlan0`;
+- access-point mode;
+- band `bg`, channel 6;
+- WPA-PSK key management without displaying the password;
+- IPv4 method `shared`;
+- address `10.42.0.1/24`;
+- autoconnect enabled with priority 100.
+
+Verify local web access from the Pi:
+
+```bash
+curl --fail --silent --show-error http://10.42.0.1
+```
+
+Verify from a connected client by opening `http://10.42.0.1`. DHCP was validated with one phone and one laptop.
+
+Listener and firewall checks — **sudo required, read-only**:
+
+```bash
+sudo ss -lntup
+sudo ufw status verbose
+```
+
+Expected hotspot boundary:
+
+- Nginx HTTP port 80 is reachable through `wlan0`;
+- DHCP UDP 67 is allowed on `wlan0`;
+- DNS TCP/UDP 53 is allowed on `wlan0`;
+- SSH port 22 is not available through `wlan0`; and
+- Uvicorn port 8000 is not directly exposed.
+
+### Hotspot troubleshooting
+
+If the SSID is missing or a device does not receive an address, run:
+
+```bash
+nmcli connection show --active
+nmcli device status
+nmcli radio wifi
+rfkill list wifi
+ip -brief address show wlan0
+iw dev wlan0 info
+journalctl -u NetworkManager --since today --no-pager
+```
+
+Focus the NetworkManager log without displaying connection secrets:
+
+```bash
+journalctl -u NetworkManager --since today --no-pager | grep -Ei 'ASTH-PORTABLE|wlan0|dnsmasq|dhcp'
+```
+
+If `ASTH-PORTABLE` exists but is inactive, activating it changes network state and may interrupt other Wi-Fi use.
+
+> **Warning — Wi-Fi state change:** Confirm that `wlan0` is the built-in hotspot interface and that no maintenance operation depends on it before activation.
+
+Activation — **sudo required**:
+
+```bash
+sudo nmcli connection up ASTH-PORTABLE
+```
+
+Then repeat the interface, UFW and `curl` checks. Do not recreate the connection or change its WPA-PSK from an undocumented command.
+
+If clients connect but the page does not load:
+
+```bash
+systemctl is-active asth.service nginx
+curl --fail --silent --show-error http://127.0.0.1/health
+curl --fail --silent --show-error http://10.42.0.1
+sudo nginx -t
+sudo ufw status verbose
+```
+
+If the client says “connected without internet” but the local URL works, no repair is required for offline portable mode.
+
+### Optional `wlan1` uplink status
+
+The external ALFA AWUS036NHV is detected as `wlan1` with the `rtl8xxxu` driver. It is intended as a Wi-Fi client, not the access-point interface.
+
+Read-only verification:
+
+```bash
+nmcli device status
+iw dev
+lsusb
+```
+
+Driver details — **sudo required, read-only**:
+
+```bash
+sudo ethtool -i wlan1
+```
+
+Internet uplink, forwarding and NAT through `wlan1` are not configured. Do not add them during routine operations; they require a separate design, firewall review and offline-mode regression test.
 ## SSH access
 
 From an administrator workstation on `192.168.100.0/24`:
@@ -252,8 +385,10 @@ Expected policy and rules:
 - incoming deny;
 - outgoing allow;
 - port 22 allowed only from `192.168.100.0/24`;
-- port 80 allowed only from `192.168.100.0/24`; and
-- no LAN rule exposing port 8000 or port 111.
+- port 80 allowed from `192.168.100.0/24` and through `wlan0`;
+- DHCP UDP 67 and DNS TCP/UDP 53 allowed on `wlan0`;
+- no SSH port 22 access through `wlan0`; and
+- no exposure of port 8000 or port 111.
 
 > **Warning — firewall lockout risk:** Do not add, delete, reset, disable or reload firewall rules without local console access, an existing SSH session, the approved source subnet and a tested rollback. This runbook intentionally provides no firewall-change command.
 
@@ -399,6 +534,9 @@ ssh asthadmin@192.168.100.187
 systemctl is-active asth.service nginx ssh
 systemctl --failed --no-pager
 curl --fail --silent --show-error http://127.0.0.1/health
+nmcli connection show --active
+ip -brief address show wlan0
+curl --fail --silent --show-error http://10.42.0.1
 vcgencmd measure_temp
 vcgencmd get_throttled
 findmnt /media/asthadmin/ROG

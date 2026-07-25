@@ -25,21 +25,23 @@ No real password, private key, token or secret is recorded in this document.
 ## Architecture
 
 ```text
-LAN client
-    |
-    | HTTP :80, allowed only from 192.168.100.0/24
-    v
-Nginx on asth-pi
-    |
-    | loopback only
-    v
-Uvicorn 127.0.0.1:8000, one worker
-    |
-    v
-Minimal FastAPI infrastructure application
-    |
-    +-- /var/lib/asth
-    +-- /var/lib/asth/db (SQLite directory; schema not yet designed)
+Ethernet LAN client                  Portable Wi-Fi client
+192.168.100.0/24                     SSID ASTH-PORTABLE
+        |                             wlan0 / 10.42.0.1/24
+        | HTTP :80                          | HTTP :80
+        +---------------+-------------------+
+                        v
+                  Nginx on asth-pi
+                        |
+                        | loopback only
+                        v
+            Uvicorn 127.0.0.1:8000, one worker
+                        |
+                        v
+          Minimal FastAPI infrastructure application
+                        |
+                        +-- /var/lib/asth
+                        +-- /var/lib/asth/db
 ```
 
 Current runtime versions:
@@ -96,14 +98,22 @@ The environment-file contents are intentionally excluded.
 | Current IPv4 address | `192.168.100.187/24` |
 | Gateway | `192.168.100.1` |
 | LAN subnet | `192.168.100.0/24` |
-| Active connection | Ethernet |
-| Wi-Fi | Inactive |
+| Active connections | Ethernet and portable hotspot simultaneously |
+| Built-in Wi-Fi | `wlan0`, access point `ASTH-PORTABLE` |
+| Hotspot gateway | `10.42.0.1/24` |
+| Hotspot radio | 2.4 GHz (`bg`), channel 6 |
+| Hotspot security | WPA-PSK; password intentionally excluded |
+| Hotspot IPv4 mode | Shared |
+| Hotspot autoconnect | Enabled, priority 100 |
+| External Wi-Fi adapter | ALFA AWUS036NHV as `wlan1`, `rtl8xxxu`; intended as future client/uplink |
 | Uvicorn binding | `127.0.0.1:8000` |
 | Nginx listener | Port 80 |
 | UFW incoming policy | Deny |
 | UFW outgoing policy | Allow |
 | SSH rule | Port 22 allowed only from `192.168.100.0/24` |
-| HTTP rule | Port 80 allowed only from `192.168.100.0/24` |
+| HTTP rules | Port 80 allowed from Ethernet LAN and through `wlan0` |
+| Hotspot DHCP/DNS rules | DHCP UDP 67 and DNS TCP/UDP 53 allowed through UFW on `wlan0` |
+| Hotspot SSH | Port 22 unavailable through `wlan0` |
 | Port 8000 | Not exposed to LAN |
 | Port 111 | Closed |
 | `PermitRootLogin` | `no` |
@@ -116,11 +126,51 @@ The address `192.168.100.187` is the current address, not yet an approved fixed 
 
 Password authentication must remain enabled until a named administrator proves key-based login in a second session and confirms a local recovery path. It may then be disabled through a controlled SSH hardening change.
 
+## Portable hotspot
+
+The portable hotspot deployment is complete and survived a full Raspberry Pi reboot.
+
+| Item | Verified configuration |
+|---|---|
+| Connection/SSID | `ASTH-PORTABLE` |
+| Interface | Built-in Wi-Fi, `wlan0` |
+| Mode | Access point |
+| Band/channel | 2.4 GHz (`bg`), channel 6 |
+| Security | WPA-PSK; password not stored in the repository |
+| IPv4 mode | Shared |
+| Gateway and portable URL | `10.42.0.1/24`; `http://10.42.0.1` |
+| Autoconnect | Yes, priority 100 |
+| Client addressing | DHCP issued addresses to a phone and laptop |
+| Web access | Nginx port 80 reachable through `wlan0` |
+| Client isolation from administration | SSH port 22 unavailable through the hotspot |
+| Simultaneous operation | Ethernet and hotspot operate together |
+| Reboot behavior | Hotspot returned automatically after a full reboot |
+
+Portable operating steps:
+
+1. Power on the Raspberry Pi and wait for startup to complete.
+2. On the participant device, connect to Wi-Fi network `ASTH-PORTABLE` using the separately managed hotspot credential.
+3. Open `http://10.42.0.1` in a browser.
+
+A device may display **“connected without internet.” This is expected** in offline portable mode. Local access to ASTH continues through `10.42.0.1`; the message does not indicate a hotspot failure.
+
+Verified response from `GET http://10.42.0.1`:
+
+```json
+{"service":"ASTH Lightweight MVP","status":"running"}
+```
+
+UFW conceptually permits only the hotspot traffic required for local operation: DHCP UDP 67, DNS TCP/UDP 53 and Nginx HTTP port 80 on `wlan0`. SSH remains unavailable through the hotspot. The hotspot password and other secrets are excluded.
+
+The ALFA AWUS036NHV is detected as `wlan1` using `rtl8xxxu`. Under the current driver it is intended as a Wi-Fi client interface, not the hotspot interface. Optional internet uplink/sharing through `wlan1` is not configured; the current hotspot is an offline local network.
 ## Validation evidence
 
 | Check | Confirmed result |
 |---|---|
-| Root endpoint | HTTP 200 |
+| Ethernet root endpoint | HTTP 200 |
+| Portable hotspot root endpoint | HTTP 200 with `{"service":"ASTH Lightweight MVP","status":"running"}` |
+| Hotspot client DHCP | Addresses issued to one phone and one laptop |
+| Hotspot reboot recovery | `ASTH-PORTABLE` returned automatically |
 | Health endpoint | HTTP 200 |
 | Docs endpoint | HTTP 200 |
 | `asth.service` | Enabled and active |
@@ -134,7 +184,7 @@ Password authentication must remain enabled until a named administrator proves k
 | RAM available | Approximately 1.5 GiB |
 | Root disk use | Approximately 26% |
 
-These values establish a healthy infrastructure baseline. Representative sustained multi-device load and real application workflow validation remain outstanding.
+These values establish a healthy infrastructure baseline. The portable offline network and two-client DHCP/web path are validated. Representative sustained application load and real application workflow validation remain outstanding.
 
 ## Backup status
 
@@ -182,6 +232,7 @@ The pass is conditional because the following production and application require
 
 - [ ] Select DHCP reservation or another approved fixed-IP method.
 - [ ] Configure and test persistent SSD mounting by UUID.
+- [ ] Decide whether optional internet uplink/sharing through `wlan1` is required; keep offline mode as the default until approved and tested.
 - [ ] Establish SSH key authentication before disabling password login.
 - [ ] Define the real ASTH application MVP requirements.
 - [ ] Design the SQLite schema and migration/recovery approach.
@@ -207,5 +258,6 @@ The pass is conditional because the following production and application require
 10. Run representative LAN, offline, multi-device, security, resource and thermal validation.
 11. Rehearse release rollback and matching database recovery.
 12. Complete operational handover and obtain final MVP acceptance.
+13. If required, design and test optional internet uplink through `wlan1` without weakening hotspot isolation or offline operation.
 
 For safe day-to-day commands, see [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md). For phase tracking, see [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
