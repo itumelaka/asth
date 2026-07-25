@@ -49,8 +49,12 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | SQLite location | Directory `/var/lib/asth/db`; schema and live filename not defined | Partially confirmed | 25 July 2026 | Design schema and record the production database filename. |
 | Maximum request body | Not defined | Pending decision | 25 July 2026 | Set from real application requirements. |
 | Environment file | `/etc/asth/asth.env`, `root:root`, mode `0600` | Confirmed | 25 July 2026 | Never expose its contents. |
-| Manual backup destination | `/media/asthadmin/ROG/ASTH_BACKUP` | Confirmed temporary | 25 July 2026 | Configure persistent mount by UUID. |
-| Configuration snapshot | `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot` | Confirmed temporary | 25 July 2026 | Revalidate after persistent mount. |
+| Persistent SSD mount | `/dev/sda2` at `/mnt/rog`; UUID `8E5AAE985AAE7C99`; NTFS via `ntfs3` | Confirmed complete | 25 July 2026 | Reboot and read/write verification passed; existing data preserved. |
+| ASTH SSD namespace | `/mnt/rog/ASTH` with NAS, app-data, database, backups, logs and staging directories | Confirmed complete | 25 July 2026 | All directories owned by `asthadmin`; do not modify unrelated SSD contents. |
+| Manual backup destination | `/mnt/rog/ASTH_BACKUP` | Confirmed preserved | 25 July 2026 | Production schedule, retention and alerting remain pending. |
+| Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` | Confirmed preserved | 25 July 2026 | Existing snapshot remained available after reboot. |
+| Basic Samba NAS | `ASTH-Public`, `ASTH-Staff`, `ASTH-Uploads` read/write; `ROG-Drive` read-only | Confirmed complete | 25 July 2026 | `smbd` enabled/active; Windows read/write and read-only denial verified. |
+| Cockpit console | HTTPS port 9090 on office LAN and `ASTH-PORTABLE` | Confirmed complete | 25 July 2026 | `cockpit.socket` enabled/active; self-signed certificate warning expected. |
 | Backup retention and schedule | Not established | Pending decision | 25 July 2026 | Define production schedule, retention and alerting. |
 | System owner | Not assigned | Pending decision | 25 July 2026 | Confirm accountable owner. |
 | Technical owner | Not assigned | Pending decision | 25 July 2026 | Confirm technical owner. |
@@ -83,13 +87,22 @@ Status as of **25 July 2026**:
 | 13 | SQLite directory and permissions | In Progress | Directory exists; schema, live filename and permission evidence remain pending. |
 | 14 | Environment variables and secrets | Complete | Environment file is `root:root` mode `0600`; no secret values are documented. |
 | 15 | Logging and log rotation | In Progress | `/var/log/asth` exists; production retention and rotation evidence remain pending. |
-| 16 | Backup destination and recovery test | In Progress | Manual `rsync` and SHA-256 recovery test passed; persistent mount, schedule and retention remain pending. |
+| 16 | Backup destination and recovery test | In Progress | Persistent mount plus manual `rsync` and SHA-256 recovery passed; schedule, retention and SQLite integrity evidence remain pending. |
 | 17 | Basic security hardening | In Progress | UFW/SSH/rpcbind controls pass; SSH key cutover remains pending. |
 | 18 | Resource and thermal monitoring | In Progress | Baseline resource/thermal values pass; representative sustained multi-device load evidence remains pending. |
 | 19 | End-to-end local-network validation | Blocked | Minimal endpoints pass; real participant/trainer/application workflows are not implemented. |
 | 20 | Rollback readiness | In Progress | Configuration snapshot and recovery evidence exist; release/database rollback is not yet proven. |
 | 21 | Documentation and handover | Blocked | Runbook/status documents are being created; owners and maintenance window are unconfirmed. |
 | 22 | Final MVP acceptance checklist | Blocked | Infrastructure has Conditional Pass only; application MVP and approver are outstanding. |
+
+### Completed storage and administration deployments
+
+- [x] Persistent SSD mount by UUID at `/mnt/rog`, with `mnt-rog.mount` active after full reboot.
+- [x] Existing SSD data and `ASTH_BACKUP` preserved; no formatting or repartitioning performed.
+- [x] ASTH storage namespace and directory ownership created under `/mnt/rog/ASTH`.
+- [x] Basic Samba NAS deployed with three authenticated read/write ASTH shares and intentionally read-only `ROG-Drive`; SMB1 disabled.
+- [x] Cockpit deployed with Storage, Networking and administration components; socket and TCP 9090 verified after reboot.
+- [x] UFW restricted Samba and Cockpit to `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`.
 
 ---
 
@@ -581,6 +594,13 @@ sudo systemctl enable asth.service
 **Safe verification commands:**
 
 ```bash
+findmnt /mnt/rog
+systemctl is-active mnt-rog.mount
+systemctl is-active smbd
+smbclient -L localhost -U asthadmin
+systemctl is-active cockpit.socket
+ss -lnt | grep -E 'LISTEN.+:9090\b'
+curl http://10.42.0.1
 curl --fail --silent --show-error http://127.0.0.1<health-path>
 curl --fail --silent --show-error http://<pi-lan-ip><health-path>
 ss -lntp
@@ -715,10 +735,12 @@ sudo logrotate --debug /etc/logrotate.conf
 
 **Prerequisites:** Phase 13 complete; `<backup-mount>` and retention confirmed; recovery operator assigned; sufficient off-device capacity; controlled test window.
 
-**Current state:** **In Progress** — Manual backup/recovery using `rsync` and SHA-256 comparison passed. The SSD mount is not persistent, and production schedule/retention are not defined.
+**Current state:** **In Progress** — The persistent SSD mount and manual backup/recovery using `rsync` and SHA-256 comparison passed. Production backup schedule/retention, SQLite snapshot and integrity evidence remain undefined.
 
 1. [x] Verify the backup destination is a different physical device or approved network/workstation destination.
 2. [x] Record destination identity, mount type, capacity, owner, and access controls.
+2a. [x] Confirm UUID-based `/mnt/rog` auto-mount and active `mnt-rog.mount` after a full reboot.
+2b. [x] Confirm existing SSD data remains preserved and read/write access succeeds.
 3. [ ] Choose a unique `<backup-id>` such as an approved UTC timestamp and confirm the snapshot filename does not already exist.
 4. [ ] Create a consistent SQLite snapshot using SQLite's `.backup` mechanism.
 5. [ ] Run `PRAGMA integrity_check;` on the snapshot.
@@ -733,8 +755,9 @@ sudo logrotate --debug /etc/logrotate.conf
 **Safe verification commands:**
 
 ```bash
-findmnt <backup-mount>
-df -h <backup-mount>
+findmnt /mnt/rog
+systemctl is-active mnt-rog.mount
+df -h /mnt/rog
 test ! -e /var/lib/asth/backup-staging/asth-<backup-id>.sqlite3
 sqlite3 /var/lib/asth/db/asth.sqlite3 ".backup '/var/lib/asth/backup-staging/asth-<backup-id>.sqlite3'"
 sqlite3 /var/lib/asth/backup-staging/asth-<backup-id>.sqlite3 "PRAGMA integrity_check;"
@@ -766,6 +789,8 @@ sha256sum /var/lib/asth/backup-staging/asth-<backup-id>.sqlite3
 5. [x] Keep Uvicorn port 8000 unexposed.
 6. [x] Exclude the hotspot password from documentation and Git.
 7. [x] Verify UFW forwarding from `wlan0` to `wlan1` and retain forwarding from `wlan0` to `eth0`.
+8. [x] Allow Samba only from `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`.
+9. [x] Allow Cockpit TCP 9090 only from `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`.
 1. [x] Inventory listening ports, enabled services, accounts, and router port forwarding.
 2. [x] Disable direct root SSH login after key access is verified.
 3. [ ] Disable SSH password authentication only after the second key session and local recovery pass.
@@ -978,6 +1003,13 @@ df -h /
 ```bash
 systemctl is-active asth.service nginx
 systemctl is-enabled asth.service nginx
+findmnt /mnt/rog
+systemctl is-active mnt-rog.mount
+systemctl is-active smbd
+smbclient -L localhost -U asthadmin
+systemctl is-active cockpit.socket
+ss -lnt | grep -E 'LISTEN.+:9090\b'
+curl http://10.42.0.1
 curl --fail --silent --show-error http://127.0.0.1<health-path>
 ss -lntp
 free -h

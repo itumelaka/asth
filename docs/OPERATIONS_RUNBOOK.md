@@ -9,9 +9,10 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 - Keep a working SSH session open during remote maintenance.
 - Use a local console for SSH or firewall recovery.
 - Do not edit or display `/etc/asth/asth.env` during routine checks.
-- Do not assume `/media/asthadmin/ROG` is mounted; it is currently a non-persistent desktop automount.
+- Confirm `/mnt/rog` is a real mount before storage, NAS, backup or restore work; never write to an unmounted mount-point directory.
 - Stop if the current IP, path, service name, mount or release layout differs from this runbook.
 - No disk-formatting, partitioning or filesystem-creation commands are included.
+- Modify only the `/mnt/rog/ASTH` namespace; leave unrelated SSD contents unchanged.
 
 ## Current operational values
 
@@ -34,9 +35,12 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 | SQLite directory | `/var/lib/asth/db` |
 | Application logs | `/var/log/asth` and service journal |
 | Environment file | `/etc/asth/asth.env` |
-| Temporary SSD mount | `/media/asthadmin/ROG` |
-| Backup directory | `/media/asthadmin/ROG/ASTH_BACKUP` |
-| Configuration snapshot | `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot` |
+| Persistent SSD mount | `/mnt/rog` (`/dev/sda2`, UUID `8E5AAE985AAE7C99`, `ntfs3`) |
+| Existing backup directory | `/mnt/rog/ASTH_BACKUP` |
+| Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` |
+| ASTH storage namespace | `/mnt/rog/ASTH` |
+| Samba service | `smbd`; authenticated shares; SMB1 disabled |
+| Cockpit URLs | `https://192.168.100.187:9090`; `https://10.42.0.1:9090` |
 
 The Ethernet IP may change until a DHCP reservation or another fixed-IP method is approved. The portable hotspot gateway remains `10.42.0.1` under the verified shared-mode connection.
 
@@ -302,6 +306,82 @@ sudo iptables -S FORWARD
 ```
 
 Expected: the intended office route is selected and the retained `wlan0` to `eth0` forwarding policy is present. Do not assume office routing merely because the Ethernet link is up.
+
+## Samba NAS access
+
+Samba `4.22.10-Debian-4.22.10+dfsg-0+deb13u1` is enabled through `smbd`. Use the separately managed Samba account for `asthadmin`; do not use or record its password in commands, documentation or tickets.
+
+| Share | Server path | Access |
+|---|---|---|
+| `ASTH-Public` | `/mnt/rog/ASTH/nas/public` | Authenticated read/write |
+| `ASTH-Staff` | `/mnt/rog/ASTH/nas/staff` | Authenticated read/write |
+| `ASTH-Uploads` | `/mnt/rog/ASTH/nas/uploads` | Authenticated read/write |
+| `ROG-Drive` | `/mnt/rog` | Authenticated read-only by design |
+
+### Access through the office LAN
+
+1. Connect the Windows device to `192.168.100.0/24`.
+2. In File Explorer, enter the exact UNC path `\\192.168.100.187\ASTH-Public`, `\\192.168.100.187\ASTH-Staff`, `\\192.168.100.187\ASTH-Uploads` or `\\192.168.100.187\ROG-Drive`.
+3. Authenticate as `asthadmin` with the separately managed Samba credential.
+
+### Access through ASTH-PORTABLE
+
+1. Connect the Windows device to `ASTH-PORTABLE`.
+2. In File Explorer, enter the exact UNC path `\\10.42.0.1\ASTH-Public`, `\\10.42.0.1\ASTH-Staff`, `\\10.42.0.1\ASTH-Uploads` or `\\10.42.0.1\ROG-Drive`.
+3. Authenticate as `asthadmin` with the separately managed Samba credential.
+
+Windows mapping and creation of `NAS-TEST.txt` were verified on `\\192.168.100.187\ASTH-Public`. `ROG-Drive` deliberately exposes the SSD read-only; `NT_STATUS_ACCESS_DENIED` on an attempted write is the expected result, not a fault.
+
+Read-only server verification:
+
+```bash
+systemctl is-active smbd
+smbclient -L localhost -U asthadmin
+```
+
+The `smbclient` command prompts interactively; never put the password on the command line. Expect `ASTH-Public`, `ASTH-Staff`, `ASTH-Uploads` and `ROG-Drive`, and no SMB1 requirement.
+
+### Samba troubleshooting
+
+Use the complete UNC path, including the share name. `\\192.168.100.187` or `\\10.42.0.1` names the server; a valid share path ends in `\ASTH-Public`, `\ASTH-Staff`, `\ASTH-Uploads` or `\ROG-Drive`.
+
+Windows can cache a different username or an old Samba password for the same server. If authentication fails unexpectedly, close mappings and File Explorer sessions for that server, remove only the matching saved entry for `192.168.100.187` or `10.42.0.1` in Windows Credential Manager, then reconnect as `asthadmin`. Do not record the replacement password.
+
+If a read/write share fails, verify the mount and `smbd` first. If only `ROG-Drive` rejects writes, no repair is required because that share is intentionally read-only.
+
+## Cockpit web console
+
+Cockpit from the Debian Trixie package set includes `cockpit-system`, `cockpit-networkmanager`, `cockpit-packagekit` and `cockpit-storaged`. It provides Overview, Logs, Storage, Networking, Accounts, Services, Applications, Software Updates and Terminal.
+
+### Access through the office LAN
+
+1. Connect the administrator device to `192.168.100.0/24`.
+2. Open `https://192.168.100.187:9090`.
+3. Accept the expected local self-signed certificate warning only after confirming the address is the ASTH Pi.
+4. Sign in with the Linux account `asthadmin` and its Linux credential, not the Samba password.
+
+### Access through ASTH-PORTABLE
+
+1. Connect the administrator device to `ASTH-PORTABLE`.
+2. Open `https://10.42.0.1:9090`.
+3. Accept the same expected local self-signed certificate warning after confirming the address.
+4. Sign in with the Linux account `asthadmin`.
+
+Read-only verification:
+
+```bash
+systemctl is-active cockpit.socket
+ss -lnt | grep -E 'LISTEN.+:9090\b'
+```
+
+Expected result: `cockpit.socket` is active and TCP 9090 is listening. UFW permits it only from the office LAN and `10.42.0.0/24` on `wlan0`.
+
+### Cockpit troubleshooting
+
+The browser warning is expected because this local deployment uses a self-signed certificate. A different host/address or an unexpectedly changed certificate still requires investigation.
+
+A normal login may initially show limited access. Use Cockpit's administrative-access control when a privileged task is authorized; the verified deployment successfully enabled administrative access. Do not confuse limited-access mode with a failed login, and do not leave elevated access active longer than the maintenance task requires.
+
 ## SSH access
 
 From a client connected to `ASTH-PORTABLE` (`10.42.0.0/24`):
@@ -336,12 +416,13 @@ Read-only:
 systemctl status asth.service --no-pager
 systemctl status nginx --no-pager
 systemctl status ssh --no-pager
-systemctl is-enabled asth.service nginx ssh
-systemctl is-active asth.service nginx ssh
+systemctl status mnt-rog.mount smbd cockpit.socket --no-pager
+systemctl is-enabled asth.service nginx ssh smbd cockpit.socket
+systemctl is-active asth.service nginx ssh mnt-rog.mount smbd cockpit.socket
 systemctl --failed --no-pager
 ```
 
-Expected result: ASTH, Nginx and SSH are enabled and active; the failed-unit list is empty.
+Expected result: ASTH, Nginx, SSH, the SSD mount, Samba and Cockpit are active; enabled services/sockets are enabled; the failed-unit list is empty.
 
 ## Start, stop, restart and reload
 
@@ -532,6 +613,8 @@ Expected policy and rules:
 - port 80 allowed from `192.168.100.0/24` and through `wlan0`;
 - DHCP UDP 67 and DNS TCP/UDP 53 allowed on `wlan0`;
 - SSH TCP port 22 on `wlan0` allowed only from `10.42.0.0/24`;
+- Samba is allowed only from `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`;
+- Cockpit TCP 9090 is allowed only from `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`; and
 - no exposure of port 8000 or port 111.
 
 > **Warning — firewall lockout risk:** Do not add, delete, reset, disable or reload firewall rules without local console access, an existing SSH session, the approved source subnet and a tested rollback. This runbook intentionally provides no firewall-change command.
@@ -587,40 +670,43 @@ Validated baseline: approximately 445 MiB RAM used, 1.5 GiB available and 26% ro
 
 ## External SSD verification
 
-The SSD is not yet persistently mounted. Verify it before every backup or restore action:
+The existing NTFS filesystem on `/dev/sda2` is persistently mounted at `/mnt/rog` through `ntfs3`. It was not formatted or repartitioned. Verify it before storage, NAS, backup or restore work:
 
 ```bash
-findmnt /media/asthadmin/ROG
+findmnt /mnt/rog
+systemctl is-active mnt-rog.mount
 lsblk -f
-findmnt -no SOURCE,FSTYPE,OPTIONS,TARGET /media/asthadmin/ROG
-
-df -h /media/asthadmin/ROG
-test -d /media/asthadmin/ROG/ASTH_BACKUP
+findmnt -no SOURCE,FSTYPE,OPTIONS,TARGET /mnt/rog
+df -h /mnt/rog
+test -d /mnt/rog/ASTH_BACKUP
+test -d /mnt/rog/ASTH/nas/public
 ```
 
-Expected result: the mount source identifies the external SSD, filesystem is NTFS, capacity is approximately 512GB, and the backup directory exists.
+Expected result: source `/dev/sda2`, label `ROG`, UUID `8E5AAE985AAE7C99`, NTFS through driver `ntfs3`, target `/mnt/rog`, and active unit `mnt-rog.mount`. The `/etc/fstab` options are `uid=1000,gid=1000,umask=0022,nofail,x-systemd.device-timeout=10`. The verified capacity was approximately 477 GB total, 305 GB used and 173 GB available.
 
-Stop immediately if `findmnt` returns no mount, the source is unexpected, the path resolves to the microSD filesystem, the mount is read-only unexpectedly or available space is insufficient. Never allow a backup job to write into an unmounted `/media/asthadmin/ROG` directory on the root filesystem.
+`findmnt --verify` produced 0 parse errors and 0 errors. One warning is expected because the on-disk type is reported as `ntfs` while the Linux driver name is `ntfs3`.
+
+Stop immediately if `findmnt` returns no mount, the source/UUID is unexpected, the path resolves to the microSD filesystem, the mount is unexpectedly read-only or available space is insufficient. Never write into an unmounted `/mnt/rog` directory. Modify only `/mnt/rog/ASTH`; preserve unrelated contents outside that namespace.
 
 ## Backup verification
 
 List backup metadata without reading secret contents:
 
 ```bash
-find /media/asthadmin/ROG/ASTH_BACKUP -maxdepth 2 -type f -printf '%TY-%Tm-%Td %TH:%TM %s %p\n'
-du -sh /media/asthadmin/ROG/ASTH_BACKUP
+find /mnt/rog/ASTH_BACKUP -maxdepth 2 -type f -printf '%TY-%Tm-%Td %TH:%TM %s %p\n'
+du -sh /mnt/rog/ASTH_BACKUP
 ```
 
 Calculate a SHA-256 checksum for a selected backup artifact:
 
 ```bash
-sha256sum /media/asthadmin/ROG/ASTH_BACKUP/<confirmed-backup-file>
+sha256sum /mnt/rog/ASTH_BACKUP/<confirmed-backup-file>
 ```
 
 If an approved checksum manifest exists:
 
 ```bash
-cd /media/asthadmin/ROG/ASTH_BACKUP
+cd /mnt/rog/ASTH_BACKUP
 sha256sum --check <confirmed-checksum-manifest>
 ```
 
@@ -639,14 +725,14 @@ Expected result: no differences for the scope under test. This is a dry run and 
 Confirm the snapshot path and metadata:
 
 ```bash
-test -d /media/asthadmin/ROG/ASTH_BACKUP/config-snapshot
-find /media/asthadmin/ROG/ASTH_BACKUP/config-snapshot -maxdepth 2 -printf '%y %TY-%Tm-%Td %TH:%TM %s %p\n'
+test -d /mnt/rog/ASTH_BACKUP/config-snapshot
+find /mnt/rog/ASTH_BACKUP/config-snapshot -maxdepth 2 -printf '%y %TY-%Tm-%Td %TH:%TM %s %p\n'
 ```
 
 If a trusted manifest exists:
 
 ```bash
-cd /media/asthadmin/ROG/ASTH_BACKUP/config-snapshot
+cd /mnt/rog/ASTH_BACKUP/config-snapshot
 sha256sum --check <confirmed-configuration-manifest>
 ```
 
@@ -659,11 +745,14 @@ Pre-reboot checks:
 ```bash
 systemctl --failed --no-pager
 systemctl is-active asth.service nginx ssh
-findmnt /media/asthadmin/ROG
+systemctl is-active mnt-rog.mount
+systemctl is-active smbd
+systemctl is-active cockpit.socket
+findmnt /mnt/rog
 sync
 ```
 
-> **Warning — host-wide outage and non-persistent SSD mount:** Reboot disconnects SSH and stops all ASTH access. The SSD may not remount automatically. Use an approved maintenance window, notify users, keep local recovery access available and confirm no backup/restore is running.
+> **Warning — host-wide outage:** Reboot disconnects SSH, web, Samba and Cockpit access. Use an approved maintenance window, notify users, keep local recovery access available and confirm no backup/restore or NAS write is running.
 
 Reboot — **sudo required**:
 
@@ -675,7 +764,14 @@ After the Pi returns, reconnect and verify:
 
 ```bash
 ssh asthadmin@192.168.100.187
-systemctl is-active asth.service nginx ssh
+findmnt /mnt/rog
+systemctl is-active mnt-rog.mount
+systemctl is-active smbd
+smbclient -L localhost -U asthadmin
+systemctl is-active cockpit.socket
+ss -lnt | grep -E 'LISTEN.+:9090\b'
+systemctl is-active asth.service
+systemctl is-active nginx ssh
 systemctl --failed --no-pager
 curl --fail --silent --show-error http://127.0.0.1/health
 nmcli connection show --active
@@ -683,11 +779,9 @@ ip -brief address show wlan0
 curl --fail --silent --show-error http://10.42.0.1
 vcgencmd measure_temp
 vcgencmd get_throttled
-findmnt /media/asthadmin/ROG
 ```
 
-A failed SSD `findmnt` check is expected until persistent UUID mounting is implemented; do not run backup automation in that state.
-
+Expected after reboot: `/mnt/rog` mounted, `mnt-rog.mount`, `smbd`, `cockpit.socket` and `asth.service` active, all Samba shares listed, TCP 9090 listening, and `curl http://10.42.0.1` returning `{"service":"ASTH Lightweight MVP","status":"running"}`. Stop storage and NAS work if any mount check fails.
 ## Basic rollback guidance
 
 Rollback is not yet production-proven because a current/previous release layout, release identifiers, SQLite schema and schema compatibility record have not been confirmed.

@@ -72,8 +72,12 @@ They do not represent the planned participant portal, trainer portal, authentica
 | Service or control | Confirmed state |
 |---|---|
 | `asth.service` | Enabled and active |
+
 | `nginx` | Enabled and active |
 | `ssh` | Enabled and active |
+| `mnt-rog.mount` | Active; persistent SSD mount verified after full reboot |
+| `smbd` | Enabled and active; Samba `4.22.10-Debian-4.22.10+dfsg-0+deb13u1` |
+| `cockpit.socket` | Enabled and active; TCP port 9090 listening |
 | UFW | Active |
 | Failed systemd services | None observed |
 | `rpcbind` | Disabled |
@@ -88,9 +92,16 @@ They do not represent the planned participant portal, trainer portal, authentica
 | SQLite directory | `/var/lib/asth/db` | Present; schema/live filename pending |
 | Application log directory | `/var/log/asth` | Present; rotation/retention pending confirmation |
 | Environment file | `/etc/asth/asth.env` | `root:root`, mode `0600` |
-| Temporary SSD mount | `/media/asthadmin/ROG` | Desktop automount; not persistent |
-| Manual backup directory | `/media/asthadmin/ROG/ASTH_BACKUP` | Present during validation |
-| Configuration snapshot | `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot` | Present during validation |
+| Persistent SSD mount | `/mnt/rog` | `/dev/sda2`, label `ROG`, UUID `8E5AAE985AAE7C99`, NTFS through `ntfs3` |
+| ASTH storage namespace | `/mnt/rog/ASTH` | Present; all directories owned by `asthadmin` |
+| NAS shares | `/mnt/rog/ASTH/nas/{public,staff,uploads}` | Present |
+| Application data | `/mnt/rog/ASTH/app-data` | Present |
+| Database storage | `/mnt/rog/ASTH/database` | Present |
+| Backup storage | `/mnt/rog/ASTH/backups` | Present |
+| Log storage | `/mnt/rog/ASTH/logs` | Present |
+| Staging storage | `/mnt/rog/ASTH/staging` | Present |
+| Existing manual backup directory | `/mnt/rog/ASTH_BACKUP` | Preserved and available |
+| Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` | Preserved and available |
 
 The environment-file contents are intentionally excluded.
 
@@ -118,6 +129,8 @@ The environment-file contents are intentionally excluded.
 | UFW outgoing policy | Allow |
 | SSH rule | Port 22 allowed only from `192.168.100.0/24` |
 | HTTP rules | Port 80 allowed from Ethernet LAN and through `wlan0` |
+| Samba rules | Allowed only from `192.168.100.0/24` and from `10.42.0.0/24` on `wlan0` |
+| Cockpit rules | TCP port 9090 allowed only from `192.168.100.0/24` and from `10.42.0.0/24` on `wlan0` |
 | Hotspot DHCP/DNS rules | DHCP UDP 67 and DNS TCP/UDP 53 allowed through UFW on `wlan0` |
 | Hotspot SSH | TCP port 22 on `wlan0` allowed only from `10.42.0.0/24` |
 | Forwarding | UFW allows `wlan0` to `wlan1`; retains `wlan0` to `eth0` for office-LAN mode |
@@ -178,6 +191,45 @@ Verified response from `GET http://10.42.0.1`:
 UFW permits hotspot DHCP UDP 67, DNS TCP/UDP 53 and Nginx HTTP port 80 on `wlan0`. SSH is restricted to source subnet `10.42.0.0/24` and TCP port 22 on `wlan0`. Forwarding from `wlan0` to `wlan1` is enabled for online portable mode, while `wlan0` to `eth0` forwarding remains available for office-LAN mode. Passwords and other secrets are excluded.
 
 The ALFA AWUS036NHV is detected as `wlan1` using `rtl8xxxu` and connects as a client through NetworkManager profile `PHONE-UPLINK`. During Ethernet-free verification it received `10.13.68.119/24`, the default route changed to `default via 10.13.68.67 dev wlan1`, and forwarded internet access succeeded with 0% packet loss. Profile credentials remain local to NetworkManager and are not stored in the repository.
+
+## Persistent SSD, Samba NAS and Cockpit
+
+The ASUS ROG STRIX Arion SSD deployment is complete. Existing NTFS data was preserved: the device was not formatted or repartitioned. Partition `/dev/sda2`, label `ROG`, UUID `8E5AAE985AAE7C99`, is mounted persistently at `/mnt/rog` through the Linux `ntfs3` driver. The `/etc/fstab` entry uses the UUID with `uid=1000,gid=1000,umask=0022,nofail,x-systemd.device-timeout=10`; its systemd unit is `mnt-rog.mount`.
+
+`findmnt --verify` reported 0 parse errors and 0 errors. Its one warning is expected because the on-disk filesystem type is reported as `ntfs` while the Linux driver name is `ntfs3`. A full reboot confirmed automatic mounting, an active `mnt-rog.mount`, preserved `ASTH_BACKUP`, and successful read/write access. At verification time the filesystem reported approximately 477 GB total, 305 GB used and 173 GB available.
+
+Final ASTH storage architecture:
+
+```text
+/mnt/rog/
+├── ASTH/
+│   ├── nas/
+│   │   ├── public
+│   │   ├── staff
+│   │   └── uploads
+│   ├── app-data
+│   ├── database
+│   ├── backups
+│   ├── logs
+│   └── staging
+└── ASTH_BACKUP/          existing preserved backup data
+```
+
+All directories inside `/mnt/rog/ASTH` are owned by `asthadmin`. Existing unrelated SSD contents remain outside the ASTH namespace and must not be modified.
+
+Basic Samba NAS deployment is complete. SMB1 is disabled, the `asthadmin` Samba account exists and is enabled, and no Samba password is recorded here.
+
+| Share | Path | Access |
+|---|---|---|
+| `ASTH-Public` | `/mnt/rog/ASTH/nas/public` | Authenticated, read/write |
+| `ASTH-Staff` | `/mnt/rog/ASTH/nas/staff` | Authenticated, read/write |
+| `ASTH-Uploads` | `/mnt/rog/ASTH/nas/uploads` | Authenticated, read/write |
+| `ROG-Drive` | `/mnt/rog` | Authenticated, intentionally read-only |
+
+Windows mapped `\\192.168.100.187\ASTH-Public` and created `NAS-TEST.txt` successfully. An attempted write to `ROG-Drive` returned `NT_STATUS_ACCESS_DENIED`, confirming its intended read-only boundary.
+
+Cockpit deployment from the Debian Trixie package set is complete, including `cockpit-system`, `cockpit-networkmanager`, `cockpit-packagekit` and `cockpit-storaged`. It is available at `https://192.168.100.187:9090` on the office LAN and `https://10.42.0.1:9090` through `ASTH-PORTABLE`. The local self-signed certificate warning is expected. Login uses the Linux account `asthadmin`, not the Samba password; administrative access was enabled successfully. The console provides Overview, Logs, Storage, Networking, Accounts, Services, Applications, Software Updates and Terminal.
+
 ## Validation evidence
 
 | Check | Confirmed result |
@@ -193,6 +245,11 @@ The ALFA AWUS036NHV is detected as `wlan1` using `rtl8xxxu` and connects as a cl
 | Health endpoint | HTTP 200 |
 | Docs endpoint | HTTP 200 |
 | `asth.service` | Enabled and active |
+| Persistent SSD | `/mnt/rog` mounted; `mnt-rog.mount` active after full reboot; read/write test passed |
+| Samba | `smbd` enabled and active; all four shares remained available after reboot |
+| Windows Samba test | `ASTH-Public` mapped and `NAS-TEST.txt` created |
+| `ROG-Drive` protection | Attempted write denied with `NT_STATUS_ACCESS_DENIED` |
+| Cockpit | `cockpit.socket` active after reboot; TCP port 9090 listening |
 | Nginx | Enabled and active |
 | SSH | Enabled and active |
 | UFW | Active |
@@ -207,19 +264,17 @@ These values establish a healthy infrastructure baseline. Offline portable, onli
 
 ## Backup status
 
-An external ASUS ROG STRIX Arion SSD, approximately 512GB and formatted NTFS, was connected during validation. It was desktop-automounted at `/media/asthadmin/ROG`.
+An external ASUS ROG STRIX Arion SSD containing an existing NTFS filesystem is now persistently mounted at `/mnt/rog`. Deployment preserved its existing data and did not format or repartition the device.
 
 Confirmed backup evidence:
 
-- manual backup directory: `/media/asthadmin/ROG/ASTH_BACKUP`;
-- configuration snapshot: `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot`;
+- manual backup directory: `/mnt/rog/ASTH_BACKUP`;
+- configuration snapshot: `/mnt/rog/ASTH_BACKUP/config-snapshot`;
 - recovery test completed successfully using `rsync`; and
 - source/recovered content was compared using SHA-256 checksums.
 
 Current limitations:
 
-- the SSD mount is not persistent;
-- the path depends on desktop automount behavior;
 - a production backup schedule is not defined;
 - retention is not defined;
 - failure alerting is not defined;
@@ -235,7 +290,6 @@ The infrastructure MVP receives a **Conditional Pass** because the confirmed hos
 The pass is conditional because the following production and application requirements are not complete:
 
 - stable network addressing;
-- persistent SSD mounting;
 - SSH-key cutover and password-login removal;
 - complete filesystem ownership/mode evidence;
 - production log rotation and retention evidence;
@@ -250,7 +304,6 @@ The pass is conditional because the following production and application require
 ## Outstanding decisions
 
 - [ ] Select DHCP reservation or another approved fixed-IP method.
-- [ ] Configure and test persistent SSD mounting by UUID.
 - [ ] Establish SSH key authentication before disabling password login.
 - [ ] Define the real ASTH application MVP requirements.
 - [ ] Design the SQLite schema and migration/recovery approach.
@@ -267,15 +320,14 @@ The pass is conditional because the following production and application require
 1. Assign the system, technical and backup owners plus the maintenance window and acceptance approver.
 2. Establish key-based SSH access, verify a second session and local recovery, then disable password authentication.
 3. Create the DHCP reservation or approved fixed-IP method and update the documented LAN URL.
-4. Configure the SSD by UUID, test it after reboot and verify that backup tasks fail safely when the mount is absent.
-5. Define backup content, schedule, retention, verification, alerting and periodic restore tests.
-6. Complete ownership/mode and log-rotation evidence for the existing infrastructure paths.
-7. Define and approve the real ASTH application MVP requirements.
-8. Design the SQLite schema, migration rules, integrity checks and backup/recovery behavior.
-9. Implement real application features through the normal development and test process.
-10. Run representative LAN, offline, multi-device, security, resource and thermal validation.
-11. Rehearse release rollback and matching database recovery.
-12. Complete operational handover and obtain final MVP acceptance.
-13. Periodically reverify `PHONE-UPLINK`, default-route selection, UFW forwarding, portable SSH restriction and offline fallback behavior.
+4. Define backup content, schedule, retention, verification, alerting and periodic restore tests.
+5. Complete ownership/mode and log-rotation evidence for the existing infrastructure paths.
+6. Define and approve the real ASTH application MVP requirements.
+7. Design the SQLite schema, migration rules, integrity checks and backup/recovery behavior.
+8. Implement real application features through the normal development and test process.
+9. Run representative LAN, offline, multi-device, security, resource and thermal validation.
+10. Rehearse release rollback and matching database recovery.
+11. Complete operational handover and obtain final MVP acceptance.
+12. Periodically reverify the SSD mount, Samba shares, Cockpit listener, `PHONE-UPLINK`, default-route selection, UFW boundaries, portable SSH restriction and offline fallback behavior.
 
 For safe day-to-day commands, see [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md). For phase tracking, see [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).

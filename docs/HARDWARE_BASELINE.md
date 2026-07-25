@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Hardware Baseline
 
-Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment ASTH. Raspberry Pi 5 ini mempunyai **2GB RAM**. Angka **32GB merujuk kepada kapasiti kad microSD sistem**, bukan kapasiti RAM. SSD luaran yang disambungkan semasa validasi ialah perkakasan backup sementara dan bukan sebahagian daripada baseline minimum.
+Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment ASTH. Raspberry Pi 5 ini mempunyai **2GB RAM**. Angka **32GB merujuk kepada kapasiti kad microSD sistem**, bukan kapasiti RAM. SSD luaran bukan sebahagian daripada baseline minimum, tetapi kini telah dipasang secara kekal untuk storan ASTH, NAS dan backup.
 
 ## 1. Spesifikasi Perkakasan Disahkan
 
@@ -10,8 +10,8 @@ Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment 
 | Pemproses | Pemproses 64-bit quad-core Cortex-A76 |
 | Memori | 2GB LPDDR4X RAM |
 | Storan sistem wajib | Kad microSD 32GB |
-| Storan backup sementara | ASUS ROG STRIX Arion SSD, kira-kira 512GB, NTFS |
-| Status SSD | Desktop automount pada `/media/asthadmin/ROG`; belum mempunyai mount kekal berasaskan UUID |
+| Storan luaran | ASUS ROG STRIX Arion SSD, `/dev/sda2`, label `ROG`, kira-kira 512GB, NTFS |
+| Status SSD | Mount kekal `/mnt/rog` melalui driver `ntfs3`; UUID `8E5AAE985AAE7C99`; `mnt-rog.mount` aktif |
 | Sistem operasi disahkan | Debian GNU/Linux 13 (Trixie), arm64/aarch64 |
 | Rangkaian berwayar | Gigabit Ethernet; aktif untuk deployment semasa |
 | Wi-Fi terbina dalam | `wlan0`; access point `ASTH-PORTABLE`, 2.4 GHz (`bg`), channel 6 |
@@ -24,17 +24,31 @@ Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment 
 | Bekalan kuasa minimum | 5V/3A |
 | Penyejukan | Penyejukan aktif dipasang dan disahkan |
 
-### Baseline wajib dan perkakasan backup sementara
+### Baseline wajib dan storan luaran
 
-Baseline minimum ASTH kekal Raspberry Pi 5, RAM 2GB, kad microSD 32GB, bekalan kuasa sesuai, sambungan LAN dan penyejukan aktif. SSD ASUS ROG STRIX Arion bukan keperluan untuk menjalankan infrastructure MVP dan tidak boleh dianggap sebagai storan sistem utama atau backup automatik production-ready pada masa ini.
+Baseline minimum ASTH kekal Raspberry Pi 5, RAM 2GB, kad microSD 32GB, bekalan kuasa sesuai, sambungan LAN dan penyejukan aktif. SSD ASUS ROG STRIX Arion bukan storan sistem utama dan backup automatik masih belum production-ready, tetapi mount kekalnya serta servis NAS telah berjaya disahkan selepas reboot penuh.
 
-SSD tersebut kini menyediakan destinasi berasingan untuk backup manual di:
+Partition `/dev/sda2` menggunakan filesystem NTFS sedia ada melalui driver Linux `ntfs3` dan dipasang pada `/mnt/rog`. Entri `/etc/fstab` menggunakan UUID `8E5AAE985AAE7C99` dengan pilihan `uid=1000,gid=1000,umask=0022,nofail,x-systemd.device-timeout=10`. Mount dan unit `mnt-rog.mount` kembali aktif selepas reboot penuh; data sedia ada, termasuk `ASTH_BACKUP`, kekal tersedia dan ujian baca/tulis berjaya. SSD tidak diformat atau dipartition semula.
+
+Semasa verifikasi, kapasiti dilaporkan kira-kira 477 GB keseluruhan, 305 GB digunakan dan 173 GB tersedia. `findmnt --verify` melaporkan 0 parse error dan 0 error; satu warning tentang jenis `ntfs` pada disk berbanding nama driver `ntfs3` adalah dijangka.
+
+Seni bina storan ASTH akhir:
 
 ```text
-/media/asthadmin/ROG/ASTH_BACKUP
+/mnt/rog/ASTH/
+├── nas/
+│   ├── public
+│   ├── staff
+│   └── uploads
+├── app-data
+├── database
+├── backups
+├── logs
+└── staging
 ```
 
-Mount desktop `/media/asthadmin/ROG` bergantung pada automount dan belum dijamin tersedia selepas reboot atau tanpa sesi desktop. Sebelum backup berjadual dianggap production-ready, SSD perlu dipasang secara kekal menggunakan UUID, diuji selepas reboot, dan dipantau untuk kegagalan mount.
+Semua direktori dalam namespace `/mnt/rog/ASTH` dimiliki oleh `asthadmin`. Kandungan SSD lain yang tidak berkaitan kekal di luar namespace ini dan tidak boleh diubah. Samba menyediakan `ASTH-Public`, `ASTH-Staff` dan `ASTH-Uploads` sebagai share authenticated read/write, serta `ROG-Drive` sebagai share authenticated read-only.
+
 ### Baseline hotspot mudah alih
 
 Wi-Fi terbina dalam Raspberry Pi ialah sebahagian daripada baseline dan kini disahkan sebagai interface hotspot:
@@ -71,7 +85,7 @@ UFW membenarkan forwarding `wlan0` ke `wlan1` untuk online portable dan mengekal
 - RAM 2GB mengehadkan bilangan servis, worker aplikasi, proses latar dan pengguna serentak yang boleh ditampung dengan selesa.
 - Kad microSD 32GB menyediakan ruang yang terhad selepas sistem operasi, aplikasi, media, pangkalan data, log dan backup diambil kira.
 - Kad microSD mempunyai ketahanan tulis dan prestasi rawak yang lebih rendah berbanding SSD; penulisan log atau pangkalan data yang berlebihan boleh memendekkan jangka hayatnya.
-- SSD backup menggunakan NTFS dan mount desktop sementara; ketersediaan, pemilikan dan pilihan mount mesti disahkan semula sebelum automasi backup production.
+- SSD menggunakan NTFS melalui `ntfs3`; pilihan mount, unit `mnt-rog.mount`, ruang tersedia dan pemilikan namespace ASTH perlu dipantau sebelum automasi backup production.
 - Pemproses ini sesuai untuk aplikasi web ringan tetapi bukan untuk latihan model AI, inferens LLM besar, pemprosesan video berat atau analitik intensif.
 - Prestasi berterusan boleh menurun akibat thermal throttling jika peranti tidak mempunyai penyejukan aktif dan aliran udara yang baik.
 - Bekalan 5V/3A ialah minimum dan mungkin mengehadkan kuasa yang tersedia kepada periferal USB. Bekalan USB-C 5V/5A lebih sesuai untuk operasi stabil.
@@ -128,15 +142,16 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 - Kabel micro HDMI jika paparan tempatan diperlukan untuk pemasangan atau troubleshooting.
 - Kabel Ethernet berkualiti untuk deployment tetap.
 - Pembaca kad microSD atau kad microSD gantian untuk pemulihan.
-- SSD USB 3.0 atau SSD NVMe melalui adapter PCIe yang serasi untuk data dan backup.
+- SSD kedua atau storan off-device yang sesuai untuk salinan backup tambahan.
 - UPS atau power bank UPS yang sesuai bagi mengurangkan risiko kerosakan data akibat gangguan kuasa.
 
 ### Keutamaan naik taraf
 
-1. Pindahkan storan aplikasi dan data ke SSD untuk kapasiti, prestasi dan ketahanan yang lebih baik.
-2. Gunakan microSD berkapasiti lebih besar atau berkelas high-endurance jika SSD belum tersedia.
-3. Naik taraf kepada varian Raspberry Pi dengan RAM lebih besar jika bilangan pengguna, servis atau dataset meningkat.
-4. Pisahkan pangkalan data atau workload AI ke server lain apabila keperluan melebihi skop MVP ringan.
+1. Tentukan data aplikasi dan pangkalan data yang akan dipindahkan ke namespace SSD yang telah disediakan.
+2. Tambah salinan backup off-device dan polisi retensi yang diuji.
+3. Gunakan microSD berkapasiti lebih besar atau berkelas high-endurance apabila penggantian diperlukan.
+4. Naik taraf kepada varian Raspberry Pi dengan RAM lebih besar jika bilangan pengguna, servis atau dataset meningkat.
+5. Pisahkan pangkalan data atau workload AI ke server lain apabila keperluan melebihi skop MVP ringan.
 
 ## 7. Pertimbangan Storan dan Backup
 
@@ -145,9 +160,9 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 - Tetapkan log rotation, had saiz upload dan polisi pembersihan fail sementara.
 - Simpan pangkalan data, fail konfigurasi bukan rahsia dan kandungan yang diperlukan dalam backup berjadual.
 - Salin backup ke SSD/USB berasingan, NAS atau lokasi rangkaian lain. Backup pada microSD yang sama tidak melindungi daripada kegagalan kad.
-- Backup manual semasa disimpan pada SSD di `/media/asthadmin/ROG/ASTH_BACKUP`; recovery telah diuji menggunakan `rsync` dan perbandingan checksum SHA-256.
-- Snapshot konfigurasi semasa disimpan di `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot`.
-- Jangan jadikan path desktop automount ini sebagai sasaran jadual production sehingga mount kekal berasaskan UUID selesai dan diuji selepas reboot.
+- Backup manual sedia ada kekal di `/mnt/rog/ASTH_BACKUP`; recovery telah diuji menggunakan `rsync` dan perbandingan checksum SHA-256.
+- Snapshot konfigurasi semasa disimpan di `/mnt/rog/ASTH_BACKUP/config-snapshot`.
+- Gunakan `/mnt/rog/ASTH/backups` untuk seni bina backup ASTH yang baharu selepas schedule, retention, ownership dan failure handling diluluskan.
 - Kekalkan sekurang-kurangnya satu salinan backup di luar Pi dan gunakan polisi retensi supaya beberapa titik pemulihan tersedia.
 - Uji proses restore secara berkala; backup hanya berguna apabila pemulihan telah dibuktikan.
 - Lakukan shutdown yang betul dan pertimbangkan UPS untuk mengurangkan risiko filesystem atau SQLite rosak akibat kehilangan kuasa.
@@ -167,4 +182,4 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 
 ## 9. Kesimpulan
 
-Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran semasa membuktikan backup dan recovery manual ke storan berasingan, tetapi masih perkakasan backup sementara sehingga mount UUID, jadual dan retensi production disahkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Hotspot `ASTH-PORTABLE` menyokong operasi offline, online portable melalui `PHONE-UPLINK` pada `wlan1`, dan office LAN melalui `eth0`. Platform ini tidak patut dianggap sesuai untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.
+Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran kini mempunyai mount UUID yang reboot-verified serta namespace ASTH dan Samba NAS yang tersusun; backup/recovery manual telah dibuktikan, tetapi schedule dan retensi production masih perlu ditetapkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Hotspot `ASTH-PORTABLE` menyokong operasi offline, online portable melalui `PHONE-UPLINK` pada `wlan1`, dan office LAN melalui `eth0`. Platform ini tidak patut dianggap sesuai untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.
