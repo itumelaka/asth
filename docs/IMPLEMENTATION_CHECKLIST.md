@@ -113,7 +113,7 @@ Status as of **25 July 2026**:
 
 **Current state:** **In Progress** — Hardware, host, network, services and backup locations are recorded. System/technical/backup owners, maintenance window and acceptance approver remain unconfirmed.
 
-1. [ ] Read `docs/DEPLOYMENT_PLAN.md` and record its version or Git commit.
+1. [x] Read `docs/DEPLOYMENT_PLAN.md` and record its verified Git reference: `77b81bb6b1d57cac0902162cd449b9c7ce37f4d7 | 2026-07-25 | docs: record Raspberry Pi infrastructure deployment status`.
 2. [x] Confirm the Pi is the 2GB model and the microSD is 32GB.
 3. [x] Confirm the deployment remains LAN-only and Docker remains deferred.
 4. [ ] Assign the technical lead, network owner, recovery operator, and acceptance approver.
