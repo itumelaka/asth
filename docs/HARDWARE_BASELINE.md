@@ -15,7 +15,7 @@ Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment 
 | Sistem operasi disahkan | Debian GNU/Linux 13 (Trixie), arm64/aarch64 |
 | Rangkaian berwayar | Gigabit Ethernet; aktif untuk deployment semasa |
 | Wi-Fi terbina dalam | `wlan0`; access point `ASTH-PORTABLE`, 2.4 GHz (`bg`), channel 6 |
-| Adapter Wi-Fi luaran | ALFA AWUS036NHV dikesan sebagai `wlan1` menggunakan `rtl8xxxu`; kegunaan client/uplink pilihan |
+| Adapter Wi-Fi luaran | ALFA AWUS036NHV sebagai `wlan1`, driver `rtl8xxxu`; uplink `PHONE-UPLINK` telah disahkan |
 | Sambungan periferal | Bluetooth 5.0 |
 | USB | Dua port USB 3.0 dan dua port USB 2.0 |
 | Paparan | Dua port micro HDMI dengan sokongan sehingga 4K60 |
@@ -52,9 +52,20 @@ Wi-Fi terbina dalam Raspberry Pi ialah sebahagian daripada baseline dan kini dis
 
 Ethernet dan hotspot boleh beroperasi serentak. DHCP hotspot telah memberikan alamat kepada telefon dan laptop, Nginx port 80 boleh dicapai melalui `wlan0`, dan hotspot kembali secara automatik selepas reboot penuh.
 
-Mode portable semasa ialah rangkaian tempatan offline. Paparan “connected without internet” pada client adalah normal selagi `http://10.42.0.1` boleh dicapai. DHCP UDP 67 dan DNS TCP/UDP 53 dibenarkan pada `wlan0` untuk operasi rangkaian setempat; SSH port 22 kekal tidak tersedia melalui hotspot.
+Tiga mode rangkaian disokong: offline portable tanpa uplink, online portable melalui `PHONE-UPLINK` pada `wlan1`, dan office LAN melalui `eth0`. Dalam offline portable, paparan “connected without internet” adalah normal selagi `http://10.42.0.1` boleh dicapai. Dalam online portable, client `ASTH-PORTABLE` mendapat internet melalui forwarding `wlan0` ke `wlan1`.
 
-ALFA AWUS036NHV pada `wlan1` ialah aksesori pilihan, bukan keperluan hotspot. Di bawah driver `rtl8xxxu` semasa, ia ditujukan sebagai interface client untuk kemungkinan uplink masa hadapan. Internet sharing melalui `wlan1` belum dikonfigurasi.
+ALFA AWUS036NHV pada `wlan1` ialah aksesori uplink, bukan interface hotspot. Dengan driver `rtl8xxxu`, ia bersambung sebagai client melalui profil NetworkManager `PHONE-UPLINK`. Semasa validasi tanpa Ethernet, `wlan1` menerima `10.13.68.119/24` dan default route menjadi `default via 10.13.68.67 dev wlan1`. Laptop pada `ASTH-PORTABLE` berjaya mencapai internet dan ASTH; 0% packet loss direkodkan. Credential `PHONE-UPLINK` kekal dalam NetworkManager tempatan dan tidak boleh dimasukkan ke repository.
+### Seni bina router portable disahkan
+
+```text
+Phone hotspot
+  → wlan1 / PHONE-UPLINK
+  → Raspberry Pi 5 / UFW forwarding
+  → wlan0 / ASTH-PORTABLE / 10.42.0.1
+  → peranti client
+```
+
+UFW membenarkan forwarding `wlan0` ke `wlan1` untuk online portable dan mengekalkan forwarding `wlan0` ke `eth0` untuk office-LAN mode. SSH pada hotspot dibenarkan hanya dari `10.42.0.0/24` ke TCP port 22 pada `wlan0`. Akses `ssh asthadmin@10.42.0.1` telah disahkan.
 ## 2. Batasan Perkakasan Semasa
 
 - RAM 2GB mengehadkan bilangan servis, worker aplikasi, proses latar dan pengguna serentak yang boleh ditampung dengan selesa.
@@ -150,9 +161,10 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 - Uji dengan bilangan peranti serentak yang dijangka, termasuk login, pembukaan modul, kuiz, dashboard dan Smart Tutor.
 - Gunakan aset termampat, pagination, caching dan query pangkalan data yang cekap.
 - Gunakan Ethernet untuk sambungan rangkaian utama apabila tersedia dan `ASTH-PORTABLE` pada `wlan0` untuk akses portable offline.
-- Kekalkan hotspot pada Wi-Fi terbina dalam; gunakan `wlan1` hanya sebagai client/uplink pilihan selepas reka bentuk internet sharing dan firewall diluluskan.
+- Kekalkan hotspot pada Wi-Fi terbina dalam `wlan0`; gunakan ALFA `wlan1` sebagai client melalui `PHONE-UPLINK` untuk online portable mode.
+- Sahkan default route memilih `wlan1` apabila Ethernet ditanggalkan, atau `eth0` apabila office-LAN mode digunakan.
 - Gunakan bekalan 5V/5A untuk kestabilan terbaik, terutama apabila SSD, kipas atau periferal USB turut disambungkan.
 
 ## 9. Kesimpulan
 
-Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran semasa membuktikan backup dan recovery manual ke storan berasingan, tetapi masih perkakasan backup sementara sehingga mount UUID, jadual dan retensi production disahkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Hotspot `ASTH-PORTABLE` membolehkan operasi portable offline tanpa router luaran. Internet uplink melalui `wlan1` masih pilihan dan belum dikonfigurasi. Platform ini tidak patut dianggap sesuai untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.
+Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran semasa membuktikan backup dan recovery manual ke storan berasingan, tetapi masih perkakasan backup sementara sehingga mount UUID, jadual dan retensi production disahkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Hotspot `ASTH-PORTABLE` menyokong operasi offline, online portable melalui `PHONE-UPLINK` pada `wlan1`, dan office LAN melalui `eth0`. Platform ini tidak patut dianggap sesuai untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.

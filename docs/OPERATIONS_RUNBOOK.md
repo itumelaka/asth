@@ -18,14 +18,15 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 | Item | Value |
 |---|---|
 | Hostname | `asth-pi` |
-| Current LAN IP | `192.168.100.187` |
-| LAN subnet | `192.168.100.0/24` |
+| Office-LAN IP when `eth0` is connected | `192.168.100.187` |
+| Office-LAN subnet | `192.168.100.0/24` |
 | Portable SSID | `ASTH-PORTABLE` |
 | Hotspot interface | Built-in Wi-Fi `wlan0` |
 | Portable gateway/URL | `10.42.0.1/24`; `http://10.42.0.1` |
 | Hotspot mode | 2.4 GHz (`bg`), channel 6, WPA-PSK, IPv4 shared |
 | Hotspot autoconnect | Yes, priority 100 |
-| Optional uplink interface | ALFA AWUS036NHV `wlan1`, `rtl8xxxu`; client use only at present |
+| Portable uplink | ALFA AWUS036NHV `wlan1`, `rtl8xxxu`, profile `PHONE-UPLINK` |
+| Verified wlan1 address/route | `10.13.68.119/24`; `default via 10.13.68.67 dev wlan1` |
 | Administrator | `asthadmin` |
 | Application service | `asth.service` |
 | Application root | `/opt/asth` |
@@ -43,7 +44,7 @@ The Ethernet IP may change until a DHCP reservation or another fixed-IP method i
 
 ### Participant operating steps
 
-1. Power on the Raspberry Pi and wait for the system and hotspot to start.
+1. Power on the Raspberry Pi and wait for the system and `ASTH-PORTABLE` hotspot to start.
 2. On the phone, tablet or laptop, connect to Wi-Fi network `ASTH-PORTABLE` using the hotspot credential provided separately by the authorized operator.
 3. Open `http://10.42.0.1` in a browser.
 
@@ -53,7 +54,15 @@ Expected response from the current minimal root endpoint:
 {"service":"ASTH Lightweight MVP","status":"running"}
 ```
 
-A client may report **“connected without internet.” This is expected**. `ASTH-PORTABLE` currently provides an offline local network for ASTH; internet sharing through `wlan1` has not been configured. Do not disconnect merely because the operating system reports no internet if `http://10.42.0.1` works.
+Choose the operating mode before the session:
+
+| Mode | Uplink | Client result |
+|---|---|---|
+| Offline portable | No uplink | ASTH works locally; “connected without internet” is expected. |
+| Online portable | Phone hotspot through `PHONE-UPLINK` on `wlan1` | ASTH and internet access are available. |
+| Office LAN | Approved network through `eth0` | ASTH and office-LAN forwarding are available. |
+
+The `ASTH-PORTABLE` client steps and local URL are the same in all three modes.
 
 The hotspot password is managed separately and must never be written to this repository, command output captured for documentation, screenshots or support tickets.
 
@@ -100,7 +109,7 @@ Expected hotspot boundary:
 - Nginx HTTP port 80 is reachable through `wlan0`;
 - DHCP UDP 67 is allowed on `wlan0`;
 - DNS TCP/UDP 53 is allowed on `wlan0`;
-- SSH port 22 is not available through `wlan0`; and
+- SSH TCP port 22 is allowed on `wlan0` only from source subnet `10.42.0.0/24`; and
 - Uvicorn port 8000 is not directly exposed.
 
 ### Hotspot troubleshooting
@@ -147,28 +156,163 @@ sudo ufw status verbose
 
 If the client says “connected without internet” but the local URL works, no repair is required for offline portable mode.
 
-### Optional `wlan1` uplink status
+### Portable internet-router mode — verified
 
-The external ALFA AWUS036NHV is detected as `wlan1` with the `rtl8xxxu` driver. It is intended as a Wi-Fi client, not the access-point interface.
+Verified architecture:
 
-Read-only verification:
+```text
+Phone hotspot
+  -> PHONE-UPLINK on wlan1
+  -> Raspberry Pi forwarding/UFW
+  -> wlan0 ASTH-PORTABLE
+  -> laptop and other client devices
+```
+
+Verified interface and route state with Ethernet removed:
+
+- `ASTH-PORTABLE` remained active on `wlan0` at `10.42.0.1/24`;
+- `PHONE-UPLINK` remained active on `wlan1`;
+- `wlan1` received `10.13.68.119/24`;
+- default route became `default via 10.13.68.67 dev wlan1`;
+- laptop internet access succeeded with 0% packet loss;
+- local ASTH access at `http://10.42.0.1` succeeded; and
+- `ssh asthadmin@10.42.0.1` succeeded.
+
+`PHONE-UPLINK` credentials are stored only in local NetworkManager. Never request or display NetworkManager secrets, copy the connection profile into Git, or capture its credentials in logs/screenshots.
+
+#### Startup steps for online portable mode
+
+1. Power on the phone hotspot without disclosing its credential.
+2. Power on the Raspberry Pi and wait for `ASTH-PORTABLE` to appear.
+3. Confirm `PHONE-UPLINK` is active on `wlan1`.
+4. Confirm the default route uses `wlan1`.
+5. Connect client devices to `ASTH-PORTABLE`.
+6. Open `http://10.42.0.1` and verify internet access separately.
+7. For administration from the portable subnet, use `ssh asthadmin@10.42.0.1`.
+
+#### Verify active connections and addresses
 
 ```bash
+nmcli -f NAME,TYPE,DEVICE connection show --active
 nmcli device status
-iw dev
-lsusb
+ip -brief address show wlan0
+ip -brief address show wlan1
 ```
 
-Driver details — **sudo required, read-only**:
+Expected: `ASTH-PORTABLE` on `wlan0`, `PHONE-UPLINK` on `wlan1`, `10.42.0.1/24` on `wlan0`, and the current upstream address on `wlan1`. The verified upstream address was `10.13.68.119/24`, but a phone hotspot may issue a different address later.
+
+#### Verify routes
 
 ```bash
-sudo ethtool -i wlan1
+ip route
+ip route show default
+ip route get 1.1.1.1
 ```
 
-Internet uplink, forwarding and NAT through `wlan1` are not configured. Do not add them during routine operations; they require a separate design, firewall review and offline-mode regression test.
+With Ethernet removed, the verified default route was:
+
+```text
+default via 10.13.68.67 dev wlan1
+```
+
+Stop troubleshooting assumptions if the default route uses another interface; first identify whether the intended mode is offline, online portable or office LAN.
+
+#### Verify wlan1 internet
+
+```bash
+ping -I wlan1 -c 4 10.13.68.67
+ping -I wlan1 -c 4 1.1.1.1
+```
+
+Expected during the verified test: successful replies and 0% packet loss. Failure to reach the phone gateway indicates an uplink/profile issue; gateway success with internet failure indicates an upstream phone/mobile-data issue.
+
+#### Verify local ASTH and SSH through wlan0
+
+```bash
+curl --fail --silent --show-error http://10.42.0.1
+```
+
+From a client connected to `ASTH-PORTABLE`:
+
+```bash
+ssh asthadmin@10.42.0.1
+```
+
+Expected root response:
+
+```json
+{"service":"ASTH Lightweight MVP","status":"running"}
+```
+
+SSH is allowed only from `10.42.0.0/24` to TCP port 22 on `wlan0`. It is not a general internet-facing SSH rule.
+
+#### Verify forwarding and UFW boundary
+
+**sudo required, read-only:**
+
+```bash
+sudo ufw status verbose
+sudo sysctl net.ipv4.ip_forward
+sudo iptables -S FORWARD
+```
+
+Conceptual forwarding boundary:
+
+- allow `wlan0` to `wlan1` for online portable mode;
+- retain `wlan0` to `eth0` for office-LAN mode;
+- allow return traffic for established forwarded connections;
+- allow hotspot DHCP/DNS and local HTTP on `wlan0`;
+- allow SSH on `wlan0` only from `10.42.0.0/24`; and
+- do not expose Uvicorn port 8000.
+
+> **Warning — firewall and routing risk:** Do not modify UFW forwarding, NAT or SSH rules during routine checks. A mistake can remove client internet access or broaden administrative exposure. Use an approved change window and local recovery access.
+
+#### Troubleshoot PHONE-UPLINK
+
+```bash
+nmcli -f NAME,TYPE,DEVICE connection show --active
+nmcli device status
+ip -brief address show wlan1
+ip route show default
+ping -I wlan1 -c 4 10.13.68.67
+journalctl -u NetworkManager --since today --no-pager | grep -Ei 'PHONE-UPLINK|wlan1|dhcp|route'
+```
+
+If `PHONE-UPLINK` exists but is inactive, activation changes routing state.
+
+> **Warning — uplink state change:** Confirm the phone hotspot is intended, Ethernet-dependent work is stopped, and the profile name is exactly `PHONE-UPLINK`.
+
+Activation — **sudo required**:
+
+```bash
+sudo nmcli connection up PHONE-UPLINK
+```
+
+Do not recreate the profile or enter credentials from this runbook. If `PHONE-UPLINK` cannot connect, use offline portable mode: local ASTH at `10.42.0.1` remains the expected fallback.
+
+#### Verify office-LAN mode
+
+When `eth0` is connected to the approved office LAN:
+
+```bash
+ip -brief address show eth0
+ip route show default
+sudo ufw status verbose
+sudo iptables -S FORWARD
+```
+
+Expected: the intended office route is selected and the retained `wlan0` to `eth0` forwarding policy is present. Do not assume office routing merely because the Ethernet link is up.
 ## SSH access
 
-From an administrator workstation on `192.168.100.0/24`:
+From a client connected to `ASTH-PORTABLE` (`10.42.0.0/24`):
+
+```bash
+ssh asthadmin@10.42.0.1
+```
+
+This portable SSH path was verified. UFW restricts it to TCP port 22 on `wlan0` from `10.42.0.0/24`.
+
+From an administrator workstation on the office LAN (`192.168.100.0/24`):
 
 ```bash
 ssh asthadmin@192.168.100.187
@@ -387,7 +531,7 @@ Expected policy and rules:
 - port 22 allowed only from `192.168.100.0/24`;
 - port 80 allowed from `192.168.100.0/24` and through `wlan0`;
 - DHCP UDP 67 and DNS TCP/UDP 53 allowed on `wlan0`;
-- no SSH port 22 access through `wlan0`; and
+- SSH TCP port 22 on `wlan0` allowed only from `10.42.0.0/24`;
 - no exposure of port 8000 or port 111.
 
 > **Warning — firewall lockout risk:** Do not add, delete, reset, disable or reload firewall rules without local console access, an existing SSH session, the approved source subnet and a tested rollback. This runbook intentionally provides no firewall-change command.

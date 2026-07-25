@@ -6,7 +6,7 @@ This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPL
 
 - Target hardware: Raspberry Pi 5 with 2GB LPDDR4X RAM and 32GB microSD storage.
 - Target operating system: Raspberry Pi OS, preferably 64-bit.
-- Deployment boundary: trusted Ethernet LAN and offline portable hotspot only; do not expose ASTH or SSH through internet-facing router port forwarding.
+- Deployment boundary: trusted office LAN, offline portable hotspot, or online portable mode through the controlled `PHONE-UPLINK`; do not expose ASTH or SSH to the upstream internet.
 - Runtime: Nginx reverse proxy to FastAPI served by **one** Uvicorn worker bound to `127.0.0.1:8000`.
 - Data store: SQLite with one application writer process.
 - Service supervision: systemd only.
@@ -35,8 +35,10 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | LAN and SSH administration subnet | `192.168.100.0/24` | Confirmed | 25 July 2026 | Revalidate if the deployment network changes. |
 | Primary network paths | Ethernet active and built-in `wlan0` hotspot active simultaneously | Confirmed | 25 July 2026 | Ethernet fixed-IP method remains pending. |
 | Portable hotspot | `ASTH-PORTABLE`, access point, 2.4 GHz (`bg`), channel 6, WPA-PSK, IPv4 shared | Confirmed | 25 July 2026 | Password is managed separately and excluded from Git. |
-| Portable gateway and URL | `10.42.0.1/24`; `http://10.42.0.1` | Confirmed | 25 July 2026 | Offline local access is the current intended mode. |
-| Optional Wi-Fi uplink | ALFA AWUS036NHV on `wlan1`, `rtl8xxxu`, client role | Pending decision | 25 July 2026 | Internet sharing is not configured. |
+| Portable gateway and URL | `10.42.0.1/24`; `http://10.42.0.1` | Confirmed | 25 July 2026 | Same local URL in offline and online portable modes. |
+| Portable internet uplink | ALFA AWUS036NHV on `wlan1`, `rtl8xxxu`, profile `PHONE-UPLINK` | Confirmed | 25 July 2026 | Credentials remain only in local NetworkManager. |
+| Verified wlan1 route | `10.13.68.119/24`; `default via 10.13.68.67 dev wlan1` | Confirmed | 25 July 2026 | Address may change when the phone hotspot renews DHCP. |
+| Portable SSH boundary | `10.42.0.0/24` to TCP port 22 on `wlan0` | Confirmed | 25 July 2026 | `ssh asthadmin@10.42.0.1` verified. |
 | Router or DHCP owner | Not assigned | Pending decision | 25 July 2026 | Confirm network owner. |
 | Time zone | `Asia/Kuala_Lumpur` | Confirmed | 25 July 2026 | None. |
 | Release identifier and rollback release | Not recorded | Pending decision | 25 July 2026 | Define release identification and previous-known-good retention. |
@@ -69,7 +71,7 @@ Status as of **25 July 2026**:
 | 1 | Pre-deployment verification | In Progress | Technical/operational owners and maintenance window remain unconfirmed. |
 | 2 | Raspberry Pi physical and thermal checks | In Progress | Cooling/thermal evidence passes; power-supply and full physical-inspection evidence were not supplied. |
 | 3 | Raspberry Pi OS and architecture verification | Complete | Debian 13, arm64/aarch64, kernel and time zone recorded. |
-| 4 | Hostname and network configuration | In Progress | Portable hotspot is complete; Ethernet fixed-IP method remains pending. |
+| 4 | Hostname and network configuration | In Progress | Portable offline/online router modes are complete; Ethernet fixed-IP method remains pending. |
 | 5 | User account and SSH preparation | In Progress | `asthadmin`, SSH and public-key support exist; key login is not yet established and password login remains enabled. |
 | 6 | System update and essential package preparation | Complete | Validated runtime stack and no failed services. |
 | 7 | ASTH directories and ownership | In Progress | Required paths exist; full ownership/mode inventory was not supplied. |
@@ -200,7 +202,7 @@ swapon --show
 
 **Prerequisites:** Phase 3 complete; `<asth-hostname>`, `<pi-lan-ip>`, `<lan-cidr>`, and `<network-interface>` confirmed with the network owner.
 
-**Current state:** **In Progress** — The `ASTH-PORTABLE` hotspot on built-in `wlan0` is complete and reboot-persistent. Ethernet and `192.168.100.187/24` remain active simultaneously; DHCP reservation or another approved fixed-IP method is still required for Ethernet.
+**Current state:** **In Progress** — `ASTH-PORTABLE` on `wlan0` is complete for offline and online portable use. With Ethernet removed, `PHONE-UPLINK` on `wlan1` supplied the default route and client internet successfully. Ethernet fixed-IP work remains pending for office-LAN mode.
 
 **Portable hotspot deployment:** **Complete**
 
@@ -210,11 +212,11 @@ swapon --show
 4. [x] Confirm Nginx port 80 is accessible through `wlan0` at `http://10.42.0.1`.
 5. [x] Confirm DHCP issued addresses to a phone and laptop.
 6. [x] Confirm DHCP UDP 67 and DNS TCP/UDP 53 are allowed through UFW on `wlan0`.
-7. [x] Confirm SSH port 22 remains unavailable through the hotspot.
+7. [x] Restrict SSH on `wlan0` to source subnet `10.42.0.0/24` and TCP port 22; verify `ssh asthadmin@10.42.0.1`.
 8. [x] Confirm Ethernet and the portable hotspot operate simultaneously.
 9. [x] Confirm `ASTH-PORTABLE` returns automatically after a full Raspberry Pi reboot.
 10. [x] Record the verified root response: `{"service":"ASTH Lightweight MVP","status":"running"}`.
-11. [ ] Decide whether optional internet uplink through `wlan1` is required; current portable mode remains offline.
+11. [x] Verify online portable mode through `PHONE-UPLINK` on `wlan1`, including forwarded internet with Ethernet removed.
 
 **Portable operating steps:**
 
@@ -222,7 +224,7 @@ swapon --show
 2. Connect the participant device to Wi-Fi network `ASTH-PORTABLE` using the separately managed credential.
 3. Open `http://10.42.0.1`.
 
-“Connected without internet” is expected in offline portable mode. Local ASTH access is working when `http://10.42.0.1` loads.
+“Connected without internet” is expected only in offline portable mode. In online portable mode, `PHONE-UPLINK` on `wlan1` provides internet while the same local ASTH URL remains available.
 
 **Safe hotspot verification commands:**
 
@@ -233,6 +235,15 @@ nmcli -f connection.id,connection.interface-name,connection.autoconnect,connecti
 ip -brief address show wlan0
 iw dev wlan0 info
 curl --fail --silent --show-error http://10.42.0.1
+ip -brief address show wlan1
+ip route show default
+ping -I wlan1 -c 4 1.1.1.1
+```
+
+From an `ASTH-PORTABLE` client:
+
+```bash
+ssh asthadmin@10.42.0.1
 ```
 
 UFW verification — **sudo required, read-only**:
@@ -744,17 +755,17 @@ sha256sum /var/lib/asth/backup-staging/asth-<backup-id>.sqlite3
 
 **Prerequisites:** Phases 5, 12, 14, and 16 complete; local console present; second key-authenticated SSH session open; `<lan-cidr>` and `<admin-cidr>` confirmed.
 
-**Current state:** **In Progress** — Existing Ethernet controls remain confirmed. On `wlan0`, UFW allows only local hotspot DHCP UDP 67, DNS TCP/UDP 53 and Nginx HTTP; SSH remains unavailable. SSH password login is still temporarily enabled on the approved administration path.
+**Current state:** **In Progress** — UFW permits required hotspot services, restricted SSH from `10.42.0.0/24`, forwarding `wlan0` to `wlan1` for online portable mode, and retained forwarding `wlan0` to `eth0` for office-LAN mode. SSH password login is still temporarily enabled.
 
 **Portable hotspot firewall checks:**
 
 1. [x] Permit DHCP UDP 67 on `wlan0` for hotspot clients.
 2. [x] Permit DNS TCP/UDP 53 on `wlan0` for shared-mode name resolution.
 3. [x] Permit Nginx HTTP port 80 through `wlan0`.
-4. [x] Keep SSH port 22 unavailable through `wlan0`.
+4. [x] Allow SSH on `wlan0` only from `10.42.0.0/24` to TCP port 22.
 5. [x] Keep Uvicorn port 8000 unexposed.
 6. [x] Exclude the hotspot password from documentation and Git.
-7. [ ] Review firewall/NAT changes separately before any optional `wlan1` internet sharing.
+7. [x] Verify UFW forwarding from `wlan0` to `wlan1` and retain forwarding from `wlan0` to `eth0`.
 1. [x] Inventory listening ports, enabled services, accounts, and router port forwarding.
 2. [x] Disable direct root SSH login after key access is verified.
 3. [ ] Disable SSH password authentication only after the second key session and local recovery pass.
@@ -831,7 +842,7 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 
 **Prerequisites:** Phases 12–18 complete; approved test accounts/data; at least five representative phones/tablets/computers; planned internet-disconnection test.
 
-**Current state:** **Blocked for application acceptance** — Portable network validation passed with a phone and laptop, offline access at `http://10.42.0.1`, DHCP assignment, reboot recovery and no hotspot SSH access. Real login, content, quiz, progress, dashboard, Smart Tutor and SQLite workflows remain unimplemented.
+**Current state:** **Blocked for application acceptance** — Offline portable, online portable through `wlan1`, office-LAN forwarding through `eth0`, local ASTH access, client internet and restricted hotspot SSH are verified. Real login, content, quiz, progress, dashboard, Smart Tutor and SQLite workflows remain unimplemented.
 
 1. [x] Connect each device to the intended training LAN.
 2. [x] Open the recorded ASTH LAN URL through Nginx.
