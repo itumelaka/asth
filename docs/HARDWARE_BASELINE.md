@@ -1,31 +1,45 @@
 # ASTH Raspberry Pi 5 Hardware Baseline
 
-Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment ASTH. Raspberry Pi 5 ini mempunyai **2GB RAM**. Angka **32GB merujuk kepada kapasiti kad microSD sahaja**, bukan kapasiti RAM.
+Dokumen ini merekodkan baseline perkakasan yang telah disahkan untuk deployment ASTH. Raspberry Pi 5 ini mempunyai **2GB RAM**. Angka **32GB merujuk kepada kapasiti kad microSD sistem**, bukan kapasiti RAM. SSD luaran yang disambungkan semasa validasi ialah perkakasan backup sementara dan bukan sebahagian daripada baseline minimum.
 
 ## 1. Spesifikasi Perkakasan Disahkan
 
 | Komponen | Spesifikasi |
 |---|---|
-| Platform | Raspberry Pi 5 |
+| Platform | Raspberry Pi 5 Model B Rev 1.1 |
 | Pemproses | Pemproses 64-bit quad-core Cortex-A76 |
 | Memori | 2GB LPDDR4X RAM |
-| Storan | Kad microSD 32GB |
-| Sistem operasi | Raspberry Pi OS telah dipasang |
-| Rangkaian berwayar | Gigabit Ethernet |
-| Rangkaian tanpa wayar | Wi-Fi |
+| Storan sistem wajib | Kad microSD 32GB |
+| Storan backup sementara | ASUS ROG STRIX Arion SSD, kira-kira 512GB, NTFS |
+| Status SSD | Desktop automount pada `/media/asthadmin/ROG`; belum mempunyai mount kekal berasaskan UUID |
+| Sistem operasi disahkan | Debian GNU/Linux 13 (Trixie), arm64/aarch64 |
+| Rangkaian berwayar | Gigabit Ethernet; aktif untuk deployment semasa |
+| Rangkaian tanpa wayar | Wi-Fi tersedia tetapi tidak aktif dalam deployment semasa |
 | Sambungan periferal | Bluetooth 5.0 |
 | USB | Dua port USB 3.0 dan dua port USB 2.0 |
 | Paparan | Dua port micro HDMI dengan sokongan sehingga 4K60 |
 | Pengembangan | Penyambung PCIe |
 | Bekalan kuasa disyorkan | USB-C 5V/5A |
 | Bekalan kuasa minimum | 5V/3A |
-| Penyejukan | Penyejukan aktif disyorkan untuk beban server jangka panjang |
+| Penyejukan | Penyejukan aktif dipasang dan disahkan |
 
+### Baseline wajib dan perkakasan backup sementara
+
+Baseline minimum ASTH kekal Raspberry Pi 5, RAM 2GB, kad microSD 32GB, bekalan kuasa sesuai, sambungan LAN dan penyejukan aktif. SSD ASUS ROG STRIX Arion bukan keperluan untuk menjalankan infrastructure MVP dan tidak boleh dianggap sebagai storan sistem utama atau backup automatik production-ready pada masa ini.
+
+SSD tersebut kini menyediakan destinasi berasingan untuk backup manual di:
+
+```text
+/media/asthadmin/ROG/ASTH_BACKUP
+```
+
+Mount desktop `/media/asthadmin/ROG` bergantung pada automount dan belum dijamin tersedia selepas reboot atau tanpa sesi desktop. Sebelum backup berjadual dianggap production-ready, SSD perlu dipasang secara kekal menggunakan UUID, diuji selepas reboot, dan dipantau untuk kegagalan mount.
 ## 2. Batasan Perkakasan Semasa
 
 - RAM 2GB mengehadkan bilangan servis, worker aplikasi, proses latar dan pengguna serentak yang boleh ditampung dengan selesa.
 - Kad microSD 32GB menyediakan ruang yang terhad selepas sistem operasi, aplikasi, media, pangkalan data, log dan backup diambil kira.
 - Kad microSD mempunyai ketahanan tulis dan prestasi rawak yang lebih rendah berbanding SSD; penulisan log atau pangkalan data yang berlebihan boleh memendekkan jangka hayatnya.
+- SSD backup menggunakan NTFS dan mount desktop sementara; ketersediaan, pemilikan dan pilihan mount mesti disahkan semula sebelum automasi backup production.
 - Pemproses ini sesuai untuk aplikasi web ringan tetapi bukan untuk latihan model AI, inferens LLM besar, pemprosesan video berat atau analitik intensif.
 - Prestasi berterusan boleh menurun akibat thermal throttling jika peranti tidak mempunyai penyejukan aktif dan aliran udara yang baik.
 - Bekalan 5V/3A ialah minimum dan mungkin mengehadkan kuasa yang tersedia kepada periferal USB. Bekalan USB-C 5V/5A lebih sesuai untuk operasi stabil.
@@ -99,6 +113,9 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 - Tetapkan log rotation, had saiz upload dan polisi pembersihan fail sementara.
 - Simpan pangkalan data, fail konfigurasi bukan rahsia dan kandungan yang diperlukan dalam backup berjadual.
 - Salin backup ke SSD/USB berasingan, NAS atau lokasi rangkaian lain. Backup pada microSD yang sama tidak melindungi daripada kegagalan kad.
+- Backup manual semasa disimpan pada SSD di `/media/asthadmin/ROG/ASTH_BACKUP`; recovery telah diuji menggunakan `rsync` dan perbandingan checksum SHA-256.
+- Snapshot konfigurasi semasa disimpan di `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot`.
+- Jangan jadikan path desktop automount ini sebagai sasaran jadual production sehingga mount kekal berasaskan UUID selesai dan diuji selepas reboot.
 - Kekalkan sekurang-kurangnya satu salinan backup di luar Pi dan gunakan polisi retensi supaya beberapa titik pemulihan tersedia.
 - Uji proses restore secara berkala; backup hanya berguna apabila pemulihan telah dibuktikan.
 - Lakukan shutdown yang betul dan pertimbangkan UPS untuk mengurangkan risiko filesystem atau SQLite rosak akibat kehilangan kuasa.
@@ -116,4 +133,4 @@ Elakkan orkestrasi dan pecahan microservice untuk MVP. Satu aplikasi modular den
 
 ## 9. Kesimpulan
 
-Raspberry Pi 5 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH MVP**. Kesesuaian ini bergantung pada seni bina yang ringkas, Raspberry Pi OS Lite atau servis minimum, bilangan proses yang terkawal, kandungan yang dioptimumkan, backup ke storan berasingan dan penyejukan aktif untuk operasi berpanjangan. Ia tidak patut dianggap sebagai platform untuk LLM besar, pemprosesan media berat atau skala pengguna yang tinggi. Apabila skop berkembang, SSD dan kapasiti RAM yang lebih besar ialah naik taraf utama.
+Raspberry Pi 5 Model B Rev 1.1 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB** sesuai untuk **lightweight ASTH infrastructure MVP**. SSD luaran semasa membuktikan backup dan recovery manual ke storan berasingan, tetapi masih perkakasan backup sementara sehingga mount UUID, jadual dan retensi production disahkan. Kesesuaian platform bergantung pada seni bina ringkas, servis minimum, satu worker aplikasi, kandungan dioptimumkan dan penyejukan aktif. Ia tidak patut dianggap sebagai platform untuk LLM besar, pemprosesan media berat atau skala pengguna tinggi.

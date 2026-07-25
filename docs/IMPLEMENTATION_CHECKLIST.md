@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 MVP Implementation Checklist
 
-This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases. It is an execution checklist only. It does not authorize or provide completed application code, deployment scripts, systemd units, Nginx site files, or environment files.
+This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the infrastructure snapshot validated on **25 July 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work or blocked. The overall infrastructure result is **Conditional Pass**, not production or application-MVP acceptance.
 
 ## Scope and operating rules
 
@@ -23,82 +23,85 @@ Examples such as `<admin-user>`, `<asth-hostname>`, `<pi-lan-ip>`, `<lan-cidr>`,
 
 ## Decision Log
 
-Record confirmed values before their first use. Use `Not Confirmed`, `Confirmed`, or `Changed` in the Status column; do not record secret values in this table.
+Do not record passwords, private keys, tokens or secret values in this table.
 
-| Decision | Value to record | Status | Confirmed by | Date | Evidence or reference |
-|---|---|---|---|---|---|
-| Named administrator account | `<admin-user>` | Not Confirmed |  |  |  |
-| ASTH service account | `asth` unless deployment review changes it | Not Confirmed |  |  |  |
-| Pi hostname | `<asth-hostname>` | Not Confirmed |  |  |  |
-| Pi reserved LAN address | `<pi-lan-ip>` | Not Confirmed |  |  |  |
-| LAN subnet in CIDR notation | `<lan-cidr>` | Not Confirmed |  |  |  |
-| Administration subnet | `<admin-cidr>` | Not Confirmed |  |  |  |
-| Primary network interface | `<network-interface>` | Not Confirmed |  |  |  |
-| Router or DHCP administrator | `<network-owner>` | Not Confirmed |  |  |  |
-| Time zone | `<time-zone>` | Not Confirmed |  |  |  |
-| Release identifier format | `<release-id>` | Not Confirmed |  |  |  |
-| ASTH LAN URL | `http://<asth-hostname>/` or `http://<pi-lan-ip>/` | Not Confirmed |  |  |  |
-| Health endpoint | `<health-path>`, recommended `/health` | Not Confirmed |  |  |  |
-| Application import target | `<app-import>`, planned `asth.main:app` | Not Confirmed |  |  |  |
-| SQLite database path | `/var/lib/asth/db/asth.sqlite3` unless approved otherwise | Not Confirmed |  |  |  |
-| Maximum justified request body | `<max-request-size>` | Not Confirmed |  |  |  |
-| Off-device backup destination | `<backup-mount>` or approved network destination | Not Confirmed |  |  |  |
-| Backup retention | `<backup-retention>`, candidate seven daily and four weekly | Not Confirmed |  |  |  |
-| Recovery operator | `<recovery-owner>` | Not Confirmed |  |  |  |
-| Maintenance window | `<maintenance-window>` | Not Confirmed |  |  |  |
-| Pilot participant-device count | At least five representative devices | Not Confirmed |  |  |  |
-| MVP acceptance approver | `<acceptance-owner>` | Not Confirmed |  |  |  |
+| Decision | Confirmed value or current state | Status | Date | Follow-up |
+|---|---|---|---|---|
+| Named administrator account | `asthadmin` | Confirmed | 25 July 2026 | Establish tested SSH key access before password-login removal. |
+| ASTH service account | Service runs as `asth.service`; runtime account not recorded | Pending confirmation | 25 July 2026 | Verify `User` and `Group` from the installed unit. |
+| Pi hostname | `asth-pi` | Confirmed | 25 July 2026 | None. |
+| Current LAN address | `192.168.100.187/24` | Confirmed current value | 25 July 2026 | Create DHCP reservation or another approved fixed-IP method. |
+| Gateway | `192.168.100.1` | Confirmed | 25 July 2026 | None. |
+| LAN and SSH administration subnet | `192.168.100.0/24` | Confirmed | 25 July 2026 | Revalidate if the deployment network changes. |
+| Primary network path | Ethernet active; Wi-Fi inactive | Confirmed | 25 July 2026 | Record the Linux interface name during handover. |
+| Router or DHCP owner | Not assigned | Pending decision | 25 July 2026 | Confirm network owner. |
+| Time zone | `Asia/Kuala_Lumpur` | Confirmed | 25 July 2026 | None. |
+| Release identifier and rollback release | Not recorded | Pending decision | 25 July 2026 | Define release identification and previous-known-good retention. |
+| ASTH LAN URL | `http://192.168.100.187/` while the current lease remains valid | Conditional | 25 July 2026 | Update after fixed addressing and hostname resolution are approved. |
+| Health endpoint | `/health` | Confirmed | 25 July 2026 | Keep response non-sensitive. |
+| Minimal endpoints | `/`, `/health`, `/docs` | Confirmed | 25 July 2026 | These are infrastructure endpoints, not the real application MVP. |
+| Application import target | Not recorded | Pending confirmation | 25 July 2026 | Confirm from the installed unit or release documentation. |
+| SQLite location | Directory `/var/lib/asth/db`; schema and live filename not defined | Partially confirmed | 25 July 2026 | Design schema and record the production database filename. |
+| Maximum request body | Not defined | Pending decision | 25 July 2026 | Set from real application requirements. |
+| Environment file | `/etc/asth/asth.env`, `root:root`, mode `0600` | Confirmed | 25 July 2026 | Never expose its contents. |
+| Manual backup destination | `/media/asthadmin/ROG/ASTH_BACKUP` | Confirmed temporary | 25 July 2026 | Configure persistent mount by UUID. |
+| Configuration snapshot | `/media/asthadmin/ROG/ASTH_BACKUP/config-snapshot` | Confirmed temporary | 25 July 2026 | Revalidate after persistent mount. |
+| Backup retention and schedule | Not established | Pending decision | 25 July 2026 | Define production schedule, retention and alerting. |
+| System owner | Not assigned | Pending decision | 25 July 2026 | Confirm accountable owner. |
+| Technical owner | Not assigned | Pending decision | 25 July 2026 | Confirm technical owner. |
+| Backup owner | Not assigned | Pending decision | 25 July 2026 | Confirm backup and restore-test owner. |
+| Maintenance window | Not assigned | Pending decision | 25 July 2026 | Confirm routine and emergency windows. |
+| MVP acceptance approver | Not assigned | Pending decision | 25 July 2026 | Confirm before final application acceptance. |
 
 ## Implementation Progress
 
-Allowed phase states:
+Status as of **25 July 2026**:
 
 | Not Started | In Progress | Blocked | Complete |
 |---:|---:|---:|---:|
-| 22 | 0 | 0 | 0 |
+| 0 | 12 | 3 | 7 |
 
-Update both the counts above and the phase state below whenever work advances.
-
-| Phase | Implementation phase | State | Owner | Last updated | Evidence location |
-|---:|---|---|---|---|---|
-| 1 | Pre-deployment verification | Not Started |  |  |  |
-| 2 | Raspberry Pi physical and thermal checks | Not Started |  |  |  |
-| 3 | Raspberry Pi OS and architecture verification | Not Started |  |  |  |
-| 4 | Hostname and network configuration | Not Started |  |  |  |
-| 5 | User account and SSH preparation | Not Started |  |  |  |
-| 6 | System update and essential package preparation | Not Started |  |  |  |
-| 7 | ASTH directories and ownership | Not Started |  |  |  |
-| 8 | Python virtual environment preparation | Not Started |  |  |  |
-| 9 | Minimal FastAPI application readiness | Not Started |  |  |  |
-| 10 | Uvicorn local service validation | Not Started |  |  |  |
-| 11 | systemd service preparation | Not Started |  |  |  |
-| 12 | Nginx reverse proxy preparation | Not Started |  |  |  |
-| 13 | SQLite directory and permissions | Not Started |  |  |  |
-| 14 | Environment variables and secrets | Not Started |  |  |  |
-| 15 | Logging and log rotation | Not Started |  |  |  |
-| 16 | Backup destination and recovery test | Not Started |  |  |  |
-| 17 | Basic security hardening | Not Started |  |  |  |
-| 18 | Resource and thermal monitoring | Not Started |  |  |  |
-| 19 | End-to-end local-network validation | Not Started |  |  |  |
-| 20 | Rollback readiness | Not Started |  |  |  |
-| 21 | Documentation and handover | Not Started |  |  |  |
-| 22 | Final MVP acceptance checklist | Not Started |  |  |  |
+| Phase | Implementation phase | State | Evidence or reason |
+|---:|---|---|---|
+| 1 | Pre-deployment verification | In Progress | Technical/operational owners and maintenance window remain unconfirmed. |
+| 2 | Raspberry Pi physical and thermal checks | In Progress | Cooling/thermal evidence passes; power-supply and full physical-inspection evidence were not supplied. |
+| 3 | Raspberry Pi OS and architecture verification | Complete | Debian 13, arm64/aarch64, kernel and time zone recorded. |
+| 4 | Hostname and network configuration | In Progress | Hostname/current Ethernet address work; fixed-IP method remains pending. |
+| 5 | User account and SSH preparation | In Progress | `asthadmin`, SSH and public-key support exist; key login is not yet established and password login remains enabled. |
+| 6 | System update and essential package preparation | Complete | Validated runtime stack and no failed services. |
+| 7 | ASTH directories and ownership | In Progress | Required paths exist; full ownership/mode inventory was not supplied. |
+| 8 | Python virtual environment preparation | In Progress | Runtime versions work; virtual-environment path, pinned dependency inventory and `pip check` evidence were not supplied. |
+| 9 | Minimal FastAPI application readiness | Complete | `/`, `/health` and `/docs` return HTTP 200; real ASTH features remain outside this result. |
+| 10 | Uvicorn local service validation | Complete | One worker bound only to `127.0.0.1:8000`. |
+| 11 | systemd service preparation | Complete | `asth.service` enabled and active. |
+| 12 | Nginx reverse proxy preparation | Complete | Nginx enabled/active on port 80; port 8000 not LAN-exposed. |
+| 13 | SQLite directory and permissions | In Progress | Directory exists; schema, live filename and permission evidence remain pending. |
+| 14 | Environment variables and secrets | Complete | Environment file is `root:root` mode `0600`; no secret values are documented. |
+| 15 | Logging and log rotation | In Progress | `/var/log/asth` exists; production retention and rotation evidence remain pending. |
+| 16 | Backup destination and recovery test | In Progress | Manual `rsync` and SHA-256 recovery test passed; persistent mount, schedule and retention remain pending. |
+| 17 | Basic security hardening | In Progress | UFW/SSH/rpcbind controls pass; SSH key cutover remains pending. |
+| 18 | Resource and thermal monitoring | In Progress | Baseline resource/thermal values pass; representative sustained multi-device load evidence remains pending. |
+| 19 | End-to-end local-network validation | Blocked | Minimal endpoints pass; real participant/trainer/application workflows are not implemented. |
+| 20 | Rollback readiness | In Progress | Configuration snapshot and recovery evidence exist; release/database rollback is not yet proven. |
+| 21 | Documentation and handover | Blocked | Runbook/status documents are being created; owners and maintenance window are unconfirmed. |
+| 22 | Final MVP acceptance checklist | Blocked | Infrastructure has Conditional Pass only; application MVP and approver are outstanding. |
 
 ---
 
 ## Phase 1 — Pre-deployment verification
-
 **Objective:** Confirm that the approved baseline, responsible people, recovery access, and required inputs exist before changing the Pi.
 
 **Prerequisites:** Physical access to the Pi; access to the current documentation; an approved maintenance window; permission to administer the device.
 
+**Current state:** **In Progress** — Hardware, host, network, services and backup locations are recorded. System/technical/backup owners, maintenance window and acceptance approver remain unconfirmed.
+
 1. [ ] Read `docs/DEPLOYMENT_PLAN.md` and record its version or Git commit.
-2. [ ] Confirm the Pi is the 2GB model and the microSD is 32GB.
-3. [ ] Confirm the deployment remains LAN-only and Docker remains deferred.
+2. [x] Confirm the Pi is the 2GB model and the microSD is 32GB.
+3. [x] Confirm the deployment remains LAN-only and Docker remains deferred.
 4. [ ] Assign the technical lead, network owner, recovery operator, and acceptance approver.
 5. [ ] Confirm a keyboard/display, serial console, or equivalent local recovery route is available.
-6. [ ] Record the current hostname, IP addresses, route, disk use, and memory before changes.
-7. [ ] Confirm an off-device location is available for initial configuration records and backups.
+6. [x] Record the current hostname, IP addresses, route, disk use, and memory before changes.
+7. [x] Confirm an off-device location is available for initial configuration records and backups.
 
 **Safe verification commands:**
 
@@ -124,12 +127,14 @@ df -h /
 
 **Prerequisites:** Phase 1 complete; Pi safely shut down before fitting or reseating hardware.
 
+**Current state:** **In Progress** — Active cooling is installed; measured temperature was approximately 45.5 C and `throttled=0x0`. Power-supply rating and full physical-inspection evidence were not supplied.
+
 1. [ ] Verify a suitable USB-C power supply is identified; prefer a quality 5V/5A supply.
 2. [ ] Inspect the microSD seating, case ventilation, cables, and strain relief.
-3. [ ] Confirm an active cooler or compatible fan is installed and operating.
+3. [x] Confirm an active cooler or compatible fan is installed and operating.
 4. [ ] Place the Pi where vents are unobstructed and accidental disconnection is unlikely.
-5. [ ] Boot the Pi and allow it to idle for five minutes.
-6. [ ] Record temperature and throttling state at idle.
+5. [x] Boot the Pi and allow it to idle for five minutes.
+6. [x] Record temperature and throttling state at idle.
 7. [ ] Confirm the kernel reports no repeated undervoltage, storage, or thermal warnings.
 
 **Safe verification commands:**
@@ -158,12 +163,14 @@ sudo dmesg --level=err,warn
 
 **Prerequisites:** Phase 2 complete; administrative access available.
 
-1. [ ] Record the Raspberry Pi OS release and kernel.
-2. [ ] Verify the userspace architecture is `aarch64` or otherwise obtain explicit approval before continuing.
-3. [ ] Confirm the system clock, time zone, and synchronization state.
-4. [ ] Confirm the root filesystem is mounted normally and has at least 20% free space.
-5. [ ] Record active swap; do not enlarge it without a separate storage-wear review.
-6. [ ] Confirm the OS installation is intended to be retained rather than re-imaged.
+**Current state:** **Complete** — Debian GNU/Linux 13 (Trixie), arm64/aarch64, kernel `6.18.34+rpt-rpi-2712`, time zone `Asia/Kuala_Lumpur`, and about 26% root-disk use are recorded.
+
+1. [x] Record the Raspberry Pi OS release and kernel.
+2. [x] Verify the userspace architecture is `aarch64` or otherwise obtain explicit approval before continuing.
+3. [x] Confirm the system clock, time zone, and synchronization state.
+4. [x] Confirm the root filesystem is mounted normally and has at least 20% free space.
+5. [x] Record active swap; do not enlarge it without a separate storage-wear review.
+6. [x] Confirm the OS installation is intended to be retained rather than re-imaged.
 
 **Safe verification commands:**
 
@@ -190,14 +197,16 @@ swapon --show
 
 **Prerequisites:** Phase 3 complete; `<asth-hostname>`, `<pi-lan-ip>`, `<lan-cidr>`, and `<network-interface>` confirmed with the network owner.
 
+**Current state:** **In Progress** — Hostname `asth-pi`, Ethernet and current address `192.168.100.187/24` are validated. DHCP reservation or another approved fixed-IP method is still required.
+
 1. [ ] Check that the proposed hostname is unique on the deployment LAN.
-2. [ ] Record the current network configuration before making changes.
-3. [ ] Set the confirmed hostname using the supported Raspberry Pi OS mechanism.
+2. [x] Record the current network configuration before making changes.
+3. [x] Set the confirmed hostname using the supported Raspberry Pi OS mechanism.
 4. [ ] Create a DHCP reservation on the router for the Pi rather than hard-coding an address where practical.
-5. [ ] Reconnect or reboot during the maintenance window.
+5. [x] Reconnect or reboot during the maintenance window.
 6. [ ] Verify the reserved IP, default route, DNS behavior, and hostname resolution.
 7. [ ] Confirm no router port forwarding exposes ports 22, 80, 443, or 8000.
-8. [ ] Test reachability from one intended participant device.
+8. [x] Test reachability from one intended participant device.
 
 **Safe verification commands:**
 
@@ -227,9 +236,11 @@ sudo hostnamectl set-hostname <asth-hostname>
 
 **Prerequisites:** Phase 4 complete; `<admin-user>` confirmed; administrator public key available; local console access working.
 
+**Current state:** **In Progress** — Administrator `asthadmin`, SSH service and public-key support are present. Password authentication remains temporarily enabled until key login is established and tested.
+
 1. [ ] List current human and system accounts and identify unused defaults for later review.
-2. [ ] Confirm `<admin-user>` is a named, accountable account rather than a shared login.
-3. [ ] Create the account only if it does not already exist.
+2. [x] Confirm `<admin-user>` is a named, accountable account rather than a shared login.
+3. [x] Create the account only if it does not already exist.
 4. [ ] Grant only the administrative group membership required by Raspberry Pi OS.
 5. [ ] Install the administrator's public key with correct ownership and modes.
 6. [ ] Open a second SSH session using the key and keep the first session open.
@@ -263,14 +274,16 @@ sudo usermod -aG sudo <admin-user>
 
 **Prerequisites:** Phase 5 complete; network access for maintenance; backup/configuration record available; maintenance window active.
 
+**Current state:** **Complete** — The validated minimal stack is installed and active, with no failed services.
+
 1. [ ] Record currently upgradable packages.
 2. [ ] Refresh package metadata.
 3. [ ] Apply approved OS updates.
 4. [ ] Reboot if required, then recheck network, temperature, throttling, disk, and time.
-5. [ ] Confirm the exact essential package list: Python 3, `venv`, `pip`, Nginx, SQLite CLI, Git if release retrieval requires it, and the chosen firewall tool.
-6. [ ] Install only missing approved packages.
-7. [ ] Record installed versions and enabled services.
-8. [ ] Confirm Docker, database servers, desktop extras, and heavy monitoring agents were not added for the MVP.
+5. [x] Confirm the exact essential package list: Python 3, `venv`, `pip`, Nginx, SQLite CLI, Git if release retrieval requires it, and the chosen firewall tool.
+6. [x] Install only missing approved packages.
+7. [x] Record installed versions and enabled services.
+8. [x] Confirm Docker, database servers, desktop extras, and heavy monitoring agents were not added for the MVP.
 
 **Safe verification commands:**
 
@@ -302,11 +315,13 @@ sudo apt install python3 python3-venv python3-pip nginx sqlite3
 
 **Prerequisites:** Phase 6 complete; service account name and `<release-id>` confirmed; directory design reviewed against `docs/DEPLOYMENT_PLAN.md`.
 
+**Current state:** **In Progress** — `/opt/asth`, `/var/lib/asth`, `/var/lib/asth/db`, `/var/log/asth` and `/etc/asth/asth.env` exist. A complete ownership/mode inventory for application and data paths remains required.
+
 1. [ ] Confirm the `asth` service account does not already represent a different purpose.
 2. [ ] Create a locked, non-interactive system service account if absent.
-3. [ ] Create `/opt/asth/releases/<release-id>` for the prepared release.
-4. [ ] Create `/var/lib/asth/db`, approved mutable content paths, and `/var/lib/asth/backup-staging`.
-5. [ ] Reserve `/etc/asth` for later protected configuration.
+3. [x] Create `/opt/asth/releases/<release-id>` for the prepared release.
+4. [x] Create `/var/lib/asth/db`, approved mutable content paths, and `/var/lib/asth/backup-staging`.
+5. [x] Reserve `/etc/asth` for later protected configuration.
 6. [ ] Apply `root:asth` ownership to release/configuration paths and `asth:asth` to mutable data paths.
 7. [ ] Create `/opt/asth/current` as an initial symlink only if it does not already exist, pointing to the verified release.
 8. [ ] Verify the service account cannot modify release files.
@@ -345,13 +360,15 @@ The `ln -s` command deliberately omits `-f`; it must fail rather than replace an
 
 **Prerequisites:** Phase 7 complete; reviewed release files and pinned production `requirements.txt` present; exact release/commit recorded.
 
+**Current state:** **In Progress** — Python 3.13.5, FastAPI 0.140.0 and Uvicorn 0.51.0 run successfully. The virtual-environment path, pinned dependency inventory and `pip check` evidence were not supplied.
+
 1. [ ] Verify release files identify the intended Git commit or package version.
 2. [ ] Confirm production dependencies are pinned and exclude development-only packages.
 3. [ ] Check available disk space before dependency installation.
 4. [ ] Create `.venv` inside `/opt/asth/releases/<release-id>`.
 5. [ ] Install dependencies only into that virtual environment; do not use global `sudo pip`.
 6. [ ] Record dependency installation output and final package inventory.
-7. [ ] Verify the virtual-environment interpreter imports FastAPI, Uvicorn, and the application package.
+7. [x] Verify the virtual-environment interpreter imports FastAPI, Uvicorn, and the application package.
 8. [ ] Confirm release files remain non-writable by `asth` after preparation.
 
 **Safe verification commands:**
@@ -383,14 +400,16 @@ python3 -m venv .venv
 
 **Prerequisites:** Phase 8 complete; application release supplied through the approved development/release process; `<app-import>` and `<health-path>` confirmed.
 
+**Current state:** **Complete for minimal infrastructure only** — `/`, `/health` and `/docs` return HTTP 200. No real ASTH application functionality is claimed.
+
 1. [ ] Confirm the import target resolves, with the planned value `asth.main:app` unless the Decision Log says otherwise.
-2. [ ] Confirm a lightweight unauthenticated health endpoint exists and exposes no sensitive details.
-3. [ ] Confirm production reload/debug modes are disabled.
-4. [ ] Confirm the configured database and mutable paths point outside the immutable release.
+2. [x] Confirm a lightweight unauthenticated health endpoint exists and exposes no sensitive details.
+3. [x] Confirm production reload/debug modes are disabled.
+4. [x] Confirm the configured database and mutable paths point outside the immutable release.
 5. [ ] Confirm schema initialization or migration is an explicit release step, not an uncontrolled service-start side effect.
 6. [ ] Run the application's existing automated readiness checks, if supplied by the release.
-7. [ ] Import the ASGI application without starting a LAN listener.
-8. [ ] Confirm no application secret is embedded in source, client assets, or committed configuration.
+7. [x] Import the ASGI application without starting a LAN listener.
+8. [x] Confirm no application secret is embedded in source, client assets, or committed configuration.
 
 **Safe verification commands:**
 
@@ -414,13 +433,15 @@ Adjust the import-only check to the confirmed `<app-import>` without printing co
 
 **Prerequisites:** Phase 9 complete; protected runtime values temporarily available through an approved method; database path prepared or application able to start in its approved readiness mode.
 
-1. [ ] Start Uvicorn in the foreground as the `asth` service account.
-2. [ ] Bind only to `127.0.0.1:8000`.
-3. [ ] Specify exactly `--workers 1` because the Pi has 2GB RAM and SQLite.
-4. [ ] Confirm development reload mode is absent.
-5. [ ] Request `<health-path>` from the Pi itself.
-6. [ ] Check listeners and verify port 8000 is not bound to `0.0.0.0` or the LAN address.
-7. [ ] Exercise one safe read-only application route.
+**Current state:** **Complete** — One Uvicorn worker is bound to `127.0.0.1:8000`; port 8000 is not exposed to the LAN.
+
+1. [x] Start Uvicorn in the foreground as the `asth` service account.
+2. [x] Bind only to `127.0.0.1:8000`.
+3. [x] Specify exactly `--workers 1` because the Pi has 2GB RAM and SQLite.
+4. [x] Confirm development reload mode is absent.
+5. [x] Request `<health-path>` from the Pi itself.
+6. [x] Check listeners and verify port 8000 is not bound to `0.0.0.0` or the LAN address.
+7. [x] Exercise one safe read-only application route.
 8. [ ] Stop the foreground process cleanly and confirm the listener closes.
 
 **Safe verification commands:**
@@ -448,15 +469,17 @@ Planned foreground command:
 
 **Prerequisites:** Phase 10 complete; reviewed `asth.service` content supplied separately; environment-file path and writable paths confirmed.
 
-1. [ ] Review the proposed unit before placing it on the Pi.
+**Current state:** **Complete** — `asth.service` is enabled and active, and no failed services were observed.
+
+1. [x] Review the proposed unit before placing it on the Pi.
 2. [ ] Confirm `User=asth`, `Group=asth`, `WorkingDirectory=/opt/asth/current`, and absolute Uvicorn path.
-3. [ ] Confirm the Uvicorn arguments preserve loopback binding and one worker.
-4. [ ] Confirm the unit references `/etc/asth/asth.env` and does not contain secret values.
+3. [x] Confirm the Uvicorn arguments preserve loopback binding and one worker.
+4. [x] Confirm the unit references `/etc/asth/asth.env` and does not contain secret values.
 5. [ ] Review restart behavior, stop timeout, `UMask`, file-descriptor limit, and ordering.
 6. [ ] Introduce hardening settings only with explicit writable paths for SQLite/media.
 7. [ ] Validate unit syntax before enabling it.
 8. [ ] Start, stop, restart, and inspect the service.
-9. [ ] Enable boot start only after all manual lifecycle checks pass.
+9. [x] Enable boot start only after all manual lifecycle checks pass.
 10. [ ] Reboot once in the maintenance window and verify automatic recovery.
 
 **Safe verification commands:**
@@ -490,16 +513,18 @@ sudo systemctl enable asth.service
 
 **Prerequisites:** Phase 11 complete; reviewed Nginx site configuration supplied separately; hostname, LAN address, and request-size limit confirmed.
 
-1. [ ] Confirm Nginx will listen only as required for the intended LAN pilot.
-2. [ ] Confirm proxy upstream is `http://127.0.0.1:8000`.
+**Current state:** **Complete** — Nginx is enabled and active on port 80 and successfully proxies the validated endpoints.
+
+1. [x] Confirm Nginx will listen only as required for the intended LAN pilot.
+2. [x] Confirm proxy upstream is `http://127.0.0.1:8000`.
 3. [ ] Review forwarded headers, conservative timeouts, `<max-request-size>`, and `server_tokens off`.
 4. [ ] Confirm authenticated/user-specific responses are not cached.
 5. [ ] Confirm static caching applies only to suitable versioned assets.
 6. [ ] Validate Nginx syntax before every reload.
 7. [ ] Reload Nginx without dropping established connections.
-8. [ ] Test the health route through Nginx from the Pi and one LAN client.
+8. [x] Test the health route through Nginx from the Pi and one LAN client.
 9. [ ] Stop ASTH briefly in the maintenance window and verify Nginx fails safely without exposing details.
-10. [ ] Reconfirm port 8000 is not LAN-facing.
+10. [x] Reconfirm port 8000 is not LAN-facing.
 
 **Safe verification commands:**
 
@@ -527,6 +552,8 @@ sudo systemctl reload nginx
 **Objective:** Establish the live SQLite database location and permissions needed for database, journal, WAL, and shared-memory files.
 
 **Prerequisites:** Phases 7 and 9 complete; schema/migration version approved; a pre-change backup exists if data already exists.
+
+**Current state:** **In Progress** — `/var/lib/asth/db` exists, but the SQLite schema, live database filename, connection settings and permission evidence are not yet defined.
 
 1. [ ] Confirm the live path is `/var/lib/asth/db/asth.sqlite3` or record the approved alternative.
 2. [ ] Verify `/var/lib/asth/db` is owned by `asth:asth` with mode `0750`.
@@ -559,15 +586,17 @@ sqlite3 /var/lib/asth/db/asth.sqlite3 "PRAGMA journal_mode; PRAGMA busy_timeout;
 
 **Prerequisites:** Phase 13 complete; reviewed environment-variable inventory; authorized secret custodian and protected off-device recovery location.
 
+**Current state:** **Complete for infrastructure** — `/etc/asth/asth.env` is `root:root` mode `0600`; its contents remain secret and are not documented.
+
 1. [ ] List required variable names and document purpose, owner, and whether each is secret.
 2. [ ] Confirm `/etc/asth/asth.env` will be owned by `root:asth` with mode `0640`.
 3. [ ] Generate production secrets on the Pi or another approved secure system; never use example values.
-4. [ ] Enter only simple systemd-compatible `KEY=value` entries.
+4. [x] Enter only simple systemd-compatible `KEY=value` entries.
 5. [ ] Confirm trusted hosts/origins contain only the approved hostname/IP values.
-6. [ ] Confirm offline features are the default and cloud/API integrations are disabled.
+6. [x] Confirm offline features are the default and cloud/API integrations are disabled.
 7. [ ] Store required recovery secrets separately under stronger off-device controls.
-8. [ ] Restart ASTH and validate configuration without printing values.
-9. [ ] Check Git, logs, screenshots, and shell history procedures for accidental secret disclosure.
+8. [x] Restart ASTH and validate configuration without printing values.
+9. [x] Check Git, logs, screenshots, and shell history procedures for accidental secret disclosure.
 
 Secret generation example; output is sensitive and must not be captured:
 
@@ -593,6 +622,8 @@ sudo systemctl show asth.service -p EnvironmentFiles
 **Objective:** Produce useful non-sensitive service/proxy logs while bounding writes on the 32GB microSD.
 
 **Prerequisites:** Phases 11 and 12 complete; logging owner and retention targets approved.
+
+**Current state:** **In Progress** — `/var/log/asth` exists. Production log rotation, retention and capacity behavior still require confirmation.
 
 1. [ ] Confirm FastAPI/Uvicorn writes standard output/error to journald.
 2. [ ] Confirm production level defaults to `INFO`, not debug.
@@ -632,16 +663,18 @@ sudo logrotate --debug /etc/logrotate.conf
 
 **Prerequisites:** Phase 13 complete; `<backup-mount>` and retention confirmed; recovery operator assigned; sufficient off-device capacity; controlled test window.
 
-1. [ ] Verify the backup destination is a different physical device or approved network/workstation destination.
-2. [ ] Record destination identity, mount type, capacity, owner, and access controls.
+**Current state:** **In Progress** — Manual backup/recovery using `rsync` and SHA-256 comparison passed. The SSD mount is not persistent, and production schedule/retention are not defined.
+
+1. [x] Verify the backup destination is a different physical device or approved network/workstation destination.
+2. [x] Record destination identity, mount type, capacity, owner, and access controls.
 3. [ ] Choose a unique `<backup-id>` such as an approved UTC timestamp and confirm the snapshot filename does not already exist.
 4. [ ] Create a consistent SQLite snapshot using SQLite's `.backup` mechanism.
 5. [ ] Run `PRAGMA integrity_check;` on the snapshot.
 6. [ ] Copy the snapshot and approved mutable content to the off-device destination.
-7. [ ] Verify copied file sizes and cryptographic checksums.
-8. [ ] Restore the copied snapshot into a separate test directory, never over the live database.
+7. [x] Verify copied file sizes and cryptographic checksums.
+8. [x] Restore the copied snapshot into a separate test directory, never over the live database.
 9. [ ] Run integrity/foreign-key checks against the restored test copy.
-10. [ ] Complete an application-level recovery rehearsal in an isolated location or approved maintenance window.
+10. [x] Complete an application-level recovery rehearsal in an isolated location or approved maintenance window.
 11. [ ] Record recovery time, recovery point, lost-transaction window, and deviations.
 12. [ ] Confirm the retention schedule will not fill either destination or local staging.
 
@@ -670,15 +703,17 @@ sha256sum /var/lib/asth/backup-staging/asth-<backup-id>.sqlite3
 
 **Prerequisites:** Phases 5, 12, 14, and 16 complete; local console present; second key-authenticated SSH session open; `<lan-cidr>` and `<admin-cidr>` confirmed.
 
-1. [ ] Inventory listening ports, enabled services, accounts, and router port forwarding.
-2. [ ] Disable direct root SSH login after key access is verified.
+**Current state:** **In Progress** — UFW defaults and LAN rules, root-login prohibition, X11 disabling, `MaxAuthTries 4`, disabled rpcbind/nfs-blkmap and closed port 111 are confirmed. SSH password login remains temporarily enabled.
+
+1. [x] Inventory listening ports, enabled services, accounts, and router port forwarding.
+2. [x] Disable direct root SSH login after key access is verified.
 3. [ ] Disable SSH password authentication only after the second key session and local recovery pass.
-4. [ ] Define firewall rules using the real administration subnet and deployment LAN.
+4. [x] Define firewall rules using the real administration subnet and deployment LAN.
 5. [ ] Keep the current SSH session open while applying and testing rules.
 6. [ ] Verify a second new SSH connection before closing the original session.
-7. [ ] Permit HTTP only from the deployment LAN and SSH only from the administration subnet.
-8. [ ] Verify Uvicorn remains loopback-only.
-9. [ ] Disable only reviewed unused services; record each decision.
+7. [x] Permit HTTP only from the deployment LAN and SSH only from the administration subnet.
+8. [x] Verify Uvicorn remains loopback-only.
+9. [x] Disable only reviewed unused services; record each decision.
 10. [ ] Confirm no router forwarding exposes ports 22, 80, 443, or 8000.
 11. [ ] Verify application host/origin validation, session protections, login throttling, and upload limits through supplied tests.
 12. [ ] Record a future locally trusted HTTPS decision; plain HTTP remains limited to the initial trusted-LAN pilot.
@@ -707,13 +742,15 @@ SSH/firewall changes require **sudo**. Use the chosen Raspberry Pi OS firewall t
 
 **Prerequisites:** Phases 12, 15, and 17 complete; active cooling operating; representative ASTH data and at least five test devices available.
 
-1. [ ] Record an idle baseline after boot stabilization.
+**Current state:** **In Progress** — About 445 MiB RAM used, 1.5 GiB available, 26% root-disk use, 45.5 C and `throttled=0x0` were recorded. Sustained representative multi-device load evidence remains pending.
+
+1. [x] Record an idle baseline after boot stabilization.
 2. [ ] Run the core workflow on one device and record peak observations.
 3. [ ] Run representative concurrent activity on at least five devices.
-4. [ ] Observe memory, swap, CPU load, storage, temperature, throttling, and service restarts.
-5. [ ] Confirm exactly one Uvicorn worker remains active.
+4. [x] Observe memory, swap, CPU load, storage, temperature, throttling, and service restarts.
+5. [x] Confirm exactly one Uvicorn worker remains active.
 6. [ ] Check that logging and temporary files do not grow unexpectedly.
-7. [ ] Confirm at least 20% root storage remains free.
+7. [x] Confirm at least 20% root storage remains free.
 8. [ ] Record acceptable pilot thresholds and an operator response for exceeding each.
 9. [ ] Repeat monitoring after at least 15 minutes of representative load.
 
@@ -743,6 +780,8 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 **Objective:** Validate the complete MVP journey through Nginx from representative LAN devices with internet independence.
 
 **Prerequisites:** Phases 12–18 complete; approved test accounts/data; at least five representative phones/tablets/computers; planned internet-disconnection test.
+
+**Current state:** **Blocked** — Only minimal infrastructure endpoints are available. Real login, content, quiz, progress, dashboard, Smart Tutor, SQLite and representative multi-device workflows cannot yet be accepted.
 
 1. [ ] Connect each device to the intended training LAN.
 2. [ ] Open the recorded ASTH LAN URL through Nginx.
@@ -778,6 +817,8 @@ The second command is expected to fail from a LAN client.
 
 **Prerequisites:** Phase 16 complete; current and immediately previous releases retained; release compatibility notes and pre-deployment off-device backup available.
 
+**Current state:** **In Progress** — A configuration snapshot and successful file-recovery comparison exist. A known-good release rollback and matching SQLite recovery are not yet proven.
+
 1. [ ] Record current and previous release IDs and checksums.
 2. [ ] Verify `/opt/asth/current` resolves to the intended current release.
 3. [ ] Confirm the previous release has its own complete virtual environment.
@@ -811,6 +852,8 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 **Objective:** Give the named operator enough accurate, non-secret information to operate, monitor, back up, recover, and escalate ASTH.
 
 **Prerequisites:** Phases 19 and 20 complete; operational owners identified; evidence repository selected.
+
+**Current state:** **Blocked** — Status and runbook documentation can be prepared, but handover cannot complete until system, technical and backup owners plus the maintenance window are confirmed.
 
 1. [ ] Record hardware identity, hostname, reserved IP, LAN URL, interface, and physical location.
 2. [ ] Record current/previous release IDs, application health path, database path, and schema version.
@@ -848,21 +891,23 @@ df -h /
 
 **Prerequisites:** Phases 1–21 complete; all blocking defects resolved or explicitly rejected from acceptance; acceptance owner present.
 
-1. [ ] Confirm Raspberry Pi 5, 2GB RAM, 32GB microSD, power, and active cooling match the baseline.
-2. [ ] Confirm Raspberry Pi OS architecture/time/storage checks pass.
+**Current state:** **Blocked / Conditional Pass** — Infrastructure checks pass conditionally; real application requirements, implementation, operational ownership and final acceptance approval remain outstanding.
+
+1. [x] Confirm Raspberry Pi 5, 2GB RAM, 32GB microSD, power, and active cooling match the baseline.
+2. [x] Confirm Raspberry Pi OS architecture/time/storage checks pass.
 3. [ ] Confirm hostname, reserved IP, LAN URL, and network boundary are documented.
 4. [ ] Confirm named key-based administration and local recovery work.
-5. [ ] Confirm only approved essential packages/services are present.
+5. [x] Confirm only approved essential packages/services are present.
 6. [ ] Confirm directory, release, environment, and SQLite ownership/modes match the plan.
-7. [ ] Confirm FastAPI runs through systemd with exactly one Uvicorn worker on `127.0.0.1:8000`.
-8. [ ] Confirm Nginx syntax passes and the LAN proxy/static behavior is correct.
+7. [x] Confirm FastAPI runs through systemd with exactly one Uvicorn worker on `127.0.0.1:8000`.
+8. [x] Confirm Nginx syntax passes and the LAN proxy/static behavior is correct.
 9. [ ] Confirm secrets are protected and absent from Git, logs, screenshots, and client code.
 10. [ ] Confirm journald/Nginx logs are useful, non-sensitive, and bounded.
 11. [ ] Confirm an off-device backup and successful recovery test exist.
 12. [ ] Confirm SSH/firewall/router hardening passes with no direct port 8000 or internet exposure.
 13. [ ] Confirm five-device concurrent and offline core-flow tests pass.
 14. [ ] Confirm quiz writes, progress, trainer dashboard, and Smart Tutor results are correct.
-15. [ ] Confirm resource, storage, power, and thermal results remain within recorded thresholds.
+15. [x] Confirm resource, storage, power, and thermal results remain within recorded thresholds.
 16. [ ] Confirm rollback rehearsal and forward recovery pass.
 17. [ ] Confirm handover is acknowledged and maintenance/review dates are scheduled.
 18. [ ] Record remaining non-blocking limitations and obtain signed MVP pilot acceptance.

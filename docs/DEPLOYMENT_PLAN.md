@@ -1,6 +1,24 @@
 # ASTH Lightweight MVP Raspberry Pi Deployment Plan
 
-> **Status:** Initial planning document. The commands and configuration choices below are proposed for the implementation phase; they have not been run by creating this document.
+> **Status:** Planning reference with an implemented infrastructure snapshot dated 25 July 2026. The plan remains the design reference; actual status and follow-up work are tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
+
+## Implemented State — 25 July 2026
+
+The lightweight infrastructure MVP is implemented on `asth-pi` with a **Conditional Pass**. This section records the current boundary without replacing the detailed checklist or operations runbook.
+
+- Raspberry Pi 5 Model B Rev 1.1, 2GB RAM, 32GB microSD, active cooling.
+- Debian GNU/Linux 13 (Trixie), arm64/aarch64, kernel `6.18.34+rpt-rpi-2712`.
+- Ethernet LAN address `192.168.100.187/24`, gateway `192.168.100.1`; Wi-Fi inactive.
+- LAN request path: `client → Nginx :80 → Uvicorn 127.0.0.1:8000`.
+- FastAPI `0.140.0` on Python `3.13.5`, served by Uvicorn `0.51.0` with one worker.
+- `asth.service`, Nginx and SSH are enabled and active; no failed services were observed.
+- UFW defaults to incoming deny/outgoing allow. Ports 22 and 80 are limited to `192.168.100.0/24`; port 8000 and rpcbind port 111 are not LAN-exposed.
+- SSH prohibits root login, disables X11 forwarding and limits authentication attempts to four. Password authentication remains temporarily enabled until key-based access is established and tested.
+- The minimal infrastructure endpoints `/`, `/health` and `/docs` return HTTP 200. This does not prove real ASTH participant, trainer, quiz, dashboard, Smart Tutor or SQLite application behavior.
+- A manual backup/recovery test passed using `rsync` and SHA-256 comparison against `/media/asthadmin/ROG/ASTH_BACKUP`.
+- The external approximately 512GB NTFS SSD is desktop-automounted at `/media/asthadmin/ROG`; its mount is not persistent, so backup automation is not production-ready.
+
+The Conditional Pass applies only to the infrastructure MVP. Fixed addressing, persistent SSD mounting, SSH-key cutover, production backup scheduling/retention, operational ownership and the real application MVP remain outstanding.
 
 ## 1. Deployment Objectives
 
