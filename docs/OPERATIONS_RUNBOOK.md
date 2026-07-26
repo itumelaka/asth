@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Operations Runbook
 
-This runbook covers the validated lightweight infrastructure on `asth-pi` as of 25 July 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
+This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v0.4.0 application as of 26 July 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
 
 ## Safety rules
 
@@ -31,6 +31,10 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 | Administrator | `asthadmin` |
 | Application service | `asth.service` |
 | Application root | `/opt/asth` |
+| Deployed application file | `/opt/asth/app/main.py` |
+| Static logo assets | `/var/www/asth-hub/assets/` |
+| Deployed application version | `v0.4.0` |
+| Application routes | `/`, `/learn/`, `/health`, `/api/hub-status` |
 | Data directory | `/var/lib/asth` |
 | SQLite directory | `/var/lib/asth/db` |
 | Application logs | `/var/log/asth` and service journal |
@@ -38,11 +42,50 @@ This runbook covers the validated lightweight infrastructure on `asth-pi` as of 
 | Persistent SSD mount | `/mnt/rog` (`/dev/sda2`, UUID `8E5AAE985AAE7C99`, `ntfs3`) |
 | Existing backup directory | `/mnt/rog/ASTH_BACKUP` |
 | Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` |
+| Backend file backup | `/opt/asth/app/main.py.backup-20260726` |
+| Previous 3D Clay UI backup | `/opt/asth/app/main.py.backup-clay-service-hub-20260726` |
 | ASTH storage namespace | `/mnt/rog/ASTH` |
 | Samba service | `smbd`; authenticated shares; SMB1 disabled |
 | Cockpit URLs | `https://192.168.100.187:9090`; `https://10.42.0.1:9090` |
 
 The Ethernet IP may change until a DHCP reservation or another fixed-IP method is approved. The portable hotspot gateway remains `10.42.0.1` under the verified shared-mode connection.
+
+## Deployed application checks
+
+The deployed source of record on the Pi is currently `/opt/asth/app/main.py`. The repository does not yet contain the confirmed v0.4.0 source, so do not use a repository file to overwrite the Pi until a controlled source synchronisation and comparison is completed.
+
+Read-only syntax validation:
+
+```bash
+python3 -m py_compile /opt/asth/app/main.py
+```
+
+The command passed on 26 July 2026. It creates or refreshes Python bytecode cache metadata but does not restart the service.
+
+Restart only after syntax validation and an approved change — **sudo required; brief interruption**:
+
+```bash
+sudo systemctl restart asth
+```
+
+After restart, verify:
+
+```bash
+systemctl is-active asth
+curl --fail --silent --show-error http://127.0.0.1/health
+curl --fail --silent --show-error http://127.0.0.1/api/hub-status
+```
+
+Open `/` in a browser for visual validation. Confirm the logos, hub state, device count, transfer rates and totals, uptime, Wi-Fi information, graph and service links. Open `/learn/` separately and confirm it has no network graph. Do not treat placeholder learning sections as completed content.
+
+The local application backups are on the microSD filesystem. Before any source replacement, verify their metadata without displaying or modifying their contents:
+
+```bash
+stat /opt/asth/app/main.py.backup-20260726
+stat /opt/asth/app/main.py.backup-clay-service-hub-20260726
+```
+
+These same-device copies do not replace an off-device backup or restore test.
 
 ## Portable hotspot operation
 
@@ -52,11 +95,7 @@ The Ethernet IP may change until a DHCP reservation or another fixed-IP method i
 2. On the phone, tablet or laptop, connect to Wi-Fi network `ASTH-PORTABLE` using the hotspot credential provided separately by the authorized operator.
 3. Open `http://10.42.0.1` in a browser.
 
-Expected response from the current minimal root endpoint:
-
-```json
-{"service":"ASTH Lightweight MVP","status":"running"}
-```
+Expected result: the ASTH v0.4.0 landing page loads with DVS/ASTH logos, hub state, connected-device count, transfer statistics, uptime, Wi-Fi information, a real-time network graph and links to Learning Hub, Uptime Kuma and Cockpit.
 
 Choose the operating mode before the session:
 
@@ -97,6 +136,7 @@ Verify local web access from the Pi:
 
 ```bash
 curl --fail --silent --show-error http://10.42.0.1
+curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 ```
 
 Verify from a connected client by opening `http://10.42.0.1`. DHCP was validated with one phone and one laptop.
@@ -154,6 +194,7 @@ If clients connect but the page does not load:
 systemctl is-active asth.service nginx
 curl --fail --silent --show-error http://127.0.0.1/health
 curl --fail --silent --show-error http://10.42.0.1
+curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 sudo nginx -t
 sudo ufw status verbose
 ```
@@ -234,6 +275,7 @@ Expected during the verified test: successful replies and 0% packet loss. Failur
 
 ```bash
 curl --fail --silent --show-error http://10.42.0.1
+curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 ```
 
 From a client connected to `ASTH-PORTABLE`:
@@ -242,11 +284,7 @@ From a client connected to `ASTH-PORTABLE`:
 ssh asthadmin@10.42.0.1
 ```
 
-Expected root response:
-
-```json
-{"service":"ASTH Lightweight MVP","status":"running"}
-```
+Expected result: the ASTH v0.4.0 landing page loads. Verify live data separately through `/api/hub-status` and confirm `/learn/` opens without a network graph.
 
 SSH is allowed only from `10.42.0.0/24` to TCP port 22 on `wlan0`. It is not a general internet-facing SSH rule.
 
@@ -494,7 +532,8 @@ From the Pi through Nginx:
 ```bash
 curl --fail --silent --show-error http://127.0.0.1/health
 curl --fail --silent --show-error http://127.0.0.1/
-curl --fail --silent --show-error http://127.0.0.1/docs
+curl --fail --silent --show-error http://127.0.0.1/learn/
+curl --fail --silent --show-error http://127.0.0.1/api/hub-status
 ```
 
 From an approved LAN client:
@@ -503,7 +542,7 @@ From an approved LAN client:
 curl --fail --silent --show-error http://192.168.100.187/health
 ```
 
-Expected result: HTTP success for `/`, `/health` and `/docs` through Nginx. These checks prove minimal infrastructure availability only.
+Expected result: HTTP success for `/`, `/learn/`, `/health` and `/api/hub-status` through the deployed client-facing service. These checks prove route availability. They do not prove populated learning content, final LCD kiosk operation, NVMe migration or complete MVP acceptance.
 
 Confirm Uvicorn is not LAN-facing:
 
@@ -642,7 +681,7 @@ systemctl show asth.service -p MainPID -p NRestarts -p MemoryCurrent -p CPUUsage
 pgrep -a -f uvicorn
 ```
 
-Expected Uvicorn state: one worker process for the 2GB MVP.
+Record the current application process count and compare it with the installed service definition; do not infer completion from RAM capacity alone.
 
 ## Temperature and throttling
 
@@ -666,7 +705,7 @@ du -sh /opt/asth /var/lib/asth /var/log/asth
 journalctl --disk-usage
 ```
 
-Validated baseline: approximately 445 MiB RAM used, 1.5 GiB available and 26% root-disk use. Investigate sustained swap use, rapid log/data growth or root-disk use approaching 80%.
+The current confirmed hardware has 32 GB RAM and a 32 GB microSD system disk. Record fresh values after final casing, NVMe and LCD assembly; investigate sustained swap use, rapid log/data growth or root-disk use approaching 80%.
 
 ## External SSD verification
 
@@ -777,11 +816,13 @@ curl --fail --silent --show-error http://127.0.0.1/health
 nmcli connection show --active
 ip -brief address show wlan0
 curl --fail --silent --show-error http://10.42.0.1
+curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 vcgencmd measure_temp
 vcgencmd get_throttled
 ```
 
-Expected after reboot: `/mnt/rog` mounted, `mnt-rog.mount`, `smbd`, `cockpit.socket` and `asth.service` active, all Samba shares listed, TCP 9090 listening, and `curl http://10.42.0.1` returning `{"service":"ASTH Lightweight MVP","status":"running"}`. Stop storage and NAS work if any mount check fails.
+Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. Stop storage or NAS work if any required mount check fails.
+
 ## Basic rollback guidance
 
 Rollback is not yet production-proven because a current/previous release layout, release identifiers, SQLite schema and schema compatibility record have not been confirmed.

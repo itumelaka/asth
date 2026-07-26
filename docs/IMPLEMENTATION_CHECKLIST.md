@@ -1,10 +1,10 @@
 # ASTH Raspberry Pi 5 MVP Implementation Checklist
 
-This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the infrastructure snapshot validated on **25 July 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work or blocked. The overall infrastructure result is **Conditional Pass**, not production or application-MVP acceptance.
+This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **26 July 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work or blocked. The operational hub and v0.4.0 landing page are **CONFIRMED**, while learning content, final hardware, kiosk, migration, backup/recovery and MVP acceptance remain incomplete.
 
 ## Scope and operating rules
 
-- Target hardware: Raspberry Pi 5 with 2GB LPDDR4X RAM and 32GB microSD storage.
+- Confirmed current hardware: Raspberry Pi 5 with 32 GB RAM, booting Raspberry Pi OS from 32 GB microSD storage.
 - Target operating system: Raspberry Pi OS, preferably 64-bit.
 - Deployment boundary: trusted office LAN, offline portable hotspot, or online portable mode through the controlled `PHONE-UPLINK`; do not expose ASTH or SSH to the upstream internet.
 - Runtime: Nginx reverse proxy to FastAPI served by **one** Uvicorn worker bound to `127.0.0.1:8000`.
@@ -28,9 +28,9 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Decision | Confirmed value or current state | Status | Date | Follow-up |
 |---|---|---|---|---|
 | Named administrator account | `asthadmin` | Confirmed | 25 July 2026 | Establish tested SSH key access before password-login removal. |
-| ASTH service account | Service runs as `asth.service`; runtime account not recorded | Pending confirmation | 25 July 2026 | Verify `User` and `Group` from the installed unit. |
+| ASTH application service | `asth`; runtime account not recorded | Partially confirmed | 26 July 2026 | Restart succeeded; verify installed unit metadata separately. |
 | Pi hostname | `asth-pi` | Confirmed | 25 July 2026 | None. |
-| Current LAN address | `192.168.100.187/24` | Confirmed current value | 25 July 2026 | Create DHCP reservation or another approved fixed-IP method. |
+| Current LAN address | `192.168.100.187` observed | Confirmed current value | 26 July 2026 | Do not treat as permanent until reservation/fixed addressing is confirmed. |
 | Gateway | `192.168.100.1` | Confirmed | 25 July 2026 | None. |
 | LAN and SSH administration subnet | `192.168.100.0/24` | Confirmed | 25 July 2026 | Revalidate if the deployment network changes. |
 | Primary network paths | Ethernet active and built-in `wlan0` hotspot active simultaneously | Confirmed | 25 July 2026 | Ethernet fixed-IP method remains pending. |
@@ -41,11 +41,11 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Portable SSH boundary | `10.42.0.0/24` to TCP port 22 on `wlan0` | Confirmed | 25 July 2026 | `ssh asthadmin@10.42.0.1` verified. |
 | Router or DHCP owner | Not assigned | Pending decision | 25 July 2026 | Confirm network owner. |
 | Time zone | `Asia/Kuala_Lumpur` | Confirmed | 25 July 2026 | None. |
-| Release identifier and rollback release | Not recorded | Pending decision | 25 July 2026 | Define release identification and previous-known-good retention. |
+| Application version and repository state | v0.4.0 deployed; repository not synchronised | Partial | 26 July 2026 | Compare and commit the deployed source later. |
 | ASTH LAN URL | `http://192.168.100.187/` while the current lease remains valid | Conditional | 25 July 2026 | Update after fixed addressing and hostname resolution are approved. |
-| Health endpoint | `/health` | Confirmed | 25 July 2026 | Keep response non-sensitive. |
-| Minimal endpoints | `/`, `/health`, `/docs` | Confirmed | 25 July 2026 | These are infrastructure endpoints, not the real application MVP. |
-| Application import target | Not recorded | Pending confirmation | 25 July 2026 | Confirm from the installed unit or release documentation. |
+| Health and live status | `/health`; `/api/hub-status` | Confirmed | 26 July 2026 | Treat live status as an operational dependency. |
+| Deployed routes | `/`, `/learn/`, `/health`, `/api/hub-status` | Confirmed | 26 July 2026 | `/` is the hub page; `/learn/` remains a placeholder Learning Hub. |
+| Deployed application source | `/opt/asth/app/main.py`, v0.4.0 | Confirmed on Pi | 26 July 2026 | Commit/synchronise this source into the repository later. |
 | SQLite location | Directory `/var/lib/asth/db`; schema and live filename not defined | Partially confirmed | 25 July 2026 | Design schema and record the production database filename. |
 | Maximum request body | Not defined | Pending decision | 25 July 2026 | Set from real application requirements. |
 | Environment file | `/etc/asth/asth.env`, `root:root`, mode `0600` | Confirmed | 25 July 2026 | Never expose its contents. |
@@ -64,23 +64,23 @@ Do not record passwords, private keys, tokens or secret values in this table.
 
 ## Implementation Progress
 
-Status as of **25 July 2026**:
+Status as of **26 July 2026**:
 
 | Not Started | In Progress | Blocked | Complete |
 |---:|---:|---:|---:|
-| 0 | 12 | 3 | 7 |
+| 0 | 14 | 1 | 7 |
 
 | Phase | Implementation phase | State | Evidence or reason |
 |---:|---|---|---|
 | 1 | Pre-deployment verification | In Progress | Technical/operational owners and maintenance window remain unconfirmed. |
-| 2 | Raspberry Pi physical and thermal checks | In Progress | Cooling/thermal evidence passes; power-supply and full physical-inspection evidence were not supplied. |
+| 2 | Raspberry Pi physical and thermal checks | In Progress | Casing, NVMe and LCD are pending; repeat power/cooling/thermal checks after final assembly. |
 | 3 | Raspberry Pi OS and architecture verification | Complete | Debian 13, arm64/aarch64, kernel and time zone recorded. |
 | 4 | Hostname and network configuration | In Progress | Portable offline/online router modes are complete; Ethernet fixed-IP method remains pending. |
 | 5 | User account and SSH preparation | In Progress | `asthadmin`, SSH and public-key support exist; key login is not yet established and password login remains enabled. |
 | 6 | System update and essential package preparation | Complete | Validated runtime stack and no failed services. |
 | 7 | ASTH directories and ownership | In Progress | Required paths exist; full ownership/mode inventory was not supplied. |
 | 8 | Python virtual environment preparation | In Progress | Runtime versions work; virtual-environment path, pinned dependency inventory and `pip check` evidence were not supplied. |
-| 9 | Minimal FastAPI application readiness | Complete | `/`, `/health` and `/docs` return HTTP 200; real ASTH features remain outside this result. |
+| 9 | FastAPI v0.4.0 application readiness | Complete | Syntax check, service restart and visual landing-page validation passed; `/learn/` content remains partial. |
 | 10 | Uvicorn local service validation | Complete | One worker bound only to `127.0.0.1:8000`. |
 | 11 | systemd service preparation | Complete | `asth.service` enabled and active. |
 | 12 | Nginx reverse proxy preparation | Complete | Nginx enabled/active on port 80; port 8000 not LAN-exposed. |
@@ -90,10 +90,26 @@ Status as of **25 July 2026**:
 | 16 | Backup destination and recovery test | In Progress | Persistent mount plus manual `rsync` and SHA-256 recovery passed; schedule, retention and SQLite integrity evidence remain pending. |
 | 17 | Basic security hardening | In Progress | UFW/SSH/rpcbind controls pass; SSH key cutover remains pending. |
 | 18 | Resource and thermal monitoring | In Progress | Baseline resource/thermal values pass; representative sustained multi-device load evidence remains pending. |
-| 19 | End-to-end local-network validation | Blocked | Minimal endpoints pass; real participant/trainer/application workflows are not implemented. |
+| 19 | End-to-end local-network validation | In Progress | Landing page and live status are confirmed; populated learning and participant/trainer workflows remain pending. |
 | 20 | Rollback readiness | In Progress | Configuration snapshot and recovery evidence exist; release/database rollback is not yet proven. |
-| 21 | Documentation and handover | Blocked | Runbook/status documents are being created; owners and maintenance window are unconfirmed. |
-| 22 | Final MVP acceptance checklist | Blocked | Infrastructure has Conditional Pass only; application MVP and approver are outstanding. |
+| 21 | Documentation and handover | In Progress | Deployment documents are updated; owners, maintenance window and final handover remain unconfirmed. |
+| 22 | Final MVP acceptance checklist | Blocked | Operational hub is confirmed, but final hardware, content, recovery, source sync and acceptance remain outstanding. |
+
+### Confirmed v0.4.0 hub deployment
+
+- [x] Raspberry Pi 5 with 32 GB RAM boots and runs from the 32 GB microSD card.
+- [x] ASTH portable network is operational; `192.168.100.187` is the current observed Pi address.
+- [x] `/opt/asth/app/main.py` passed `python3 -m py_compile`.
+- [x] `sudo systemctl restart asth` completed successfully.
+- [x] The live `/` landing page was visually confirmed with DVS/ASTH logos, live metrics, graph and supporting-service links.
+- [x] `/learn/` exists separately without a network graph and contains placeholder learning sections.
+- [x] `/health` remains available and `/api/hub-status` is an operational live-data dependency.
+- [x] Uptime Kuma and Cockpit are available as separately linked services.
+- [x] Local application backups exist at `/opt/asth/app/main.py.backup-20260726` and `/opt/asth/app/main.py.backup-clay-service-hub-20260726`.
+- [ ] Receive and install the casing, NVMe base/HAT and SSD, LCD and suitable display cable.
+- [ ] Validate final power, cooling, temperature, NVMe, kiosk startup, backup and recovery.
+- [ ] Populate Learning Hub content and move large content to NVMe when available.
+- [ ] Synchronise and commit the deployed v0.4.0 source into this repository later.
 
 ### Completed storage and administration deployments
 
@@ -114,7 +130,7 @@ Status as of **25 July 2026**:
 **Current state:** **In Progress** — Hardware, host, network, services and backup locations are recorded. System/technical/backup owners, maintenance window and acceptance approver remain unconfirmed.
 
 1. [x] Read `docs/DEPLOYMENT_PLAN.md` and record its verified Git reference: `77b81bb6b1d57cac0902162cd449b9c7ce37f4d7 | 2026-07-25 | docs: record Raspberry Pi infrastructure deployment status`.
-2. [x] Confirm the Pi is the 2GB model and the microSD is 32GB.
+2. [x] Confirm the Pi has 32 GB RAM and the current microSD system storage is 32 GB.
 3. [x] Confirm the deployment remains LAN-only and Docker remains deferred.
 4. [ ] Assign the technical lead, network owner, recovery operator, and acceptance approver.
 5. [ ] Confirm a keyboard/display, serial console, or equivalent local recovery route is available.
@@ -145,7 +161,7 @@ df -h /
 
 **Prerequisites:** Phase 1 complete; Pi safely shut down before fitting or reseating hardware.
 
-**Current state:** **In Progress** — Active cooling is installed; measured temperature was approximately 45.5 C and `throttled=0x0`. Power-supply rating and full physical-inspection evidence were not supplied.
+**Current state:** **In Progress** — Earlier cooling/thermal evidence exists, but casing, NVMe and LCD are pending. Power, cooling and temperature must be revalidated after final assembly.
 
 1. [ ] Verify a suitable USB-C power supply is identified; prefer a quality 5V/5A supply.
 2. [ ] Inspect the microSD seating, case ventilation, cables, and strain relief.
@@ -228,7 +244,7 @@ swapon --show
 7. [x] Restrict SSH on `wlan0` to source subnet `10.42.0.0/24` and TCP port 22; verify `ssh asthadmin@10.42.0.1`.
 8. [x] Confirm Ethernet and the portable hotspot operate simultaneously.
 9. [x] Confirm `ASTH-PORTABLE` returns automatically after a full Raspberry Pi reboot.
-10. [x] Record the verified root response: `{"service":"ASTH Lightweight MVP","status":"running"}`.
+10. [x] Confirm the v0.4.0 landing page loads and displays the verified live hub interface.
 11. [x] Verify online portable mode through `PHONE-UPLINK` on `wlan1`, including forwarded internet with Ethernet removed.
 
 **Portable operating steps:**
@@ -368,7 +384,7 @@ sudo apt upgrade
 sudo apt install python3 python3-venv python3-pip nginx sqlite3
 ```
 
-**Expected result:** The OS is patched, required commands are available, and no unapproved service increases the 2GB RAM footprint.
+**Expected result:** The OS is patched, required commands are available, and no unapproved service increases the 32 GB RAM footprint.
 
 **Stop condition:** Stop on package errors, dependency conflicts, insufficient storage, failed reboot, lost network access, new power/thermal warnings, or an unapproved package/service requirement.
 
@@ -459,38 +475,42 @@ python3 -m venv .venv
 
 **Evidence to record:** Release ID/commit, Python/pip versions, requirements checksum, installation transcript, `pip check`, package inventory, and disk usage.
 
-## Phase 9 — Minimal FastAPI application readiness
+## Phase 9 — FastAPI v0.4.0 application readiness
 
-**Objective:** Verify the supplied application release meets the minimum production interface without creating application source code on the Pi.
+**Objective:** Verify the actual deployed application without claiming repository synchronisation or completed learning content.
 
-**Prerequisites:** Phase 8 complete; application release supplied through the approved development/release process; `<app-import>` and `<health-path>` confirmed.
+**Prerequisites:** Administrative access to the Pi and a maintenance window for restart actions.
 
-**Current state:** **Complete for minimal infrastructure only** — `/`, `/health` and `/docs` return HTTP 200. No real ASTH application functionality is claimed.
+**Current state:** **Complete for the deployed hub shell** — `/opt/asth/app/main.py` passed syntax validation, `asth` restarted successfully and the landing page was visually confirmed. `/learn/` remains a placeholder Learning Hub.
 
-1. [ ] Confirm the import target resolves, with the planned value `asth.main:app` unless the Decision Log says otherwise.
-2. [x] Confirm a lightweight unauthenticated health endpoint exists and exposes no sensitive details.
-3. [x] Confirm production reload/debug modes are disabled.
-4. [x] Confirm the configured database and mutable paths point outside the immutable release.
-5. [ ] Confirm schema initialization or migration is an explicit release step, not an uncontrolled service-start side effect.
-6. [ ] Run the application's existing automated readiness checks, if supplied by the release.
-7. [x] Import the ASGI application without starting a LAN listener.
-8. [x] Confirm no application secret is embedded in source, client assets, or committed configuration.
+1. [x] Confirm the deployed version shown by the FastAPI application is v0.4.0.
+2. [x] Confirm the main deployed file is `/opt/asth/app/main.py`.
+3. [x] Confirm DVS and ASTH logo assets are under `/var/www/asth-hub/assets/`.
+4. [x] Run `python3 -m py_compile /opt/asth/app/main.py` successfully.
+5. [x] Restart with `sudo systemctl restart asth` successfully.
+6. [x] Visually confirm `/` with hub status, device count, current rates, totals, uptime, Wi-Fi information, graph and service links.
+7. [x] Confirm `/learn/` is separate, has no network graph and contains the three placeholder sections.
+8. [x] Confirm `/health` remains available and `/api/hub-status` supplies live status data.
+9. [ ] Populate approved Learning Hub modules, PDFs, videos and interactive content.
+10. [ ] Compare and commit the deployed v0.4.0 source into this repository later.
 
-**Safe verification commands:**
+**Safe validation command:**
 
 ```bash
-cd /opt/asth/releases/<release-id>
-.venv/bin/python -c "from asth.main import app; print(type(app).__name__)"
-.venv/bin/python -m pip check
+python3 -m py_compile /opt/asth/app/main.py
 ```
 
-Adjust the import-only check to the confirmed `<app-import>` without printing configuration values.
+Restart — **sudo required; brief interruption**:
 
-**Expected result:** The application imports successfully, has a non-sensitive health endpoint, uses external mutable paths, and is production-ready for local foreground testing.
+```bash
+sudo systemctl restart asth
+```
 
-**Stop condition:** Stop if imports fail, the health endpoint is missing/sensitive, reload/debug is enabled, migrations are uncontrolled, mutable data targets the release tree, or secrets are found in source.
+**Expected result:** Syntax validation and restart pass, operational routes recover and the live page matches the confirmed architecture.
 
-**Evidence to record:** Release ID, import-test output, automated test summary, confirmed health path, migration/schema version, and secret-scan result without secret contents.
+**Stop condition:** Stop if syntax validation fails, the service does not recover, `/api/hub-status` fails or the page no longer matches the confirmed layout. Do not overwrite the Pi from this repository because v0.4.0 is not yet synchronised here.
+
+**Evidence to record:** Version, file paths, command result, service result, route checks and non-sensitive visual evidence.
 
 ## Phase 10 — Uvicorn local service validation
 
@@ -502,7 +522,7 @@ Adjust the import-only check to the confirmed `<app-import>` without printing co
 
 1. [x] Start Uvicorn in the foreground as the `asth` service account.
 2. [x] Bind only to `127.0.0.1:8000`.
-3. [x] Specify exactly `--workers 1` because the Pi has 2GB RAM and SQLite.
+3. [x] Retain the previously validated single-worker process model until representative testing justifies a controlled change.
 4. [x] Confirm development reload mode is absent.
 5. [x] Request `<health-path>` from the Pi itself.
 6. [x] Check listeners and verify port 8000 is not bound to `0.0.0.0` or the LAN address.
@@ -691,7 +711,7 @@ sudo systemctl show asth.service -p EnvironmentFiles
 
 ## Phase 15 — Logging and log rotation
 
-**Objective:** Produce useful non-sensitive service/proxy logs while bounding writes on the 32GB microSD.
+**Objective:** Produce useful non-sensitive service/proxy logs while bounding writes on the current 32 GB microSD.
 
 **Prerequisites:** Phases 11 and 12 complete; logging owner and retention targets approved.
 
@@ -824,11 +844,11 @@ SSH/firewall changes require **sudo**. Use the chosen Raspberry Pi OS firewall t
 
 ## Phase 18 — Resource and thermal monitoring
 
-**Objective:** Establish measured operating limits for CPU, RAM, swap, disk, temperature, and throttling on the real 2GB Pi.
+**Objective:** Establish measured operating limits for CPU, RAM, swap, disk, temperature and throttling on the current Pi and repeat them after final assembly.
 
 **Prerequisites:** Phases 12, 15, and 17 complete; active cooling operating; representative ASTH data and at least five test devices available.
 
-**Current state:** **In Progress** — About 445 MiB RAM used, 1.5 GiB available, 26% root-disk use, 45.5 C and `throttled=0x0` were recorded. Sustained representative multi-device load evidence remains pending.
+**Current state:** **In Progress** — About 445 MiB RAM used, available memory must be remeasured, 26% root-disk use, 45.5 C and `throttled=0x0` were recorded. Sustained representative multi-device load evidence remains pending.
 
 1. [x] Record an idle baseline after boot stabilization.
 2. [ ] Run the core workflow on one device and record peak observations.
@@ -863,39 +883,32 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 
 ## Phase 19 — End-to-end local-network validation
 
-**Objective:** Validate the complete MVP journey through Nginx from representative LAN devices with internet independence.
+**Objective:** Validate the confirmed hub journey now and the full learning journey after content is populated.
 
-**Prerequisites:** Phases 12–18 complete; approved test accounts/data; at least five representative phones/tablets/computers; planned internet-disconnection test.
+**Prerequisites:** Operational ASTH portable network; representative clients; approved test content and accounts for later learning-flow acceptance.
 
-**Current state:** **Blocked for application acceptance** — Offline portable, online portable through `wlan1`, office-LAN forwarding through `eth0`, local ASTH access, client internet and restricted hotspot SSH are verified. Real login, content, quiz, progress, dashboard, Smart Tutor and SQLite workflows remain unimplemented.
+**Current state:** **In Progress** — The portable network, landing page and live status are confirmed. Populated learning content, participant/trainer workflows and representative concurrency remain pending.
 
-1. [x] Connect each device to the intended training LAN.
-2. [x] Open the recorded ASTH LAN URL through Nginx.
-3. [ ] Verify health, landing page, static assets, and responsive layout.
-4. [ ] Test participant login, module/SOP viewing, quiz submission, score, and progress.
-5. [ ] Test trainer login and dashboard read-back of the submitted result.
-6. [ ] Test the local knowledge-base Smart Tutor and source display.
-7. [ ] Verify authentication separation and logout/session expiry behavior.
-8. [ ] Test justified upload limits and safe rejection if uploads are in scope.
-9. [x] Disconnect upstream internet while preserving the LAN, then repeat the core flow.
-10. [ ] Run the core flow concurrently on at least five devices.
-11. [ ] Check logs, database write/read consistency, resources, and temperature during the test.
-12. [x] Confirm clients cannot connect directly to port 8000.
+1. [x] Connect intended client devices to the ASTH network.
+2. [x] Open the recorded ASTH URL and visually confirm the v0.4.0 landing page.
+3. [x] Confirm DVS/ASTH logos and the live hub online/offline state.
+4. [x] Confirm connected devices, current download/upload, cumulative RX/TX, Wi-Fi information and uptime are supplied through `/api/hub-status`.
+5. [x] Confirm the real-time graph appears on `/`.
+6. [x] Confirm `/learn/` opens separately and intentionally has no network graph.
+7. [ ] Populate and test Modul Pembelajaran, Video Latihan and Latihan Interaktif.
+8. [ ] Test participant login, module/SOP viewing, quiz, score and progress if implemented.
+9. [ ] Test trainer login and dashboard read-back if implemented.
+10. [ ] Test the local knowledge-base Smart Tutor and source display if implemented.
+11. [x] Confirm the hub remains locally available in the documented offline portable mode.
+12. [ ] Run the approved complete learning flow concurrently on at least five devices.
+13. [ ] Check logs, data consistency, resources and temperature during representative load.
+14. [x] Retain the previously verified boundary that clients cannot connect directly to port 8000.
 
-**Safe client/Pi verification commands:**
+**Expected result:** The current hub data remains reliable and, after content implementation, all approved learning flows work for representative clients without requiring upstream internet.
 
-```bash
-curl --fail --silent --show-error http://<pi-lan-ip><health-path>
-curl --connect-timeout 3 http://<pi-lan-ip>:8000<health-path>
-```
+**Stop condition:** Stop acceptance for live-status failure, data leakage, direct Uvicorn exposure, internet dependency in a core flow, repeated server errors, inconsistent learning results or resource/thermal breach.
 
-The second command is expected to fail from a LAN client.
-
-**Expected result:** All critical participant/trainer flows work through Nginx for at least five devices, persist correctly in SQLite, and continue without upstream internet.
-
-**Stop condition:** Stop acceptance for data loss/cross-user leakage, direct Uvicorn exposure, internet dependency in a core flow, authentication failure, repeated server errors, inconsistent dashboard results, or resource/thermal breach.
-
-**Evidence to record:** Device/browser matrix, LAN URL and IP, pass/fail per flow, quiz record identifier without personal data, screenshots, offline test result, concurrency timing, listener test, log review, and defect references.
+**Evidence to record:** Device/browser matrix, URL, status data, screenshots without credentials, offline result, concurrency timing, log review and defect references.
 
 ## Phase 20 — Rollback readiness
 
@@ -939,7 +952,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 
 **Prerequisites:** Phases 19 and 20 complete; operational owners identified; evidence repository selected.
 
-**Current state:** **Blocked** — Status and runbook documentation can be prepared, but handover cannot complete until system, technical and backup owners plus the maintenance window are confirmed.
+**Current state:** **In Progress** — Status and runbook documentation are updated for 26 July 2026, but handover cannot complete until system, technical and backup owners plus the maintenance window are confirmed.
 
 1. [ ] Record hardware identity, hostname, reserved IP, LAN URL, interface, and physical location.
 2. [ ] Record current/previous release IDs, application health path, database path, and schema version.
@@ -948,7 +961,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 5. [ ] Record monitoring thresholds and response/escalation actions.
 6. [ ] Record maintenance, safe shutdown/startup, rollback, and recovery procedures.
 7. [ ] Record administrative contacts and access-request process without recording credentials.
-8. [ ] Record known limitations: 2GB RAM, 32GB microSD, one Uvicorn worker, LAN-only HTTP pilot, minimal services, and no Docker.
+8. [ ] Record known limitations: 32 GB microSD system storage, pending casing/NVMe/LCD, placeholder Learning Hub content, incomplete recovery testing and repository source not synchronised.
 9. [ ] Walk the operator through health, logs, backup evidence, shutdown/startup, and escalation.
 10. [ ] Have the operator perform a supervised read-only health/status check.
 11. [ ] Store screenshots/outputs in the approved non-secret evidence location.
@@ -977,26 +990,27 @@ df -h /
 
 **Prerequisites:** Phases 1–21 complete; all blocking defects resolved or explicitly rejected from acceptance; acceptance owner present.
 
-**Current state:** **Blocked / Conditional Pass** — Infrastructure checks pass conditionally; real application requirements, implementation, operational ownership and final acceptance approval remain outstanding.
+**Current state:** **Blocked / PARTIAL** — The operational hub is confirmed; final hardware, Learning Hub content, kiosk, NVMe migration, recovery testing, source synchronisation, ownership and final approval remain outstanding.
 
-1. [x] Confirm Raspberry Pi 5, 2GB RAM, 32GB microSD, power, and active cooling match the baseline.
-2. [x] Confirm Raspberry Pi OS architecture/time/storage checks pass.
-3. [ ] Confirm hostname, reserved IP, LAN URL, and network boundary are documented.
-4. [ ] Confirm named key-based administration and local recovery work.
-5. [x] Confirm only approved essential packages/services are present.
-6. [ ] Confirm directory, release, environment, and SQLite ownership/modes match the plan.
-7. [x] Confirm FastAPI runs through systemd with exactly one Uvicorn worker on `127.0.0.1:8000`.
-8. [x] Confirm Nginx syntax passes and the LAN proxy/static behavior is correct.
-9. [ ] Confirm secrets are protected and absent from Git, logs, screenshots, and client code.
-10. [ ] Confirm journald/Nginx logs are useful, non-sensitive, and bounded.
-11. [ ] Confirm an off-device backup and successful recovery test exist.
-12. [ ] Confirm SSH/firewall/router hardening passes with no direct port 8000 or internet exposure.
-13. [ ] Confirm five-device concurrent and offline core-flow tests pass.
-14. [ ] Confirm quiz writes, progress, trainer dashboard, and Smart Tutor results are correct.
-15. [x] Confirm resource, storage, power, and thermal results remain within recorded thresholds.
-16. [ ] Confirm rollback rehearsal and forward recovery pass.
-17. [ ] Confirm handover is acknowledged and maintenance/review dates are scheduled.
-18. [ ] Record remaining non-blocking limitations and obtain signed MVP pilot acceptance.
+1. [x] Confirm Raspberry Pi 5, 32 GB RAM and current 32 GB microSD match the confirmed baseline.
+2. [ ] Confirm casing, NVMe, LCD, final power, cooling and temperature after assembly.
+3. [x] Confirm Raspberry Pi OS architecture/time/storage checks pass.
+4. [ ] Confirm hostname, reserved IP, LAN URL, and network boundary are documented.
+5. [ ] Confirm named key-based administration and local recovery work.
+6. [x] Confirm only approved essential packages/services are present.
+7. [ ] Confirm directory, release, environment, and SQLite ownership/modes match the plan.
+8. [x] Confirm FastAPI runs through systemd with exactly one Uvicorn worker on `127.0.0.1:8000`.
+9. [x] Confirm Nginx syntax passes and the LAN proxy/static behavior is correct.
+10. [ ] Confirm secrets are protected and absent from Git, logs, screenshots, and client code.
+11. [ ] Confirm journald/Nginx logs are useful, non-sensitive, and bounded.
+12. [ ] Confirm an off-device backup and successful recovery test exist.
+13. [ ] Confirm SSH/firewall/router hardening passes with no direct port 8000 or internet exposure.
+14. [ ] Confirm five-device concurrent and offline core-flow tests pass.
+15. [ ] Confirm quiz writes, progress, trainer dashboard, and Smart Tutor results are correct.
+16. [ ] Confirm representative resource results and final-assembly power/cooling/thermal checks pass.
+17. [ ] Confirm rollback rehearsal and forward recovery pass.
+18. [ ] Confirm handover is acknowledged and maintenance/review dates are scheduled.
+19. [ ] Record remaining non-blocking limitations and obtain signed MVP pilot acceptance.
 
 **Safe final verification commands:**
 

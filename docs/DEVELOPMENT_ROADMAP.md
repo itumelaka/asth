@@ -1,5 +1,9 @@
 # ASTH Development Roadmap
 
+**Status date:** 26 July 2026
+
+Status labels used below: **CONFIRMED** for directly verified work, **PARTIAL** for an operational shell or incomplete milestone, **PLANNED** for an approved future direction and **PENDING** for work not yet completed.
+
 ## Sasaran Utama
 
 Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan serta pertandingan inovasi.
@@ -24,6 +28,8 @@ Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan 
 
 ## Sprint 1 — UI/UX Prototype
 
+**Current state: PARTIAL**
+
 **Output**
 
 - landing page;
@@ -39,6 +45,8 @@ Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan 
 - semua skrin utama boleh dilayari;
 - paparan telefon dan desktop lulus semakan awal;
 - tiada backend sebenar diperlukan pada tahap ini.
+
+The deployed v0.4.0 landing page at `/` is visually confirmed and includes live network status. The separate `/learn/` page exists, but participant/trainer portals and the complete learning experience are not confirmed.
 
 ## Sprint 2 — Backend and Database
 
@@ -60,6 +68,8 @@ Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan 
 
 ## Sprint 3 — Learning Experience
 
+**Current state: PARTIAL**
+
 **Output**
 
 - modul Operasi Ladang Poltri;
@@ -72,6 +82,8 @@ Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan 
 **Exit criteria**
 
 - satu aliran pembelajaran lengkap boleh diselesaikan oleh peserta.
+
+The Learning Hub currently contains placeholders for Modul Pembelajaran, Video Latihan and Latihan Interaktif. Actual modules, PDFs, videos and interactive content remain pending.
 
 ## Sprint 4 — ASTH Smart Tutor
 
@@ -91,6 +103,8 @@ Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan 
 
 ## Sprint 5 — Raspberry Pi Deployment
 
+**Current state: PARTIAL**
+
 **Output**
 
 - deployment script;
@@ -107,6 +121,8 @@ Menghasilkan MVP yang boleh didemokan, diuji dan dibentangkan kepada pengurusan 
 - Pi boleh reboot dan ASTH hidup sendiri;
 - minimum lima peranti berjaya masuk;
 - sistem asas berfungsi tanpa internet.
+
+Confirmed: the Raspberry Pi, portable network, v0.4.0 application service, `/`, `/learn/`, `/health` and `/api/hub-status` are operational. Pending: final casing, NVMe and LCD installation, kiosk mode, post-installation validation, production backup/recovery testing and repository synchronisation of the deployed source.
 
 ## Sprint 6 — Testing and Hardening
 
@@ -187,3 +203,12 @@ Selepas versi 0.9:
 - digital twin;
 - peluasan kepada kursus lain;
 - integrasi sistem organisasi.
+
+## Immediate Hardware and Content Sequence
+
+1. **PENDING:** Receive and install the casing.
+2. **PENDING:** Receive and install the NVMe base/HAT and SSD, then detect and test the device.
+3. **PLANNED:** Choose and execute the final NVMe migration method; prefer full-OS boot from NVMe and retain the microSD as recovery media if testing succeeds.
+4. **PENDING:** Receive and install the LCD and suitable display cable; configure kiosk mode to open `/`.
+5. **PENDING:** Populate Learning Hub content and move large content to NVMe when available.
+6. **PENDING:** Complete final power, cooling, temperature, backup, recovery and post-installation validation.

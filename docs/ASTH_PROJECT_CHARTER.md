@@ -18,7 +18,7 @@ Latihan di ladang, bengkel atau lokasi luar juga boleh terjejas oleh sambungan i
 
 ASTH dicadangkan sebagai sebuah platform latihan digital yang menggabungkan kandungan pembelajaran, SOP, kuiz, Smart Tutor dan dashboard trainer dalam satu sistem yang dihoskan pada Raspberry Pi 5.
 
-Perkakasan MVP yang disahkan mempunyai **2GB LPDDR4X RAM** dan **kad microSD 32GB**. Angka 32GB merujuk kepada storan microSD sahaja, bukan RAM. Oleh sebab kapasiti RAM ialah 2GB, MVP mesti menggunakan seni bina ringan dan servis latar minimum. Rujuk [ASTH Raspberry Pi 5 Hardware Baseline](HARDWARE_BASELINE.md) untuk spesifikasi, batasan dan panduan deployment lengkap.
+Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **32 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Casing, NVMe base/HAT dan SSD serta LCD belum dipasang. Rujuk [ASTH Raspberry Pi 5 Hardware Baseline](HARDWARE_BASELINE.md) untuk status fizikal, batasan dan arah migrasi.
 
 ## 3. Pernyataan Masalah
 
@@ -158,7 +158,7 @@ Telefon / Tablet / Laptop
  Modul      Knowledge Base
 ```
 
-Deployment MVP menggunakan satu aplikasi modular, satu atau sejumlah kecil worker Uvicorn, SQLite dan servis latar minimum. Seni bina ini perlu kekal ringan agar sesuai dengan RAM 2GB.
+Deployment semasa menggunakan aplikasi FastAPI v0.4.0 pada Raspberry Pi dan endpoint langsung `/api/hub-status` untuk dashboard rangkaian. Seni bina perlu kekal mudah diselenggara dan offline-first walaupun perkakasan mempunyai 32 GB RAM.
 
 ## 13. Teknologi Teras
 
@@ -176,7 +176,7 @@ Deployment MVP menggunakan satu aplikasi modular, satu atau sejumlah kecil worke
 
 ## 14. Anggaran Kos MVP
 
-MVP menggunakan Raspberry Pi 5 dengan 2GB LPDDR4X RAM dan kad microSD 32GB sedia ada. Kapasiti 32GB ialah storan microSD sahaja.
+MVP menggunakan Raspberry Pi 5 dengan 32 GB RAM dan kad microSD 32 GB sedia ada. Casing, NVMe base/HAT dan SSD serta LCD masih menunggu ketibaan.
 
 | Item | Status | Kos awal |
 |---|---|---:|
@@ -185,12 +185,14 @@ MVP menggunakan Raspberry Pi 5 dengan 2GB LPDDR4X RAM dan kad microSD 32GB sedia
 | Raspberry Pi OS | Percuma | RM0 |
 | FastAPI / SQLite / Nginx | Sumber terbuka | RM0 |
 | Web app | Dibangunkan dalaman | RM0 |
-| Casing / penyejukan aktif | Disyorkan untuk operasi berpanjangan | Tertakluk aksesori dipilih |
+| Casing | Menunggu ketibaan | Tertakluk aksesori dipilih |
+| NVMe base/HAT dan SSD | Menunggu ketibaan | Tertakluk perkakasan dipilih |
+| LCD dan kabel paparan | Menunggu ketibaan | Tertakluk perkakasan dipilih |
 | QR sticker / bahan booth | Jika diperlukan | Rendah |
 
 **Pendekatan rasmi:** proof of concept menggunakan aset sedia ada sebelum memohon peruntukan penambahbaikan.
 
-Pengembangan selepas MVP boleh menggunakan storan SSD atau microSD berkapasiti lebih besar, memindahkan workload berat kepada servis luaran terkawal, atau beralih kepada perkakasan dengan RAM lebih tinggi.
+Arah pilihan selepas perkakasan tiba ialah boot keseluruhan OS daripada NVMe dan mengekalkan microSD sebagai media pemulihan, tertakluk kepada pengesanan, ujian dan keputusan migrasi.
 
 ## 15. Kriteria Kejayaan MVP
 
@@ -214,7 +216,7 @@ MVP dianggap berjaya apabila:
 | Skop terlalu besar | Lewat siap | Kunci skop MVP |
 | Kandungan modul lambat diterima | Smart Tutor tidak lengkap | Mulakan FAQ dan modul teras |
 | Pi terlalu panas | Sistem tidak stabil | Gunakan casing berventilasi dan penyejukan aktif |
-| RAM 2GB tidak mencukupi | Prestasi menurun apabila skop berkembang | Kekalkan MVP ringan; pindahkan servis berat atau gunakan perkakasan RAM lebih tinggi |
+| microSD 32 GB penuh atau gagal | Sistem dan kandungan tidak tersedia | Hadkan pertumbuhan semasa; uji migrasi penuh ke NVMe dan kekalkan microSD sebagai media pemulihan |
 | Wi-Fi tidak stabil | Peserta sukar akses | Ujian hotspot dan router pilihan |
 | Data rosak | Kehilangan rekod | Backup automatik SQLite |
 | AI disalahfaham | Ekspektasi terlalu tinggi | Jelaskan Smart Tutor knowledge-based |

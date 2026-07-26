@@ -1,24 +1,21 @@
 # ASTH Lightweight MVP Raspberry Pi Deployment Plan
 
-> **Status:** Planning reference with an implemented infrastructure snapshot dated 25 July 2026. The plan remains the design reference; actual status and follow-up work are tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
+> **Status:** Planning reference reconciled with the deployed state on 26 July 2026. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
 
-## Implemented State — 25 July 2026
+## Implemented State — 26 July 2026
 
-The lightweight infrastructure MVP is implemented on `asth-pi` with a **Conditional Pass**. This section records the current boundary without replacing the detailed checklist or operations runbook.
+- **CONFIRMED:** Raspberry Pi 5 with 32 GB RAM is operational and currently boots Raspberry Pi OS from a 32 GB microSD card.
+- **CONFIRMED:** The ASTH portable network is operational; current Pi address observed is `192.168.100.187`.
+- **CONFIRMED:** FastAPI v0.4.0 is deployed at `/opt/asth/app/main.py`; static logo assets are under `/var/www/asth-hub/assets/`.
+- **CONFIRMED:** `/` is the live hub landing page, `/learn/` is the separate Learning Hub, `/health` remains available and `/api/hub-status` supplies live dashboard data.
+- **CONFIRMED:** Syntax validation passed, the `asth` service restarted successfully and the landing page was visually confirmed.
+- **PARTIAL:** Learning Hub sections are placeholders; actual modules, PDFs, videos and interactive content are not populated.
+- **CONFIRMED:** Uptime Kuma and Cockpit are available as separate linked services; advanced monitoring, alerting and security completeness is not claimed.
+- **PENDING:** Casing, NVMe base/HAT and SSD, LCD and display cable are not installed.
+- **PLANNED:** Prefer full-OS boot from NVMe after detection/testing, with the microSD retained as recovery media if migration succeeds.
+- **PENDING:** The deployed v0.4.0 source must be committed to this repository later; it is not yet synchronised.
 
-- Raspberry Pi 5 Model B Rev 1.1, 2GB RAM, 32GB microSD, active cooling.
-- Debian GNU/Linux 13 (Trixie), arm64/aarch64, kernel `6.18.34+rpt-rpi-2712`.
-- Ethernet LAN address `192.168.100.187/24`, gateway `192.168.100.1`; Wi-Fi inactive.
-- LAN request path: `client → Nginx :80 → Uvicorn 127.0.0.1:8000`.
-- FastAPI `0.140.0` on Python `3.13.5`, served by Uvicorn `0.51.0` with one worker.
-- `asth.service`, Nginx and SSH are enabled and active; no failed services were observed.
-- UFW defaults to incoming deny/outgoing allow. Ports 22 and 80 are limited to `192.168.100.0/24`; port 8000 and rpcbind port 111 are not LAN-exposed.
-- SSH prohibits root login, disables X11 forwarding and limits authentication attempts to four. Password authentication remains temporarily enabled until key-based access is established and tested.
-- The minimal infrastructure endpoints `/`, `/health` and `/docs` return HTTP 200. This does not prove real ASTH participant, trainer, quiz, dashboard, Smart Tutor or SQLite application behavior.
-- A manual backup/recovery test passed using `rsync` and SHA-256 comparison against `/media/asthadmin/ROG/ASTH_BACKUP`.
-- The external approximately 512GB NTFS SSD is desktop-automounted at `/media/asthadmin/ROG`; its mount is not persistent, so backup automation is not production-ready.
-
-The Conditional Pass applies only to the infrastructure MVP. Fixed addressing, persistent SSD mounting, SSH-key cutover, production backup scheduling/retention, operational ownership and the real application MVP remain outstanding.
+The external USB SSD, Samba and Cockpit evidence recorded on 25 July remains useful infrastructure history. The external USB SSD must not be confused with the pending NVMe hardware.
 
 ## 1. Deployment Objectives
 
@@ -32,7 +29,7 @@ The initial deployment will provide a stable, lightweight ASTH MVP on one Raspbe
 - use the fewest practical background services;
 - protect data with tested backups stored outside the microSD card;
 - remain supportable through SSH; and
-- fit within the 2GB RAM and 32GB microSD limits recorded in [HARDWARE_BASELINE.md](HARDWARE_BASELINE.md).
+- fit within the current 32 GB RAM and 32 GB microSD baseline recorded in [HARDWARE_BASELINE.md](HARDWARE_BASELINE.md).
 
 The initial request path will be:
 
@@ -44,14 +41,14 @@ Docker, container orchestration, microservices, public internet exposure, and a 
 
 This plan assumes:
 
-- a Raspberry Pi 5 with 2GB LPDDR4X RAM and a 32GB microSD card;
+- a Raspberry Pi 5 with 32 GB RAM and a 32 GB microSD card;
 - Raspberry Pi OS is already installed and boots successfully;
 - a reliable USB-C power supply, preferably 5V/5A;
 - active cooling and unobstructed airflow for sustained server use;
 - administrative access to the Pi during initial setup;
 - a router or access point serving the deployment LAN;
 - temporary internet access during preparation for operating-system updates and package installation;
-- an ASTH application release that exposes a FastAPI ASGI object as `asth.main:app`;
+- the currently deployed FastAPI v0.4.0 file at `/opt/asth/app/main.py`, pending later repository synchronisation;
 - application dependencies pinned in a project dependency file;
 - no other service using TCP ports 80 or 8000; and
 - a separate USB drive, NAS, or administrator workstation for off-device backups.
@@ -251,7 +248,7 @@ The planned start command is:
   --forwarded-allow-ips 127.0.0.1
 ```
 
-Uvicorn's development reload mode must not be used in production. Start with one worker because SQLite writes and 2GB RAM favor a single application process. Increase concurrency only after measuring representative participant activity on the actual Pi.
+Uvicorn's development reload mode must not be used in production. Retain the currently validated process model until representative load and SQLite behaviour justify a controlled change. Increase concurrency only after measuring representative participant activity on the actual Pi.
 
 Database migrations or schema initialization must be a deliberate release step, not an automatic action performed independently by every service start. Any migration must be backed up, tested, and assessed for backward compatibility before the release symlink changes.
 
@@ -435,7 +432,7 @@ Firewall changes can lock out administrators. Build and test rules while a local
 
 Because the Pi serves multiple participants, the training Wi-Fi should use modern encryption and a controlled password. Client isolation must not block clients from reaching the Pi. Separate the training network from sensitive organizational systems where the network infrastructure permits it.
 
-## 17. Performance Considerations for 2GB RAM
+## 17. Performance Considerations for the Current Hardware
 
 The constraints and unsuitable workloads are documented in [HARDWARE_BASELINE.md](HARDWARE_BASELINE.md). The initial deployment should:
 
@@ -463,14 +460,14 @@ vcgencmd measure_temp
 vcgencmd get_throttled
 ```
 
-Test at least the MVP target from the development roadmap: five simultaneous devices performing login, module viewing, quiz submission, dashboard viewing, and Smart Tutor searches. Establish observed latency, peak RAM, swap activity, CPU load, temperature, and database write behavior before increasing the participant count.
+After real learning workflows are populated, test at least the MVP target from the development roadmap: five simultaneous devices performing the approved representative workflow. Establish observed latency, peak RAM, swap activity, CPU load, temperature, and database write behavior before increasing the participant count.
 
 ## 18. Deployment Validation Checklist
 
 ### Host and network
 
-- [ ] Raspberry Pi model, 2GB RAM, and 32GB storage match the hardware baseline.
-- [ ] Power supply and active cooling are installed and stable.
+- [x] Raspberry Pi 5, 32 GB RAM and current 32 GB microSD match the confirmed 26 July baseline.
+- [ ] Power supply, cooling and temperature are revalidated after the final casing, NVMe and LCD assembly.
 - [ ] OS version, architecture, time zone, and free storage are recorded.
 - [ ] Hostname resolves where expected.
 - [ ] Router DHCP reservation is active and documented.
@@ -495,8 +492,10 @@ Test at least the MVP target from the development roadmap: five simultaneous dev
 - [ ] `asth.service` starts, stops, restarts, and survives a reboot.
 - [ ] `nginx -t` passes before reload.
 - [ ] Nginx proxies dynamic requests and serves intended static assets.
-- [ ] `/health` succeeds through Nginx and fails safely when the app is stopped.
-- [ ] Login, module access, quiz submission, progress, dashboard, export if present, and Smart Tutor search work without internet.
+- [x] `/health` remains available and the live landing page was visually confirmed after service restart.
+- [x] `/api/hub-status` supplies the live landing-page status data.
+- [x] `/learn/` exists separately and intentionally has no network graph.
+- [ ] Populate and validate actual modules, PDFs, videos and interactive content; participant/trainer, quiz, progress and Smart Tutor workflows remain pending.
 - [ ] Upload and request-size limits behave as designed.
 - [ ] Five representative client devices complete the core flow concurrently.
 
@@ -535,7 +534,21 @@ Nginx and systemd configuration changes should be backed up before alteration an
 
 Rollback is complete only when health, login, a read operation, a write operation, and relevant media access have passed. Diagnose the failed release separately rather than editing production files in place.
 
-## 20. Recommended Implementation Sequence
+## 20. Final Hardware, Content and Migration Sequence
+
+1. Preserve the working microSD deployment and the two confirmed local application backups.
+2. Receive and install the casing.
+3. Receive and install the NVMe base/HAT and SSD, then detect and test the device before any migration.
+4. Receive and install the LCD and appropriate display cable.
+5. Verify power-supply suitability, cooling and temperature with the final assembly.
+6. Decide and execute the NVMe migration method; prefer full-OS boot from NVMe only if testing passes.
+7. Retain and label the microSD as recovery media after a successful full migration.
+8. Configure LCD kiosk mode to open `/` and verify reboot recovery.
+9. Populate `/learn/` with approved modules, PDFs, videos and interactive content, placing large content on NVMe when available.
+10. Perform post-installation endpoint, visual, multi-device, backup, restore and recovery testing.
+11. Bring the deployed v0.4.0 source into this repository through a controlled comparison and commit later; do not overwrite the Pi from the stale repository state.
+
+## 21. General Implementation Sequence
 
 1. Confirm the hardware, OS, power, cooling, filesystem, and site network details against [HARDWARE_BASELINE.md](HARDWARE_BASELINE.md).
 2. Record current configuration and take an initial off-device microSD image or equivalent recovery backup.

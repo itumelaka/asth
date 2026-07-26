@@ -6,7 +6,7 @@
 
 **Adaptive Smart Training Hub (ASTH)** ialah platform latihan digital TVET yang dibangunkan untuk Institut Teknologi Unggas, Jabatan Perkhidmatan Veterinar. Sistem ini direka sebagai **web app / Progressive Web App (PWA)** yang boleh dihoskan pada Raspberry Pi 5 dan digunakan melalui telefon, tablet atau komputer dalam rangkaian Wi-Fi tempatan.
 
-Perkakasan MVP yang disahkan ialah Raspberry Pi 5 dengan **2GB LPDDR4X RAM** dan **kad microSD 32GB**. Angka 32GB ialah kapasiti storan microSD, bukan RAM. Oleh sebab RAM terhad kepada 2GB, deployment MVP mesti kekal ringan dengan servis latar minimum dan penyejukan aktif disyorkan untuk operasi berpanjangan. Lihat [Hardware Baseline](docs/HARDWARE_BASELINE.md) untuk spesifikasi, batasan dan panduan deployment lengkap.
+Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **32 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Casing, NVMe base/HAT dan SSD, LCD serta kabel paparan yang sesuai masih belum diterima atau dipasang. Arah pilihan selepas perkakasan tiba dan lulus ujian ialah memindahkan keseluruhan sistem operasi ke NVMe serta mengekalkan microSD sebagai media pemulihan.
 
 ASTH menggabungkan:
 
@@ -59,13 +59,16 @@ Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan
 | Internet | Tidak wajib |
 | Cloud AI/API | Pilihan dan terkawal |
 
-Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan SSD, servis luaran terkawal atau perkakasan Raspberry Pi dengan RAM lebih besar tanpa mengubah arah asas projek.
+Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan NVMe, servis luaran terkawal atau pengasingan workload tanpa mengubah arah asas projek.
 
-## Status
+## Status pada 26 Julai 2026
 
-**Versi dokumentasi:** 0.1  
-**Fasa:** Project Foundation  
-**Status:** Perancangan awal dan pengesahan skop MVP
+- **CONFIRMED:** Rangkaian portable ASTH dan aplikasi web FastAPI v0.4.0 beroperasi pada Raspberry Pi.
+- **CONFIRMED:** Halaman utama `/` memaparkan status hub, statistik rangkaian masa nyata dan pautan ke Learning Hub, Uptime Kuma serta Cockpit.
+- **PARTIAL:** `/learn/` tersedia sebagai Learning Hub berasingan, tetapi kandungan sebenar belum dimasukkan.
+- **PENDING:** Pemasangan casing, NVMe dan LCD; konfigurasi kiosk LCD; migrasi storan; ujian backup/pemulihan; serta sinkronisasi source v0.4.0 dari Pi ke repository ini.
+
+Butiran semasa direkodkan dalam [Deployment Status](docs/DEPLOYMENT_STATUS.md).
 
 ## Dokumen Utama
 
@@ -75,6 +78,8 @@ Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses mini
 - [MVP Scope](docs/MVP_SCOPE.md)
 - [Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
 - [Hardware Baseline](docs/HARDWARE_BASELINE.md)
+- [Deployment Status](docs/DEPLOYMENT_STATUS.md)
+- [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
 
 ## Pemilikan Projek
 

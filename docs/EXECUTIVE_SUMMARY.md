@@ -24,9 +24,15 @@ ASTH dicadangkan bukan sekadar sebagai projek pertandingan, tetapi sebagai asas 
 - menyokong transformasi digital TVET;
 - boleh dikembangkan tanpa membina sistem baru untuk setiap kursus.
 
-## Cadangan Pelaksanaan
+## Status Pelaksanaan pada 26 Julai 2026
 
-Pelaksanaan dimulakan melalui proof of concept berskala kecil. MVP akan menumpukan satu kursus, tiga modul, satu Smart Tutor knowledge-based, kuiz, dashboard dan deployment Raspberry Pi. Selepas sistem diuji bersama pengguna sebenar, penambahbaikan boleh dibuat berdasarkan bukti penggunaan dan keperluan organisasi.
+Raspberry Pi 5 dengan 32 GB RAM kini beroperasi menggunakan Raspberry Pi OS pada kad microSD 32 GB. Rangkaian portable ASTH dan aplikasi FastAPI v0.4.0 telah beroperasi. Halaman utama `/` memaparkan identiti DVS/ASTH, status hub, bilangan peranti, kadar muat turun/muat naik, jumlah RX/TX, uptime, maklumat Wi-Fi, graf aktiviti rangkaian dan pautan ke Learning Hub, Uptime Kuma serta Cockpit. Data status dibekalkan secara langsung oleh `/api/hub-status`.
+
+Learning Hub di `/learn/` telah dipisahkan daripada dashboard rangkaian dan sengaja tidak mempunyai graf rangkaian. Ia masih **PARTIAL** kerana bahagian Modul Pembelajaran, Video Latihan dan Latihan Interaktif belum diisi dengan kandungan sebenar. NVMe, casing dan LCD juga masih **PENDING** dan tidak boleh dianggap telah dipasang. Source aplikasi v0.4.0 yang berjalan pada Pi belum diselaraskan ke repository ini.
+
+## Cadangan Pelaksanaan Seterusnya
+
+Kekalkan deployment microSD yang sedang berfungsi sementara perkakasan tiba. Selepas casing, NVMe dan LCD diterima, uji bekalan kuasa, penyejukan, suhu dan pengesanan NVMe sebelum memilih kaedah migrasi. Arah pilihan ialah boot keseluruhan OS daripada NVMe dan mengekalkan microSD sebagai media pemulihan, tertakluk kepada ujian. Kandungan pembelajaran sebenar, kiosk LCD, backup/pemulihan dan ujian pengguna perlu disiapkan sebelum MVP diterima sepenuhnya.
 
 ## Keputusan Yang Dimohon
 
