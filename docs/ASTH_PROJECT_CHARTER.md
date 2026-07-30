@@ -18,7 +18,7 @@ Latihan di ladang, bengkel atau lokasi luar juga boleh terjejas oleh sambungan i
 
 ASTH dicadangkan sebagai sebuah platform latihan digital yang menggabungkan kandungan pembelajaran, SOP, kuiz, Smart Tutor dan dashboard trainer dalam satu sistem yang dihoskan pada Raspberry Pi 5.
 
-Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **32 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Casing, NVMe base/HAT dan SSD serta LCD belum dipasang. Rujuk [ASTH Raspberry Pi 5 Hardware Baseline](HARDWARE_BASELINE.md) untuk status fizikal, batasan dan arah migrasi.
+Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **2 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Casing, NVMe base/HAT dan SSD serta LCD belum dipasang. Rujuk [ASTH Raspberry Pi 5 Hardware Baseline](HARDWARE_BASELINE.md) untuk status fizikal, batasan dan arah migrasi.
 
 ## 3. Pernyataan Masalah
 
@@ -158,7 +158,7 @@ Telefon / Tablet / Laptop
  Modul      Knowledge Base
 ```
 
-Deployment semasa menggunakan aplikasi FastAPI v0.4.0 pada Raspberry Pi dan endpoint langsung `/api/hub-status` untuk dashboard rangkaian. Seni bina perlu kekal mudah diselenggara dan offline-first walaupun perkakasan mempunyai 32 GB RAM.
+Deployment semasa menggunakan aplikasi FastAPI v0.4.0 pada Raspberry Pi dan endpoint langsung `/api/hub-status` untuk dashboard rangkaian. Seni bina perlu kekal ringan, mudah diselenggara dan offline-first kerana perkakasan mempunyai 2 GB RAM.
 
 ## 13. Teknologi Teras
 
@@ -176,7 +176,7 @@ Deployment semasa menggunakan aplikasi FastAPI v0.4.0 pada Raspberry Pi dan endp
 
 ## 14. Anggaran Kos MVP
 
-MVP menggunakan Raspberry Pi 5 dengan 32 GB RAM dan kad microSD 32 GB sedia ada. Casing, NVMe base/HAT dan SSD serta LCD masih menunggu ketibaan.
+MVP menggunakan Raspberry Pi 5 dengan 2 GB RAM dan kad microSD 32 GB sedia ada. Pemasangan akhir casing/LCD dan NVMe masih belum lengkap.
 
 | Item | Status | Kos awal |
 |---|---|---:|
@@ -185,9 +185,9 @@ MVP menggunakan Raspberry Pi 5 dengan 32 GB RAM dan kad microSD 32 GB sedia ada.
 | Raspberry Pi OS | Percuma | RM0 |
 | FastAPI / SQLite / Nginx | Sumber terbuka | RM0 |
 | Web app | Dibangunkan dalaman | RM0 |
-| Casing | Menunggu ketibaan | Tertakluk aksesori dipilih |
-| NVMe base/HAT dan SSD | Menunggu ketibaan | Tertakluk perkakasan dipilih |
-| LCD dan kabel paparan | Menunggu ketibaan | Tertakluk perkakasan dipilih |
+| Casing | Pemasangan akhir pending | Tertakluk aksesori dipilih |
+| NVMe base/HAT dan SSD | Pending | Tertakluk perkakasan dipilih |
+| LCD dan kabel paparan | Pemasangan akhir pending | Tertakluk perkakasan dipilih |
 | QR sticker / bahan booth | Jika diperlukan | Rendah |
 
 **Pendekatan rasmi:** proof of concept menggunakan aset sedia ada sebelum memohon peruntukan penambahbaikan.

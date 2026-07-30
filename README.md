@@ -6,7 +6,7 @@
 
 **Adaptive Smart Training Hub (ASTH)** ialah platform latihan digital TVET yang dibangunkan untuk Institut Teknologi Unggas, Jabatan Perkhidmatan Veterinar. Sistem ini direka sebagai **web app / Progressive Web App (PWA)** yang boleh dihoskan pada Raspberry Pi 5 dan digunakan melalui telefon, tablet atau komputer dalam rangkaian Wi-Fi tempatan.
 
-Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **32 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Casing, NVMe base/HAT dan SSD, LCD serta kabel paparan yang sesuai masih belum diterima atau dipasang. Arah pilihan selepas perkakasan tiba dan lulus ujian ialah memindahkan keseluruhan sistem operasi ke NVMe serta mengekalkan microSD sebagai media pemulihan.
+Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **2 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Pemasangan akhir casing/LCD dan NVMe masih belum lengkap. Arah pilihan selepas perkakasan dipasang dan lulus ujian ialah memindahkan keseluruhan sistem operasi ke NVMe serta mengekalkan microSD sebagai media pemulihan.
 
 ASTH menggabungkan:
 
@@ -61,12 +61,14 @@ Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan
 
 Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan NVMe, servis luaran terkawal atau pengasingan workload tanpa mengubah arah asas projek.
 
-## Status pada 26 Julai 2026
+## Status pada 30 Julai 2026
 
+- **CONFIRMED:** Akses pemulihan fizikal melalui HDMI dan papan kekunci USB lengkap; login tempatan `asthadmin`, pemulihan kata laluan melalui boot recovery, `sudo` (`SUDO_OK`) dan reboot normal telah disahkan.
 - **CONFIRMED:** Rangkaian portable ASTH dan aplikasi web FastAPI v0.4.0 beroperasi pada Raspberry Pi.
+- **CONFIRMED:** `ASTH-PORTABLE` aktif pada `wlan0` dengan `10.42.0.1/24`; telefon yang disambungkan boleh mencapai health endpoint ASTH dan menggunakan internet melalui forwarding `eth0`.
 - **CONFIRMED:** Halaman utama `/` memaparkan status hub, statistik rangkaian masa nyata dan pautan ke Learning Hub, Uptime Kuma serta Cockpit.
 - **PARTIAL:** `/learn/` tersedia sebagai Learning Hub berasingan, tetapi kandungan sebenar belum dimasukkan.
-- **PENDING:** Pemasangan casing, NVMe dan LCD; konfigurasi kiosk LCD; migrasi storan; ujian backup/pemulihan; serta sinkronisasi source v0.4.0 dari Pi ke repository ini.
+- **PENDING:** Pemasangan casing, NVMe dan LCD; konfigurasi kiosk LCD; migrasi storan; ujian backup/restore database dan rollback aplikasi; serta sinkronisasi source v0.4.0 dari Pi ke repository ini.
 
 Butiran semasa direkodkan dalam [Deployment Status](docs/DEPLOYMENT_STATUS.md).
 

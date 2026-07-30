@@ -1,19 +1,24 @@
 # ASTH Lightweight MVP Raspberry Pi Deployment Plan
 
-> **Status:** Planning reference reconciled with the deployed state on 26 July 2026. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
+> **Status:** Planning reference reconciled with the deployed state on 30 July 2026. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
 
-## Implemented State — 26 July 2026
+## Implemented State — 30 July 2026
 
-- **CONFIRMED:** Raspberry Pi 5 with 32 GB RAM is operational and currently boots Raspberry Pi OS from a 32 GB microSD card.
+- **CONFIRMED:** Raspberry Pi 5 with 2 GB RAM is operational and currently boots Raspberry Pi OS from a 32 GB microSD card.
+- **CONFIRMED:** HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery, `sudo` (`SUDO_OK`) and normal reboot passed; physical recovery access is complete.
 - **CONFIRMED:** The ASTH portable network is operational; current Pi address observed is `192.168.100.187`.
+- **CONFIRMED:** `ASTH-PORTABLE` is active on `wlan0` at `10.42.0.1/24`; a connected phone reached ASTH health and received forwarded internet through `eth0`.
 - **CONFIRMED:** FastAPI v0.4.0 is deployed at `/opt/asth/app/main.py`; static logo assets are under `/var/www/asth-hub/assets/`.
 - **CONFIRMED:** `/` is the live hub landing page, `/learn/` is the separate Learning Hub, `/health` remains available and `/api/hub-status` supplies live dashboard data.
 - **CONFIRMED:** Syntax validation passed, the `asth` service restarted successfully and the landing page was visually confirmed.
 - **PARTIAL:** Learning Hub sections are placeholders; actual modules, PDFs, videos and interactive content are not populated.
-- **CONFIRMED:** Uptime Kuma and Cockpit are available as separate linked services; advanced monitoring, alerting and security completeness is not claimed.
+- **CONFIRMED:** Post-reboot checks found zero failed systemd units, healthy/running ASTH health, `/mnt/rog` mounted and `smbd` active.
+- **CONFIRMED:** Uptime Kuma returned HTTP 200 after redirect; Cockpit listened on port 9090 and returned HTTP 200.
 - **PENDING:** Casing, NVMe base/HAT and SSD, LCD and display cable are not installed.
 - **PLANNED:** Prefer full-OS boot from NVMe after detection/testing, with the microSD retained as recovery media if migration succeeds.
 - **PENDING:** The deployed v0.4.0 source must be committed to this repository later; it is not yet synchronised.
+- **PENDING:** Database backup/restore and application rollback tests remain incomplete.
+- **PENDING:** The system custodian and maintenance window are not finalised.
 
 The external USB SSD, Samba and Cockpit evidence recorded on 25 July remains useful infrastructure history. The external USB SSD must not be confused with the pending NVMe hardware.
 
@@ -29,7 +34,7 @@ The initial deployment will provide a stable, lightweight ASTH MVP on one Raspbe
 - use the fewest practical background services;
 - protect data with tested backups stored outside the microSD card;
 - remain supportable through SSH; and
-- fit within the current 32 GB RAM and 32 GB microSD baseline recorded in [HARDWARE_BASELINE.md](HARDWARE_BASELINE.md).
+- fit within the current 2 GB RAM and 32 GB microSD baseline recorded in [HARDWARE_BASELINE.md](HARDWARE_BASELINE.md).
 
 The initial request path will be:
 
@@ -41,7 +46,7 @@ Docker, container orchestration, microservices, public internet exposure, and a 
 
 This plan assumes:
 
-- a Raspberry Pi 5 with 32 GB RAM and a 32 GB microSD card;
+- a Raspberry Pi 5 with 2 GB RAM and a 32 GB microSD card;
 - Raspberry Pi OS is already installed and boots successfully;
 - a reliable USB-C power supply, preferably 5V/5A;
 - active cooling and unobstructed airflow for sustained server use;
@@ -153,6 +158,8 @@ ss -lntp
 ```
 
 Maintain at least one tested recovery path: local keyboard/display access or a documented method to mount and repair the microSD card from another machine. Avoid changing the SSH port merely as a substitute for access controls. Remote administration from outside the LAN is not part of this phase; use a properly managed VPN in a future phase rather than router port forwarding.
+
+The local keyboard/display recovery path was confirmed on 30 July 2026 using HDMI and a USB keyboard. Local `asthadmin` login, boot-recovery password recovery, approved `sudo` access and a normal reboot all passed.
 
 ## 6. System Update and Essential Packages
 
@@ -466,18 +473,19 @@ After real learning workflows are populated, test at least the MVP target from t
 
 ### Host and network
 
-- [x] Raspberry Pi 5, 32 GB RAM and current 32 GB microSD match the confirmed 26 July baseline.
+- [x] Raspberry Pi 5, 2 GB RAM and current 32 GB microSD match the confirmed 30 July baseline.
 - [ ] Power supply, cooling and temperature are revalidated after the final casing, NVMe and LCD assembly.
 - [ ] OS version, architecture, time zone, and free storage are recorded.
 - [ ] Hostname resolves where expected.
 - [ ] Router DHCP reservation is active and documented.
-- [ ] Pi is reachable from a participant device on the intended LAN.
+- [x] Pi is reachable from a phone connected to `ASTH-PORTABLE`; the ASTH health endpoint succeeded.
 - [ ] Ports exposed by `ss -lntp` match the plan; Uvicorn is not LAN-facing.
 
 ### Administration and security
 
 - [ ] Named administrator can authenticate using an SSH key.
-- [ ] A tested local recovery path exists.
+- [x] A tested local HDMI/USB-keyboard recovery path exists.
+- [x] Local `asthadmin` login, boot-recovery password recovery and approved `sudo` access are verified.
 - [ ] Root SSH login is disabled.
 - [ ] Password SSH login is disabled only after key access is proven.
 - [ ] Firewall permits the intended LAN and blocks unintended networks.
@@ -506,7 +514,7 @@ After real learning workflows are populated, test at least the MVP target from t
 - [ ] Journald and Nginx rotation limits are active and storage remains bounded.
 - [ ] A consistent off-device backup completes and passes integrity checking.
 - [ ] A restore is tested and the recovered application passes core checks.
-- [ ] A graceful shutdown and cold boot return ASTH to service automatically.
+- [x] A normal recovery reboot returned ASTH, `/mnt/rog`, Samba, Uptime Kuma, Cockpit and `ASTH-PORTABLE` to service.
 - [ ] Temperature, throttling, RAM, swap, CPU, and disk usage remain acceptable during the load test.
 - [ ] Site handover notes contain URLs, network details, backup location, recovery steps, and administrative contacts.
 
@@ -545,8 +553,10 @@ Rollback is complete only when health, login, a read operation, a write operatio
 7. Retain and label the microSD as recovery media after a successful full migration.
 8. Configure LCD kiosk mode to open `/` and verify reboot recovery.
 9. Populate `/learn/` with approved modules, PDFs, videos and interactive content, placing large content on NVMe when available.
-10. Perform post-installation endpoint, visual, multi-device, backup, restore and recovery testing.
-11. Bring the deployed v0.4.0 source into this repository through a controlled comparison and commit later; do not overwrite the Pi from the stale repository state.
+10. Perform post-installation endpoint, visual, multi-device and final-assembly validation.
+11. Complete database backup/restore and application rollback testing.
+12. Finalise the system custodian and maintenance window.
+13. Bring the deployed v0.4.0 source into this repository through a controlled comparison and commit later; do not overwrite the Pi from the stale repository state.
 
 ## 21. General Implementation Sequence
 

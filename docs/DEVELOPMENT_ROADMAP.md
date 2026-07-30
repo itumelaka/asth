@@ -1,6 +1,6 @@
 # ASTH Development Roadmap
 
-**Status date:** 26 July 2026
+**Status date:** 30 July 2026
 
 Status labels used below: **CONFIRMED** for directly verified work, **PARTIAL** for an operational shell or incomplete milestone, **PLANNED** for an approved future direction and **PENDING** for work not yet completed.
 
@@ -122,7 +122,7 @@ The Learning Hub currently contains placeholders for Modul Pembelajaran, Video L
 - minimum lima peranti berjaya masuk;
 - sistem asas berfungsi tanpa internet.
 
-Confirmed: the Raspberry Pi, portable network, v0.4.0 application service, `/`, `/learn/`, `/health` and `/api/hub-status` are operational. Pending: final casing, NVMe and LCD installation, kiosk mode, post-installation validation, production backup/recovery testing and repository synchronisation of the deployed source.
+Confirmed: the Raspberry Pi with 2 GB RAM, physical HDMI/USB-keyboard recovery access, local `asthadmin` login, recovered password, `sudo`, normal reboot, portable network, v0.4.0 application service, `/`, `/learn/`, `/health` and `/api/hub-status` are operational. Post-reboot checks also confirmed zero failed units, `/mnt/rog`, `smbd`, Uptime Kuma, Cockpit, phone access through `ASTH-PORTABLE` and internet forwarding through `eth0`. Pending: final casing, NVMe and LCD installation, kiosk mode, post-installation validation, database backup/restore testing, application rollback testing and repository synchronisation of the deployed source.
 
 ## Sprint 6 — Testing and Hardening
 
@@ -211,4 +211,6 @@ Selepas versi 0.9:
 3. **PLANNED:** Choose and execute the final NVMe migration method; prefer full-OS boot from NVMe and retain the microSD as recovery media if testing succeeds.
 4. **PENDING:** Receive and install the LCD and suitable display cable; configure kiosk mode to open `/`.
 5. **PENDING:** Populate Learning Hub content and move large content to NVMe when available.
-6. **PENDING:** Complete final power, cooling, temperature, backup, recovery and post-installation validation.
+6. **PENDING:** Complete final power, cooling and temperature validation after assembly.
+7. **PENDING:** Complete database backup/restore and application rollback testing.
+8. **PENDING:** Finalise the system custodian and maintenance window.

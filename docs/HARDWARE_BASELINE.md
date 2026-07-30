@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Hardware Baseline
 
-**Baseline date:** 26 July 2026
+**Baseline date:** 30 July 2026
 
 This document distinguishes currently installed hardware from future hardware. Status labels are **CONFIRMED**, **PARTIAL**, **PLANNED** and **PENDING**. In particular, the NVMe base/HAT, NVMe SSD, casing and LCD have **not** been installed.
 
@@ -9,20 +9,32 @@ This document distinguishes currently installed hardware from future hardware. S
 | Component | State | Baseline |
 |---|---|---|
 | Platform | **CONFIRMED** | Raspberry Pi 5 |
-| Memory | **CONFIRMED** | 32 GB RAM |
+| Memory | **CONFIRMED** | 2 GB RAM |
 | Current system storage | **CONFIRMED** | Raspberry Pi OS boots and runs from a 32 GB microSD card |
 | Current Pi address | **CONFIRMED** | `192.168.100.187` observed; not documented as permanently reserved |
 | ASTH portable network | **CONFIRMED** | Operational |
 | Application | **CONFIRMED** | FastAPI v0.4.0, main file `/opt/asth/app/main.py` |
 | Static logo assets | **CONFIRMED** | `/var/www/asth-hub/assets/` |
-| Casing | **PENDING** | Awaiting arrival and installation |
-| NVMe base/HAT and SSD | **PENDING** | Awaiting arrival and installation |
-| LCD and display cable | **PENDING** | Awaiting arrival and installation |
+| Casing | **PENDING** | Final integrated assembly incomplete |
+| NVMe base/HAT and SSD | **PENDING** | Not yet installed |
+| LCD and display cable | **PENDING** | Final integrated assembly incomplete |
 | Final power/cooling/thermal result | **PENDING** | Must be verified after final assembly |
 
-The 32 GB figures describe two different resources: the Raspberry Pi has 32 GB RAM and the current microSD has 32 GB storage.
+The Raspberry Pi has 2 GB RAM. The separate 32 GB figure describes the current microSD storage capacity.
 
-## 2. Storage architecture
+## 2. Confirmed physical recovery baseline
+
+Physical recovery access is **CONFIRMED complete** as of 30 July 2026:
+
+- HDMI display output and a USB keyboard worked successfully;
+- local login as `asthadmin` succeeded;
+- the `asthadmin` password was recovered through boot recovery;
+- approved `sudo` access returned `SUDO_OK`; and
+- the Raspberry Pi rebooted normally after recovery.
+
+This confirms an available local recovery route for the current microSD deployment. It does not replace the still-pending database backup/restore test or application rollback test.
+
+## 3. Storage architecture
 
 ### Current boot medium
 
@@ -32,7 +44,7 @@ The microSD must remain the working source until the NVMe hardware arrives and p
 
 ### Existing external USB SSD evidence
 
-Repository evidence dated 25 July records an external ASUS ROG STRIX Arion SSD mounted at `/mnt/rog` through `ntfs3`, with an ASTH namespace, Samba shares and manual backup evidence. This external USB SSD is separate from the pending NVMe base/HAT and NVMe SSD. Its presence does not complete the future NVMe boot migration.
+Repository evidence dated 25 July records an external ASUS ROG STRIX Arion SSD mounted at `/mnt/rog` through `ntfs3`, with an ASTH namespace, Samba shares and manual backup evidence. On 30 July, `/mnt/rog` was confirmed still mounted after reboot and `smbd` was active. This external USB SSD is separate from the pending NVMe base/HAT and NVMe SSD. Its presence does not complete the future NVMe boot migration or prove database restore readiness.
 
 Existing documented namespace:
 
@@ -61,9 +73,9 @@ Existing unrelated data outside `/mnt/rog/ASTH` must remain untouched.
 6. **PLANNED:** Preserve the current microSD as recovery media after a successful full-OS migration.
 7. **PLANNED:** Store large Learning Hub content on NVMe when available.
 
-## 3. Display and kiosk baseline
+## 4. Display and kiosk baseline
 
-The LCD and appropriate display cable are pending arrival. The landing page at `/` is the intended LCD kiosk target, but kiosk mode is not yet configured and no LCD installation is complete.
+The final integrated LCD/casing assembly is pending. The landing page at `/` is the intended LCD kiosk target, but kiosk mode is not yet configured and no final LCD installation is complete.
 
 After arrival:
 
@@ -74,13 +86,13 @@ After arrival:
 - verify automatic recovery after a reboot; and
 - retain a documented local recovery path if kiosk startup fails.
 
-## 4. Network baseline
+## 5. Network baseline
 
-The ASTH portable network is operational. The main landing page obtains live network/system data through `/api/hub-status` and displays connected devices, download/upload rates, cumulative RX/TX, Wi-Fi information, uptime and a real-time activity graph.
+The ASTH portable network is operational. On 30 July, `ASTH-PORTABLE` was active on `wlan0` at `10.42.0.1/24`; a connected phone reached the ASTH health endpoint and internet forwarding through `eth0` succeeded. The main landing page obtains live network/system data through `/api/hub-status` and displays connected devices, download/upload rates, cumulative RX/TX, Wi-Fi information, uptime and a real-time activity graph.
 
 Earlier repository evidence documents the existing portable SSID, interface names, local gateway, office-LAN subnet, firewall boundaries and optional uplink mode. These established values may be used for support, but this update does not invent or change network names, credentials, ports or configuration.
 
-## 5. Suitable workloads
+## 6. Suitable workloads
 
 The confirmed Raspberry Pi 5 is suitable for:
 
@@ -92,9 +104,9 @@ The confirmed Raspberry Pi 5 is suitable for:
 - Uptime Kuma and Cockpit as separate supporting services within measured resource limits; and
 - a simple, maintainable application architecture.
 
-The larger RAM capacity does not remove storage, thermal, power, data-integrity or operational risks. Service count and complexity should still be justified by measured need.
+The 2 GB RAM baseline requires a lightweight service footprint. Storage, thermal, power, data-integrity and operational risks also remain, so service count and complexity must be justified by measured need.
 
-## 6. Workloads and practices to avoid
+## 7. Workloads and practices to avoid
 
 - Treating the 32 GB microSD as unlimited media or backup capacity.
 - Storing the only recovery copy on the same microSD as the running OS.
@@ -105,7 +117,7 @@ The larger RAM capacity does not remove storage, thermal, power, data-integrity 
 - Exposing credentials in documentation, commands, screenshots or source control.
 - Claiming advanced monitoring, alerting or security readiness without evidence.
 
-## 7. Power, cooling and thermal requirements
+## 8. Power, cooling and thermal requirements
 
 The final assembly has not been validated because the casing, NVMe hardware and LCD are pending. After installation:
 
@@ -118,14 +130,14 @@ The final assembly has not been validated because the casing, NVMe hardware and 
 
 Earlier thermal measurements remain historical evidence only; they do not replace validation of the final assembly.
 
-## 8. Backup and recovery baseline
+## 9. Backup and recovery baseline
 
 Confirmed microSD-local application copies:
 
 - `/opt/asth/app/main.py.backup-20260726`;
 - `/opt/asth/app/main.py.backup-clay-service-hub-20260726`.
 
-These files are useful local rollback references but are not off-device backups. Existing external SSD backup evidence may be retained, but final acceptance requires a fresh post-installation backup and restore test covering the chosen NVMe/microSD architecture.
+These files are useful local rollback references but are not off-device backups. The external SSD remaining mounted after reboot does not prove database backup/restore. Database backup/restore testing and application rollback testing remain pending, and final acceptance also requires a fresh post-installation test covering the chosen NVMe/microSD architecture.
 
 If full-OS NVMe migration succeeds, the microSD should be preserved as recovery media only after:
 
@@ -135,7 +147,7 @@ If full-OS NVMe migration succeeds, the microSD should be preserved as recovery 
 - backup and restore procedures have been tested; and
 - the microSD recovery purpose, date and limitations are labelled.
 
-## 9. Final assembly acceptance
+## 10. Final assembly acceptance
 
 The hardware milestone remains **PENDING** until all of the following are evidenced:
 
@@ -147,8 +159,8 @@ The hardware milestone remains **PENDING** until all of the following are eviden
 - microSD retained and tested as recovery media if full migration succeeds;
 - kiosk mode opens `/` after boot;
 - large Learning Hub content placement confirmed; and
-- post-installation backup and recovery testing passes.
+- post-installation database backup/restore and application rollback testing passes.
 
-## 10. Conclusion
+## 11. Conclusion
 
-The confirmed current baseline is a Raspberry Pi 5 with 32 GB RAM running Raspberry Pi OS and ASTH v0.4.0 from a 32 GB microSD card. The portable hub is operational. The casing, NVMe and LCD remain pending. Full-OS boot from NVMe with microSD recovery is a preferred **PLANNED** direction, not a completed deployment state.
+The confirmed current baseline is a Raspberry Pi 5 with 2 GB RAM running Raspberry Pi OS and ASTH v0.4.0 from a 32 GB microSD card. Physical recovery access and the portable hub are operational. The casing, NVMe and LCD remain pending. Database backup/restore and application rollback testing also remain pending. Full-OS boot from NVMe with microSD recovery is a preferred **PLANNED** direction, not a completed deployment state.

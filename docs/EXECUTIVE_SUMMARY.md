@@ -24,15 +24,17 @@ ASTH dicadangkan bukan sekadar sebagai projek pertandingan, tetapi sebagai asas 
 - menyokong transformasi digital TVET;
 - boleh dikembangkan tanpa membina sistem baru untuk setiap kursus.
 
-## Status Pelaksanaan pada 26 Julai 2026
+## Status Pelaksanaan pada 30 Julai 2026
 
-Raspberry Pi 5 dengan 32 GB RAM kini beroperasi menggunakan Raspberry Pi OS pada kad microSD 32 GB. Rangkaian portable ASTH dan aplikasi FastAPI v0.4.0 telah beroperasi. Halaman utama `/` memaparkan identiti DVS/ASTH, status hub, bilangan peranti, kadar muat turun/muat naik, jumlah RX/TX, uptime, maklumat Wi-Fi, graf aktiviti rangkaian dan pautan ke Learning Hub, Uptime Kuma serta Cockpit. Data status dibekalkan secara langsung oleh `/api/hub-status`.
+Raspberry Pi 5 dengan 2 GB RAM kini beroperasi menggunakan Raspberry Pi OS pada kad microSD 32 GB. Akses pemulihan fizikal melalui HDMI dan papan kekunci USB telah disahkan lengkap: login tempatan `asthadmin` berjaya, kata laluan dipulihkan melalui boot recovery, `sudo` mengembalikan `SUDO_OK` dan Raspberry Pi reboot secara normal. Selepas reboot, tiada unit systemd yang gagal, health endpoint ASTH melaporkan `healthy`/`running`, SSD luaran kekal mounted pada `/mnt/rog` dan `smbd` aktif.
+
+Rangkaian `ASTH-PORTABLE` aktif pada `wlan0` dengan alamat `10.42.0.1/24`. Telefon yang disambungkan berjaya mencapai health endpoint ASTH dan forwarding internet melalui `eth0` telah disahkan. Uptime Kuma memberikan HTTP 200 selepas redirect, manakala Cockpit mendengar pada port 9090 dan memberikan HTTP 200. Halaman utama `/` memaparkan identiti DVS/ASTH, status hub, bilangan peranti, kadar muat turun/muat naik, jumlah RX/TX, uptime, maklumat Wi-Fi, graf aktiviti rangkaian dan pautan ke Learning Hub, Uptime Kuma serta Cockpit. Data status dibekalkan secara langsung oleh `/api/hub-status`.
 
 Learning Hub di `/learn/` telah dipisahkan daripada dashboard rangkaian dan sengaja tidak mempunyai graf rangkaian. Ia masih **PARTIAL** kerana bahagian Modul Pembelajaran, Video Latihan dan Latihan Interaktif belum diisi dengan kandungan sebenar. NVMe, casing dan LCD juga masih **PENDING** dan tidak boleh dianggap telah dipasang. Source aplikasi v0.4.0 yang berjalan pada Pi belum diselaraskan ke repository ini.
 
 ## Cadangan Pelaksanaan Seterusnya
 
-Kekalkan deployment microSD yang sedang berfungsi sementara perkakasan tiba. Selepas casing, NVMe dan LCD diterima, uji bekalan kuasa, penyejukan, suhu dan pengesanan NVMe sebelum memilih kaedah migrasi. Arah pilihan ialah boot keseluruhan OS daripada NVMe dan mengekalkan microSD sebagai media pemulihan, tertakluk kepada ujian. Kandungan pembelajaran sebenar, kiosk LCD, backup/pemulihan dan ujian pengguna perlu disiapkan sebelum MVP diterima sepenuhnya.
+Kekalkan deployment microSD yang sedang berfungsi sementara perkakasan tiba. Selepas casing, NVMe dan LCD diterima, uji bekalan kuasa, penyejukan, suhu dan pengesanan NVMe sebelum memilih kaedah migrasi. Arah pilihan ialah boot keseluruhan OS daripada NVMe dan mengekalkan microSD sebagai media pemulihan, tertakluk kepada ujian. Kandungan pembelajaran sebenar, kiosk LCD, ujian backup/restore database, rollback aplikasi dan ujian pengguna perlu disiapkan sebelum MVP diterima sepenuhnya. Pemilik sistem/custodian dan maintenance window juga perlu dimuktamadkan.
 
 ## Keputusan Yang Dimohon
 

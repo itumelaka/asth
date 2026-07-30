@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Operations Runbook
 
-This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v0.4.0 application as of 26 July 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
+This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v0.4.0 application as of 30 July 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
 
 ## Safety rules
 
@@ -34,6 +34,7 @@ This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v
 | Deployed application file | `/opt/asth/app/main.py` |
 | Static logo assets | `/var/www/asth-hub/assets/` |
 | Deployed application version | `v0.4.0` |
+| Confirmed RAM | 2 GB |
 | Application routes | `/`, `/learn/`, `/health`, `/api/hub-status` |
 | Data directory | `/var/lib/asth` |
 | SQLite directory | `/var/lib/asth/db` |
@@ -49,6 +50,23 @@ This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v
 | Cockpit URLs | `https://192.168.100.187:9090`; `https://10.42.0.1:9090` |
 
 The Ethernet IP may change until a DHCP reservation or another fixed-IP method is approved. The portable hotspot gateway remains `10.42.0.1` under the verified shared-mode connection.
+
+## Verified recovery and operational snapshot — 30 July 2026
+
+- HDMI display output and a USB keyboard worked.
+- Local login as `asthadmin` succeeded.
+- The `asthadmin` password was recovered through boot recovery.
+- Approved `sudo` access returned `SUDO_OK`.
+- The Raspberry Pi rebooted normally after recovery.
+- `systemctl --failed` reported zero failed units.
+- Local ASTH health returned `healthy`/`running`.
+- `/mnt/rog` remained mounted and `smbd` was active after reboot.
+- Uptime Kuma followed its redirect and returned HTTP 200.
+- Cockpit listened on TCP port 9090 and returned HTTP 200.
+- `ASTH-PORTABLE` was active on `wlan0` at `10.42.0.1/24`.
+- A connected phone reached the ASTH health endpoint and received internet forwarding through `eth0`.
+
+Physical recovery access is complete. Database backup/restore and application rollback testing remain pending. Final integrated casing/LCD assembly and NVMe remain pending, and the system custodian and maintenance window are not finalised.
 
 ## Deployed application checks
 
@@ -103,7 +121,7 @@ Choose the operating mode before the session:
 |---|---|---|
 | Offline portable | No uplink | ASTH works locally; “connected without internet” is expected. |
 | Online portable | Phone hotspot through `PHONE-UPLINK` on `wlan1` | ASTH and internet access are available. |
-| Office LAN | Approved network through `eth0` | ASTH and office-LAN forwarding are available. |
+| Office LAN | Approved network through `eth0` | ASTH and internet forwarding are available; phone forwarding was verified on 30 July 2026. |
 
 The `ASTH-PORTABLE` client steps and local URL are the same in all three modes.
 
@@ -139,7 +157,7 @@ curl --fail --silent --show-error http://10.42.0.1
 curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 ```
 
-Verify from a connected client by opening `http://10.42.0.1`. DHCP was validated with one phone and one laptop.
+Verify from a connected client by opening `http://10.42.0.1`. DHCP was validated with one phone and one laptop. On 30 July, a phone also reached the ASTH health endpoint through `ASTH-PORTABLE`.
 
 Listener and firewall checks — **sudo required, read-only**:
 
@@ -343,7 +361,7 @@ sudo ufw status verbose
 sudo iptables -S FORWARD
 ```
 
-Expected: the intended office route is selected and the retained `wlan0` to `eth0` forwarding policy is present. Do not assume office routing merely because the Ethernet link is up.
+Expected: the intended office route is selected and the retained `wlan0` to `eth0` forwarding policy is present. Phone internet forwarding through `eth0` passed on 30 July 2026. Do not assume office routing merely because the Ethernet link is up.
 
 ## Samba NAS access
 
@@ -412,7 +430,7 @@ systemctl is-active cockpit.socket
 ss -lnt | grep -E 'LISTEN.+:9090\b'
 ```
 
-Expected result: `cockpit.socket` is active and TCP 9090 is listening. UFW permits it only from the office LAN and `10.42.0.0/24` on `wlan0`.
+Expected result: `cockpit.socket` is active, TCP 9090 is listening and the HTTP check succeeds. Listening on port 9090 and HTTP 200 were verified on 30 July 2026. UFW permits it only from the office LAN and `10.42.0.0/24` on `wlan0`.
 
 ### Cockpit troubleshooting
 
@@ -446,6 +464,8 @@ Expected result: the server identity is `asth-pi`, and the named administrator r
 
 Password authentication is temporarily enabled. Do not disable it until key authentication succeeds in a second session and local console recovery is confirmed.
 
+Local console recovery is confirmed: HDMI, a USB keyboard, local `asthadmin` login, boot-recovery password recovery, `sudo` (`SUDO_OK`) and a normal reboot passed on 30 July 2026. SSH key authentication remains a separate pending hardening step.
+
 ## Service status
 
 Read-only:
@@ -461,6 +481,8 @@ systemctl --failed --no-pager
 ```
 
 Expected result: ASTH, Nginx, SSH, the SSD mount, Samba and Cockpit are active; enabled services/sockets are enabled; the failed-unit list is empty.
+
+The 30 July post-recovery check reported zero failed units, healthy/running local ASTH health, `/mnt/rog` mounted and `smbd` active.
 
 ## Start, stop, restart and reload
 
@@ -542,7 +564,7 @@ From an approved LAN client:
 curl --fail --silent --show-error http://192.168.100.187/health
 ```
 
-Expected result: HTTP success for `/`, `/learn/`, `/health` and `/api/hub-status` through the deployed client-facing service. These checks prove route availability. They do not prove populated learning content, final LCD kiosk operation, NVMe migration or complete MVP acceptance.
+Expected result: HTTP success for `/`, `/learn/`, `/health` and `/api/hub-status` through the deployed client-facing service. On 30 July, local ASTH health returned `healthy`/`running` and a phone connected through `ASTH-PORTABLE` reached the health endpoint. These checks prove route availability. They do not prove populated learning content, final LCD kiosk operation, NVMe migration or complete MVP acceptance.
 
 Confirm Uvicorn is not LAN-facing:
 
@@ -705,7 +727,7 @@ du -sh /opt/asth /var/lib/asth /var/log/asth
 journalctl --disk-usage
 ```
 
-The current confirmed hardware has 32 GB RAM and a 32 GB microSD system disk. Record fresh values after final casing, NVMe and LCD assembly; investigate sustained swap use, rapid log/data growth or root-disk use approaching 80%.
+The current confirmed hardware has 2 GB RAM and a 32 GB microSD system disk. Record fresh values after final casing, NVMe and LCD assembly; investigate sustained swap use, rapid log/data growth or root-disk use approaching 80%.
 
 ## External SSD verification
 
@@ -821,11 +843,11 @@ vcgencmd measure_temp
 vcgencmd get_throttled
 ```
 
-Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. Stop storage or NAS work if any required mount check fails.
+Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. The 30 July recovery reboot completed normally; zero failed units, healthy/running ASTH health, `/mnt/rog`, `smbd`, Uptime Kuma HTTP 200 after redirect, Cockpit on port 9090 with HTTP 200 and `ASTH-PORTABLE` on `wlan0` at `10.42.0.1/24` were verified afterward. Stop storage or NAS work if any required mount check fails.
 
 ## Basic rollback guidance
 
-Rollback is not yet production-proven because a current/previous release layout, release identifiers, SQLite schema and schema compatibility record have not been confirmed.
+Application rollback is not yet production-proven because a current/previous release layout, release identifiers, SQLite schema and schema compatibility record have not been confirmed. Database backup/restore testing also remains pending.
 
 ### Read-only readiness checks
 

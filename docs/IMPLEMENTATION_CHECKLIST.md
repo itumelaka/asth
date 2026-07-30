@@ -1,10 +1,10 @@
 # ASTH Raspberry Pi 5 MVP Implementation Checklist
 
-This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **26 July 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work or blocked. The operational hub and v0.4.0 landing page are **CONFIRMED**, while learning content, final hardware, kiosk, migration, backup/recovery and MVP acceptance remain incomplete.
+This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **30 July 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work or blocked. Physical recovery, the operational hub and v0.4.0 landing page are **CONFIRMED**, while learning content, final hardware, kiosk, migration, database backup/restore, application rollback and MVP acceptance remain incomplete.
 
 ## Scope and operating rules
 
-- Confirmed current hardware: Raspberry Pi 5 with 32 GB RAM, booting Raspberry Pi OS from 32 GB microSD storage.
+- Confirmed current hardware: Raspberry Pi 5 with 2 GB RAM, booting Raspberry Pi OS from 32 GB microSD storage.
 - Target operating system: Raspberry Pi OS, preferably 64-bit.
 - Deployment boundary: trusted office LAN, offline portable hotspot, or online portable mode through the controlled `PHONE-UPLINK`; do not expose ASTH or SSH to the upstream internet.
 - Runtime: Nginx reverse proxy to FastAPI served by **one** Uvicorn worker bound to `127.0.0.1:8000`.
@@ -28,6 +28,8 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Decision | Confirmed value or current state | Status | Date | Follow-up |
 |---|---|---|---|---|
 | Named administrator account | `asthadmin` | Confirmed | 25 July 2026 | Establish tested SSH key access before password-login removal. |
+| Physical recovery access | HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery and normal reboot | Confirmed complete | 30 July 2026 | Keep this path available until final assembly and revalidate afterward. |
+| Named administrator sudo | `SUDO_OK` | Confirmed | 30 July 2026 | None. |
 | ASTH application service | `asth`; runtime account not recorded | Partially confirmed | 26 July 2026 | Restart succeeded; verify installed unit metadata separately. |
 | Pi hostname | `asth-pi` | Confirmed | 25 July 2026 | None. |
 | Current LAN address | `192.168.100.187` observed | Confirmed current value | 26 July 2026 | Do not treat as permanent until reservation/fixed addressing is confirmed. |
@@ -49,12 +51,14 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | SQLite location | Directory `/var/lib/asth/db`; schema and live filename not defined | Partially confirmed | 25 July 2026 | Design schema and record the production database filename. |
 | Maximum request body | Not defined | Pending decision | 25 July 2026 | Set from real application requirements. |
 | Environment file | `/etc/asth/asth.env`, `root:root`, mode `0600` | Confirmed | 25 July 2026 | Never expose its contents. |
-| Persistent SSD mount | `/dev/sda2` at `/mnt/rog`; UUID `8E5AAE985AAE7C99`; NTFS via `ntfs3` | Confirmed complete | 25 July 2026 | Reboot and read/write verification passed; existing data preserved. |
+| Persistent SSD mount | `/dev/sda2` at `/mnt/rog`; UUID `8E5AAE985AAE7C99`; NTFS via `ntfs3` | Confirmed complete | 30 July 2026 | Remained mounted after the recovery reboot; existing data preserved. |
 | ASTH SSD namespace | `/mnt/rog/ASTH` with NAS, app-data, database, backups, logs and staging directories | Confirmed complete | 25 July 2026 | All directories owned by `asthadmin`; do not modify unrelated SSD contents. |
 | Manual backup destination | `/mnt/rog/ASTH_BACKUP` | Confirmed preserved | 25 July 2026 | Production schedule, retention and alerting remain pending. |
 | Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` | Confirmed preserved | 25 July 2026 | Existing snapshot remained available after reboot. |
-| Basic Samba NAS | `ASTH-Public`, `ASTH-Staff`, `ASTH-Uploads` read/write; `ROG-Drive` read-only | Confirmed complete | 25 July 2026 | `smbd` enabled/active; Windows read/write and read-only denial verified. |
-| Cockpit console | HTTPS port 9090 on office LAN and `ASTH-PORTABLE` | Confirmed complete | 25 July 2026 | `cockpit.socket` enabled/active; self-signed certificate warning expected. |
+| Basic Samba NAS | `ASTH-Public`, `ASTH-Staff`, `ASTH-Uploads` read/write; `ROG-Drive` read-only | Confirmed complete | 30 July 2026 | `smbd` remained active after recovery reboot; Windows read/write and read-only denial were previously verified. |
+| Uptime Kuma | Redirect followed by HTTP 200 | Confirmed | 30 July 2026 | Advanced monitoring/alerting acceptance is not implied. |
+| Cockpit console | HTTPS port 9090 on office LAN and `ASTH-PORTABLE` | Confirmed complete | 30 July 2026 | TCP 9090 listening and HTTP 200 verified; self-signed certificate warning expected. |
+| Post-recovery service state | Zero failed units; ASTH health `healthy`/`running` | Confirmed | 30 July 2026 | Recheck after future maintenance. |
 | Backup retention and schedule | Not established | Pending decision | 25 July 2026 | Define production schedule, retention and alerting. |
 | System owner | Not assigned | Pending decision | 25 July 2026 | Confirm accountable owner. |
 | Technical owner | Not assigned | Pending decision | 25 July 2026 | Confirm technical owner. |
@@ -64,7 +68,7 @@ Do not record passwords, private keys, tokens or secret values in this table.
 
 ## Implementation Progress
 
-Status as of **26 July 2026**:
+Status as of **30 July 2026**:
 
 | Not Started | In Progress | Blocked | Complete |
 |---:|---:|---:|---:|
@@ -72,11 +76,11 @@ Status as of **26 July 2026**:
 
 | Phase | Implementation phase | State | Evidence or reason |
 |---:|---|---|---|
-| 1 | Pre-deployment verification | In Progress | Technical/operational owners and maintenance window remain unconfirmed. |
+| 1 | Pre-deployment verification | In Progress | Physical recovery is complete; technical/operational owners and maintenance window remain unconfirmed. |
 | 2 | Raspberry Pi physical and thermal checks | In Progress | Casing, NVMe and LCD are pending; repeat power/cooling/thermal checks after final assembly. |
 | 3 | Raspberry Pi OS and architecture verification | Complete | Debian 13, arm64/aarch64, kernel and time zone recorded. |
 | 4 | Hostname and network configuration | In Progress | Portable offline/online router modes are complete; Ethernet fixed-IP method remains pending. |
-| 5 | User account and SSH preparation | In Progress | `asthadmin`, SSH and public-key support exist; key login is not yet established and password login remains enabled. |
+| 5 | User account and SSH preparation | In Progress | Local `asthadmin` login, password recovery and `sudo` pass; key login is not yet established and password login remains enabled. |
 | 6 | System update and essential package preparation | Complete | Validated runtime stack and no failed services. |
 | 7 | ASTH directories and ownership | In Progress | Required paths exist; full ownership/mode inventory was not supplied. |
 | 8 | Python virtual environment preparation | In Progress | Runtime versions work; virtual-environment path, pinned dependency inventory and `pip check` evidence were not supplied. |
@@ -87,17 +91,18 @@ Status as of **26 July 2026**:
 | 13 | SQLite directory and permissions | In Progress | Directory exists; schema, live filename and permission evidence remain pending. |
 | 14 | Environment variables and secrets | Complete | Environment file is `root:root` mode `0600`; no secret values are documented. |
 | 15 | Logging and log rotation | In Progress | `/var/log/asth` exists; production retention and rotation evidence remain pending. |
-| 16 | Backup destination and recovery test | In Progress | Persistent mount plus manual `rsync` and SHA-256 recovery passed; schedule, retention and SQLite integrity evidence remain pending. |
+| 16 | Backup destination and recovery test | In Progress | Persistent mount plus earlier manual file recovery evidence exist; database backup/restore, schedule, retention and SQLite integrity evidence remain pending. |
 | 17 | Basic security hardening | In Progress | UFW/SSH/rpcbind controls pass; SSH key cutover remains pending. |
 | 18 | Resource and thermal monitoring | In Progress | Baseline resource/thermal values pass; representative sustained multi-device load evidence remains pending. |
 | 19 | End-to-end local-network validation | In Progress | Landing page and live status are confirmed; populated learning and participant/trainer workflows remain pending. |
-| 20 | Rollback readiness | In Progress | Configuration snapshot and recovery evidence exist; release/database rollback is not yet proven. |
-| 21 | Documentation and handover | In Progress | Deployment documents are updated; owners, maintenance window and final handover remain unconfirmed. |
-| 22 | Final MVP acceptance checklist | Blocked | Operational hub is confirmed, but final hardware, content, recovery, source sync and acceptance remain outstanding. |
+| 20 | Rollback readiness | In Progress | Configuration snapshot and recovery evidence exist; application rollback is not yet proven. |
+| 21 | Documentation and handover | In Progress | Deployment documents are updated; system custodian, maintenance window and final handover remain unconfirmed. |
+| 22 | Final MVP acceptance checklist | Blocked | Operational hub is confirmed, but final hardware, content, database restore, application rollback, source sync and acceptance remain outstanding. |
 
 ### Confirmed v0.4.0 hub deployment
 
-- [x] Raspberry Pi 5 with 32 GB RAM boots and runs from the 32 GB microSD card.
+- [x] Raspberry Pi 5 with 2 GB RAM boots and runs from the 32 GB microSD card.
+- [x] HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery, `sudo` (`SUDO_OK`) and normal reboot passed.
 - [x] ASTH portable network is operational; `192.168.100.187` is the current observed Pi address.
 - [x] `/opt/asth/app/main.py` passed `python3 -m py_compile`.
 - [x] `sudo systemctl restart asth` completed successfully.
@@ -105,9 +110,12 @@ Status as of **26 July 2026**:
 - [x] `/learn/` exists separately without a network graph and contains placeholder learning sections.
 - [x] `/health` remains available and `/api/hub-status` is an operational live-data dependency.
 - [x] Uptime Kuma and Cockpit are available as separately linked services.
+- [x] Zero failed units, healthy/running ASTH health, persistent `/mnt/rog`, active `smbd`, Uptime Kuma HTTP 200 after redirect and Cockpit port 9090/HTTP 200 were verified after recovery.
+- [x] A phone on `ASTH-PORTABLE` reached ASTH health and internet forwarding through `eth0` passed.
 - [x] Local application backups exist at `/opt/asth/app/main.py.backup-20260726` and `/opt/asth/app/main.py.backup-clay-service-hub-20260726`.
-- [ ] Receive and install the casing, NVMe base/HAT and SSD, LCD and suitable display cable.
-- [ ] Validate final power, cooling, temperature, NVMe, kiosk startup, backup and recovery.
+- [ ] Complete the integrated casing/LCD assembly and install the NVMe base/HAT and SSD.
+- [ ] Validate final power, cooling, temperature, NVMe and kiosk startup.
+- [ ] Complete database backup/restore and application rollback testing.
 - [ ] Populate Learning Hub content and move large content to NVMe when available.
 - [ ] Synchronise and commit the deployed v0.4.0 source into this repository later.
 
@@ -127,13 +135,14 @@ Status as of **26 July 2026**:
 
 **Prerequisites:** Physical access to the Pi; access to the current documentation; an approved maintenance window; permission to administer the device.
 
-**Current state:** **In Progress** — Hardware, host, network, services and backup locations are recorded. System/technical/backup owners, maintenance window and acceptance approver remain unconfirmed.
+**Current state:** **In Progress** — Hardware, host, network, services, backup locations and physical recovery access are recorded. System/technical/backup owners, maintenance window and acceptance approver remain unconfirmed.
 
 1. [x] Read `docs/DEPLOYMENT_PLAN.md` and record its verified Git reference: `77b81bb6b1d57cac0902162cd449b9c7ce37f4d7 | 2026-07-25 | docs: record Raspberry Pi infrastructure deployment status`.
-2. [x] Confirm the Pi has 32 GB RAM and the current microSD system storage is 32 GB.
+2. [x] Confirm the Pi has 2 GB RAM and the current microSD system storage is 32 GB.
 3. [x] Confirm the deployment remains LAN-only and Docker remains deferred.
 4. [ ] Assign the technical lead, network owner, recovery operator, and acceptance approver.
-5. [ ] Confirm a keyboard/display, serial console, or equivalent local recovery route is available.
+5. [x] Confirm HDMI display and USB keyboard local recovery access.
+5a. [x] Confirm local `asthadmin` login, boot-recovery password recovery, `sudo` (`SUDO_OK`) and normal reboot.
 6. [x] Record the current hostname, IP addresses, route, disk use, and memory before changes.
 7. [x] Confirm an off-device location is available for initial configuration records and backups.
 
@@ -246,6 +255,7 @@ swapon --show
 9. [x] Confirm `ASTH-PORTABLE` returns automatically after a full Raspberry Pi reboot.
 10. [x] Confirm the v0.4.0 landing page loads and displays the verified live hub interface.
 11. [x] Verify online portable mode through `PHONE-UPLINK` on `wlan1`, including forwarded internet with Ethernet removed.
+12. [x] Verify a phone can reach ASTH health through `ASTH-PORTABLE` and receive internet forwarding through `eth0`.
 
 **Portable operating steps:**
 
@@ -317,7 +327,7 @@ sudo hostnamectl set-hostname <asth-hostname>
 
 **Prerequisites:** Phase 4 complete; `<admin-user>` confirmed; administrator public key available; local console access working.
 
-**Current state:** **In Progress** — Administrator `asthadmin`, SSH service and public-key support are present. Password authentication remains temporarily enabled until key login is established and tested.
+**Current state:** **In Progress** — Local `asthadmin` login, boot-recovery password recovery, approved `sudo` and physical console recovery pass. SSH and public-key support are present, but password authentication remains temporarily enabled until key login is established and tested.
 
 1. [ ] List current human and system accounts and identify unused defaults for later review.
 2. [x] Confirm `<admin-user>` is a named, accountable account rather than a shared login.
@@ -325,8 +335,8 @@ sudo hostnamectl set-hostname <asth-hostname>
 4. [ ] Grant only the administrative group membership required by Raspberry Pi OS.
 5. [ ] Install the administrator's public key with correct ownership and modes.
 6. [ ] Open a second SSH session using the key and keep the first session open.
-7. [ ] Verify approved `sudo` access from the named account.
-8. [ ] Confirm local console recovery still works before later disabling password SSH.
+7. [x] Verify approved `sudo` access from the named account with `SUDO_OK`.
+8. [x] Confirm local HDMI/USB-keyboard console recovery and normal reboot work before later disabling password SSH.
 
 **Safe verification commands:**
 
@@ -384,7 +394,7 @@ sudo apt upgrade
 sudo apt install python3 python3-venv python3-pip nginx sqlite3
 ```
 
-**Expected result:** The OS is patched, required commands are available, and no unapproved service increases the 32 GB RAM footprint.
+**Expected result:** The OS is patched, required commands are available, and no unapproved service puts unnecessary pressure on the 2 GB RAM footprint.
 
 **Stop condition:** Stop on package errors, dependency conflicts, insufficient storage, failed reboot, lost network access, new power/thermal warnings, or an unapproved package/service requirement.
 
@@ -565,7 +575,7 @@ Planned foreground command:
 7. [ ] Validate unit syntax before enabling it.
 8. [ ] Start, stop, restart, and inspect the service.
 9. [x] Enable boot start only after all manual lifecycle checks pass.
-10. [ ] Reboot once in the maintenance window and verify automatic recovery.
+10. [x] Reboot after physical recovery and verify automatic service recovery.
 
 **Safe verification commands:**
 
@@ -755,7 +765,7 @@ sudo logrotate --debug /etc/logrotate.conf
 
 **Prerequisites:** Phase 13 complete; `<backup-mount>` and retention confirmed; recovery operator assigned; sufficient off-device capacity; controlled test window.
 
-**Current state:** **In Progress** — The persistent SSD mount and manual backup/recovery using `rsync` and SHA-256 comparison passed. Production backup schedule/retention, SQLite snapshot and integrity evidence remain undefined.
+**Current state:** **In Progress** — The persistent SSD mount remained available after reboot and earlier manual file-copy/checksum evidence exists. Database backup/restore testing, production schedule/retention, SQLite snapshot and integrity evidence remain incomplete.
 
 1. [x] Verify the backup destination is a different physical device or approved network/workstation destination.
 2. [x] Record destination identity, mount type, capacity, owner, and access controls.
@@ -766,9 +776,9 @@ sudo logrotate --debug /etc/logrotate.conf
 5. [ ] Run `PRAGMA integrity_check;` on the snapshot.
 6. [ ] Copy the snapshot and approved mutable content to the off-device destination.
 7. [x] Verify copied file sizes and cryptographic checksums.
-8. [x] Restore the copied snapshot into a separate test directory, never over the live database.
+8. [ ] Restore the copied database snapshot into a separate test directory, never over the live database.
 9. [ ] Run integrity/foreign-key checks against the restored test copy.
-10. [x] Complete an application-level recovery rehearsal in an isolated location or approved maintenance window.
+10. [ ] Complete an application-level database restore rehearsal in an isolated location or approved maintenance window.
 11. [ ] Record recovery time, recovery point, lost-transaction window, and deviations.
 12. [ ] Confirm the retention schedule will not fill either destination or local staging.
 
@@ -798,7 +808,7 @@ sha256sum /var/lib/asth/backup-staging/asth-<backup-id>.sqlite3
 
 **Prerequisites:** Phases 5, 12, 14, and 16 complete; local console present; second key-authenticated SSH session open; `<lan-cidr>` and `<admin-cidr>` confirmed.
 
-**Current state:** **In Progress** — UFW permits required hotspot services, restricted SSH from `10.42.0.0/24`, forwarding `wlan0` to `wlan1` for online portable mode, and retained forwarding `wlan0` to `eth0` for office-LAN mode. SSH password login is still temporarily enabled.
+**Current state:** **In Progress** — UFW permits required hotspot services, restricted SSH from `10.42.0.0/24`, forwarding `wlan0` to `wlan1` for online portable mode, and forwarding `wlan0` to `eth0` verified with a phone on 30 July. SSH password login is still temporarily enabled.
 
 **Portable hotspot firewall checks:**
 
@@ -887,7 +897,7 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 
 **Prerequisites:** Operational ASTH portable network; representative clients; approved test content and accounts for later learning-flow acceptance.
 
-**Current state:** **In Progress** — The portable network, landing page and live status are confirmed. Populated learning content, participant/trainer workflows and representative concurrency remain pending.
+**Current state:** **In Progress** — The portable network, landing page and live status are confirmed. A phone reached ASTH health through `ASTH-PORTABLE` and received internet forwarding through `eth0`. Populated learning content, participant/trainer workflows and representative concurrency remain pending.
 
 1. [x] Connect intended client devices to the ASTH network.
 2. [x] Open the recorded ASTH URL and visually confirm the v0.4.0 landing page.
@@ -916,7 +926,7 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 
 **Prerequisites:** Phase 16 complete; current and immediately previous releases retained; release compatibility notes and pre-deployment off-device backup available.
 
-**Current state:** **In Progress** — A configuration snapshot and successful file-recovery comparison exist. A known-good release rollback and matching SQLite recovery are not yet proven.
+**Current state:** **In Progress** — A configuration snapshot and successful file-recovery comparison exist. Application rollback and matching SQLite recovery are not yet proven.
 
 1. [ ] Record current and previous release IDs and checksums.
 2. [ ] Verify `/opt/asth/current` resolves to the intended current release.
@@ -952,7 +962,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 
 **Prerequisites:** Phases 19 and 20 complete; operational owners identified; evidence repository selected.
 
-**Current state:** **In Progress** — Status and runbook documentation are updated for 26 July 2026, but handover cannot complete until system, technical and backup owners plus the maintenance window are confirmed.
+**Current state:** **In Progress** — Status and runbook documentation are updated for 30 July 2026, but handover cannot complete until the system custodian, technical and backup owners plus the maintenance window are confirmed.
 
 1. [ ] Record hardware identity, hostname, reserved IP, LAN URL, interface, and physical location.
 2. [ ] Record current/previous release IDs, application health path, database path, and schema version.
@@ -990,13 +1000,14 @@ df -h /
 
 **Prerequisites:** Phases 1–21 complete; all blocking defects resolved or explicitly rejected from acceptance; acceptance owner present.
 
-**Current state:** **Blocked / PARTIAL** — The operational hub is confirmed; final hardware, Learning Hub content, kiosk, NVMe migration, recovery testing, source synchronisation, ownership and final approval remain outstanding.
+**Current state:** **Blocked / PARTIAL** — Physical recovery and the operational hub are confirmed; final hardware, Learning Hub content, kiosk, NVMe migration, database backup/restore, application rollback, source synchronisation, ownership and final approval remain outstanding.
 
-1. [x] Confirm Raspberry Pi 5, 32 GB RAM and current 32 GB microSD match the confirmed baseline.
+1. [x] Confirm Raspberry Pi 5, 2 GB RAM and current 32 GB microSD match the confirmed baseline.
 2. [ ] Confirm casing, NVMe, LCD, final power, cooling and temperature after assembly.
 3. [x] Confirm Raspberry Pi OS architecture/time/storage checks pass.
 4. [ ] Confirm hostname, reserved IP, LAN URL, and network boundary are documented.
-5. [ ] Confirm named key-based administration and local recovery work.
+5. [ ] Confirm named key-based administration.
+5a. [x] Confirm local physical recovery, password recovery and approved `sudo` access work.
 6. [x] Confirm only approved essential packages/services are present.
 7. [ ] Confirm directory, release, environment, and SQLite ownership/modes match the plan.
 8. [x] Confirm FastAPI runs through systemd with exactly one Uvicorn worker on `127.0.0.1:8000`.
