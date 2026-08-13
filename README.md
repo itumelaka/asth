@@ -61,14 +61,17 @@ Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan
 
 Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan NVMe, servis luaran terkawal atau pengasingan workload tanpa mengubah arah asas projek.
 
-## Status pada 30 Julai 2026
+## Status pada 13 Ogos 2026
 
 - **CONFIRMED:** Akses pemulihan fizikal melalui HDMI dan papan kekunci USB lengkap; login tempatan `asthadmin`, pemulihan kata laluan melalui boot recovery, `sudo` (`SUDO_OK`) dan reboot normal telah disahkan.
 - **CONFIRMED:** Rangkaian portable ASTH dan aplikasi web FastAPI v0.4.0 beroperasi pada Raspberry Pi.
 - **CONFIRMED:** `ASTH-PORTABLE` aktif pada `wlan0` dengan `10.42.0.1/24`; telefon yang disambungkan boleh mencapai health endpoint ASTH dan menggunakan internet melalui forwarding `eth0`.
 - **CONFIRMED:** Halaman utama `/` memaparkan status hub, statistik rangkaian masa nyata dan pautan ke Learning Hub, Uptime Kuma serta Cockpit.
+- **VERIFIED:** Rollback manual aplikasi daripada ASTH v0.4.0 kepada salinan v0.3.0 dan pemulihan semula kepada v0.4.0 berjaya; kedua-dua health check akhir mengembalikan HTTP 200 dan keadaan `healthy`.
+- **VERIFIED:** `vc4-kms-v3d` diaktifkan semula; selepas reboot, peranti DRI dan modul kernel `vc4`/`v3d` tersedia, `rp1-test.service` aktif, `asth.service` aktif dan tiada unit systemd gagal.
 - **PARTIAL:** `/learn/` tersedia sebagai Learning Hub berasingan, tetapi kandungan sebenar belum dimasukkan.
-- **PENDING:** Pemasangan casing, NVMe dan LCD; konfigurasi kiosk LCD; migrasi storan; ujian backup/restore database dan rollback aplikasi; serta sinkronisasi source v0.4.0 dari Pi ke repository ini.
+- **DEFERRED:** Ujian backup/restore database ditangguhkan kerana `/var/lib/asth/db` kosong dan aplikasi semasa belum mempunyai fail atau rujukan database.
+- **PENDING:** MHS35 LCD belum dipasang dan `MHS35-show` tidak dijalankan semasa pemulihan; NVMe controller/HAT belum tiba; konfigurasi kiosk LCD, migrasi storan dan sinkronisasi source v0.4.0 dari Pi ke repository ini masih belum lengkap.
 
 Butiran semasa direkodkan dalam [Deployment Status](docs/DEPLOYMENT_STATUS.md).
 

@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 MVP Implementation Checklist
 
-This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **30 July 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work or blocked. Physical recovery, the operational hub and v0.4.0 landing page are **CONFIRMED**, while learning content, final hardware, kiosk, migration, database backup/restore, application rollback and MVP acceptance remain incomplete.
+This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **13 August 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work, deferred or blocked. Physical recovery, the operational hub, manual application rollback/restoration and GPU/display-stack recovery are **VERIFIED**. Learning content, final hardware, kiosk, migration and MVP acceptance remain incomplete; database backup/restore is **DEFERRED** until a database-backed module exists.
 
 ## Scope and operating rules
 
@@ -30,7 +30,7 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Named administrator account | `asthadmin` | Confirmed | 25 July 2026 | Establish tested SSH key access before password-login removal. |
 | Physical recovery access | HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery and normal reboot | Confirmed complete | 30 July 2026 | Keep this path available until final assembly and revalidate afterward. |
 | Named administrator sudo | `SUDO_OK` | Confirmed | 30 July 2026 | None. |
-| ASTH application service | `asth`; runtime account not recorded | Partially confirmed | 26 July 2026 | Restart succeeded; verify installed unit metadata separately. |
+| ASTH application service | `asth`; runtime account not recorded | Verified active | 13 August 2026 | Rollback and restoration restarts succeeded; verify installed unit metadata separately. |
 | Pi hostname | `asth-pi` | Confirmed | 25 July 2026 | None. |
 | Current LAN address | `192.168.100.187` observed | Confirmed current value | 26 July 2026 | Do not treat as permanent until reservation/fixed addressing is confirmed. |
 | Gateway | `192.168.100.1` | Confirmed | 25 July 2026 | None. |
@@ -48,9 +48,9 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Health and live status | `/health`; `/api/hub-status` | Confirmed | 26 July 2026 | Treat live status as an operational dependency. |
 | Deployed routes | `/`, `/learn/`, `/health`, `/api/hub-status` | Confirmed | 26 July 2026 | `/` is the hub page; `/learn/` remains a placeholder Learning Hub. |
 | Deployed application source | `/opt/asth/app/main.py`, v0.4.0 | Confirmed on Pi | 26 July 2026 | Commit/synchronise this source into the repository later. |
-| SQLite location | Directory `/var/lib/asth/db`; schema and live filename not defined | Partially confirmed | 25 July 2026 | Design schema and record the production database filename. |
+| SQLite location | `/var/lib/asth/db` exists and is empty; no database file/reference exists in the current application | Deferred | 13 August 2026 | Resume backup/restore work after a database-backed module defines the live database. |
 | Maximum request body | Not defined | Pending decision | 25 July 2026 | Set from real application requirements. |
-| Environment file | `/etc/asth/asth.env`, `root:root`, mode `0600` | Confirmed | 25 July 2026 | Never expose its contents. |
+| Environment file | `/etc/asth/asth.env`, previously confirmed `root:root` mode `0600`; no `KEY=value` entries | Partial | 13 August 2026 | Define required variable names when a module needs runtime configuration; never expose secret values. |
 | Persistent SSD mount | `/dev/sda2` at `/mnt/rog`; UUID `8E5AAE985AAE7C99`; NTFS via `ntfs3` | Confirmed complete | 30 July 2026 | Remained mounted after the recovery reboot; existing data preserved. |
 | ASTH SSD namespace | `/mnt/rog/ASTH` with NAS, app-data, database, backups, logs and staging directories | Confirmed complete | 25 July 2026 | All directories owned by `asthadmin`; do not modify unrelated SSD contents. |
 | Manual backup destination | `/mnt/rog/ASTH_BACKUP` | Confirmed preserved | 25 July 2026 | Production schedule, retention and alerting remain pending. |
@@ -59,6 +59,10 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Uptime Kuma | Redirect followed by HTTP 200 | Confirmed | 30 July 2026 | Advanced monitoring/alerting acceptance is not implied. |
 | Cockpit console | HTTPS port 9090 on office LAN and `ASTH-PORTABLE` | Confirmed complete | 30 July 2026 | TCP 9090 listening and HTTP 200 verified; self-signed certificate warning expected. |
 | Post-recovery service state | Zero failed units; ASTH health `healthy`/`running` | Confirmed | 30 July 2026 | Recheck after future maintenance. |
+| Manual application rollback | v0.4.0 → v0.3.0 → v0.4.0; both restarts and HTTP 200 healthy/version checks passed | Verified | 13 August 2026 | Revalidate if the deployment layout changes. |
+| GPU/display stack | `dtoverlay=vc4-kms-v3d` enabled; DRI nodes and `vc4`/`v3d` present; `rp1-test.service` active | Verified | 13 August 2026 | This does not imply LCD installation. |
+| LCD | MHS35 not installed; LCD-show cloned previously; `MHS35-show` not run during recovery | Pending | 13 August 2026 | Install driver only with compatible LCD/casing hardware. |
+| NVMe | Controller/HAT has not arrived; system remains on 32 GB microSD | Pending | 13 August 2026 | Detect and test after arrival before migration. |
 | Backup retention and schedule | Not established | Pending decision | 25 July 2026 | Define production schedule, retention and alerting. |
 | System owner | Not assigned | Pending decision | 25 July 2026 | Confirm accountable owner. |
 | Technical owner | Not assigned | Pending decision | 25 July 2026 | Confirm technical owner. |
@@ -68,11 +72,11 @@ Do not record passwords, private keys, tokens or secret values in this table.
 
 ## Implementation Progress
 
-Status as of **30 July 2026**:
+Status as of **13 August 2026**:
 
-| Not Started | In Progress | Blocked | Complete |
-|---:|---:|---:|---:|
-| 0 | 14 | 1 | 7 |
+| Not Started | In Progress | Deferred | Blocked | Complete |
+|---:|---:|---:|---:|---:|
+| 0 | 13 | 2 | 1 | 6 |
 
 | Phase | Implementation phase | State | Evidence or reason |
 |---:|---|---|---|
@@ -88,16 +92,16 @@ Status as of **30 July 2026**:
 | 10 | Uvicorn local service validation | Complete | One worker bound only to `127.0.0.1:8000`. |
 | 11 | systemd service preparation | Complete | `asth.service` enabled and active. |
 | 12 | Nginx reverse proxy preparation | Complete | Nginx enabled/active on port 80; port 8000 not LAN-exposed. |
-| 13 | SQLite directory and permissions | In Progress | Directory exists; schema, live filename and permission evidence remain pending. |
-| 14 | Environment variables and secrets | Complete | Environment file is `root:root` mode `0600`; no secret values are documented. |
+| 13 | SQLite directory and permissions | Deferred | Directory exists but is empty; the current application has no database file or reference. |
+| 14 | Environment variables and secrets | In Progress | File metadata was previously confirmed, but the file has no `KEY=value` configuration. |
 | 15 | Logging and log rotation | In Progress | `/var/log/asth` exists; production retention and rotation evidence remain pending. |
-| 16 | Backup destination and recovery test | In Progress | Persistent mount plus earlier manual file recovery evidence exist; database backup/restore, schedule, retention and SQLite integrity evidence remain pending. |
+| 16 | Backup destination and recovery test | Deferred | Off-device storage evidence exists; database backup/restore awaits a database-backed module and has no pass/fail result. |
 | 17 | Basic security hardening | In Progress | UFW/SSH/rpcbind controls pass; SSH key cutover remains pending. |
 | 18 | Resource and thermal monitoring | In Progress | Baseline resource/thermal values pass; representative sustained multi-device load evidence remains pending. |
 | 19 | End-to-end local-network validation | In Progress | Landing page and live status are confirmed; populated learning and participant/trainer workflows remain pending. |
-| 20 | Rollback readiness | In Progress | Configuration snapshot and recovery evidence exist; application rollback is not yet proven. |
+| 20 | Rollback readiness | In Progress | Manual application-file rollback/restoration is verified; release-layout and database-coupled recovery remain outstanding or deferred. |
 | 21 | Documentation and handover | In Progress | Deployment documents are updated; system custodian, maintenance window and final handover remain unconfirmed. |
-| 22 | Final MVP acceptance checklist | Blocked | Operational hub is confirmed, but final hardware, content, database restore, application rollback, source sync and acceptance remain outstanding. |
+| 22 | Final MVP acceptance checklist | Blocked | Operational hub and application rollback are verified, but final hardware, content, deferred database recovery, source sync and acceptance remain outstanding. |
 
 ### Confirmed v0.4.0 hub deployment
 
@@ -113,9 +117,11 @@ Status as of **30 July 2026**:
 - [x] Zero failed units, healthy/running ASTH health, persistent `/mnt/rog`, active `smbd`, Uptime Kuma HTTP 200 after redirect and Cockpit port 9090/HTTP 200 were verified after recovery.
 - [x] A phone on `ASTH-PORTABLE` reached ASTH health and internet forwarding through `eth0` passed.
 - [x] Local application backups exist at `/opt/asth/app/main.py.backup-20260726` and `/opt/asth/app/main.py.backup-clay-service-hub-20260726`.
-- [ ] Complete the integrated casing/LCD assembly and install the NVMe base/HAT and SSD.
+- [x] Manual rollback to v0.3.0 and restoration to v0.4.0 passed SHA-256, service restart, HTTP 200, health and version checks.
+- [x] KMS/DRI recovery produced the expected devices and modules; `rp1-test.service` and `asth.service` were active with zero failed units.
+- [ ] Complete the compatible casing/LCD assembly and install the NVMe controller/HAT and SSD after arrival.
 - [ ] Validate final power, cooling, temperature, NVMe and kiosk startup.
-- [ ] Complete database backup/restore and application rollback testing.
+- [ ] Complete database backup/restore after a database-backed module exists; application rollback is verified.
 - [ ] Populate Learning Hub content and move large content to NVMe when available.
 - [ ] Synchronise and commit the deployed v0.4.0 source into this repository later.
 
@@ -655,7 +661,7 @@ sudo systemctl reload nginx
 
 **Prerequisites:** Phases 7 and 9 complete; schema/migration version approved; a pre-change backup exists if data already exists.
 
-**Current state:** **In Progress** — `/var/lib/asth/db` exists, but the SQLite schema, live database filename, connection settings and permission evidence are not yet defined.
+**Current state:** **Deferred** — `/var/lib/asth/db` exists but is empty. No database file or database reference was found in the current application, so schema, live filename, connection and recovery work await a database-backed module.
 
 1. [ ] Confirm the live path is `/var/lib/asth/db/asth.sqlite3` or record the approved alternative.
 2. [ ] Verify `/var/lib/asth/db` is owned by `asth:asth` with mode `0750`.
@@ -688,12 +694,12 @@ sqlite3 /var/lib/asth/db/asth.sqlite3 "PRAGMA journal_mode; PRAGMA busy_timeout;
 
 **Prerequisites:** Phase 13 complete; reviewed environment-variable inventory; authorized secret custodian and protected off-device recovery location.
 
-**Current state:** **Complete for infrastructure** — `/etc/asth/asth.env` is `root:root` mode `0600`; its contents remain secret and are not documented.
+**Current state:** **In Progress** — File metadata was previously confirmed as `root:root` mode `0600`. A non-secret structural check on 13 August 2026 found no `KEY=value` entries; required runtime-variable inventory and configuration therefore remain deferred until a module needs them.
 
 1. [ ] List required variable names and document purpose, owner, and whether each is secret.
 2. [ ] Confirm `/etc/asth/asth.env` will be owned by `root:asth` with mode `0640`.
 3. [ ] Generate production secrets on the Pi or another approved secure system; never use example values.
-4. [x] Enter only simple systemd-compatible `KEY=value` entries.
+4. [ ] Enter only required simple systemd-compatible `KEY=value` entries when the reviewed application configuration defines them.
 5. [ ] Confirm trusted hosts/origins contain only the approved hostname/IP values.
 6. [x] Confirm offline features are the default and cloud/API integrations are disabled.
 7. [ ] Store required recovery secrets separately under stronger off-device controls.
@@ -765,7 +771,7 @@ sudo logrotate --debug /etc/logrotate.conf
 
 **Prerequisites:** Phase 13 complete; `<backup-mount>` and retention confirmed; recovery operator assigned; sufficient off-device capacity; controlled test window.
 
-**Current state:** **In Progress** — The persistent SSD mount remained available after reboot and earlier manual file-copy/checksum evidence exists. Database backup/restore testing, production schedule/retention, SQLite snapshot and integrity evidence remain incomplete.
+**Current state:** **Deferred for database recovery** — The persistent external SSD and earlier manual file-copy/checksum evidence remain confirmed. However, `/var/lib/asth/db` is empty and the current application has no database file or reference. Database backup/restore has not passed or failed and resumes only after a database-backed module exists. Production schedule and retention decisions also remain open.
 
 1. [x] Verify the backup destination is a different physical device or approved network/workstation destination.
 2. [x] Record destination identity, mount type, capacity, owner, and access controls.
@@ -924,20 +930,20 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 
 **Objective:** Prove the immediately previous known-good release and matching data can be restored within a controlled window.
 
-**Prerequisites:** Phase 16 complete; current and immediately previous releases retained; release compatibility notes and pre-deployment off-device backup available.
+**Prerequisites:** For database-coupled rollback, Phase 16 complete with compatibility notes and an off-device database backup. For the current database-free application-only path, preserve verified current and previous files with checksums and an explicit forward-restoration copy.
 
-**Current state:** **In Progress** — A configuration snapshot and successful file-recovery comparison exist. Application rollback and matching SQLite recovery are not yet proven.
+**Current state:** **In Progress / application path verified** — On 13 August 2026, manual application rollback from v0.4.0 to v0.3.0 and forward restoration to v0.4.0 passed checksum, service restart, HTTP 200, health and version checks. Release-symlink rollback is not applicable to the confirmed single-file test; matching SQLite recovery is deferred because no database-backed module exists.
 
-1. [ ] Record current and previous release IDs and checksums.
+1. [x] Record current and previous application versions and file checksums.
 2. [ ] Verify `/opt/asth/current` resolves to the intended current release.
 3. [ ] Confirm the previous release has its own complete virtual environment.
 4. [ ] Record current configuration checksum without exposing secret values.
-5. [ ] Confirm database schema compatibility between current and previous releases.
-6. [ ] Confirm a matching pre-deployment SQLite backup is off-device and integrity-checked.
-7. [ ] Rehearse application-only rollback using test data or an approved maintenance window when schemas are backward-compatible.
-8. [ ] Rehearse matching database recovery when schemas are not backward-compatible.
+5. [ ] Confirm database schema compatibility after a database-backed module exists.
+6. [ ] Confirm a matching pre-deployment SQLite backup is off-device and integrity-checked after a live database exists.
+7. [x] Rehearse application-only rollback and restore the current application during an approved controlled test.
+8. [ ] Rehearse matching database recovery after a database-backed module and non-backward-compatible schema change exist.
 9. [ ] Validate health, login, one read, one write, dashboard read-back, and media after rollback.
-10. [ ] Record the forward-recovery route after the rehearsal.
+10. [x] Record the forward-recovery route after the rehearsal.
 
 **Safe verification commands:**
 
@@ -950,7 +956,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 
 **Warning:** Repointing the current release or restoring a live database changes production state. Stop `asth.service`, preserve the current database and symlink target, use an approved maintenance window, and keep the known-good release plus off-device backup available. Never delete a release during the rehearsal.
 
-**Expected result:** Operators can identify and restore the previous compatible release/data, then pass core checks within the recorded recovery time.
+**Expected result:** For the current database-free application, operators can restore the verified previous file and then forward-restore v0.4.0 with matching checksums and health/version checks. After a database-backed module exists, the matching data recovery path must also pass its separate integrity and application checks.
 
 **Stop condition:** Stop if release IDs/checksums are unknown, previous dependencies are incomplete, schema compatibility is unclear, backup integrity is unproven, or any rollback step would overwrite the only recoverable copy.
 
@@ -962,7 +968,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 
 **Prerequisites:** Phases 19 and 20 complete; operational owners identified; evidence repository selected.
 
-**Current state:** **In Progress** — Status and runbook documentation are updated for 30 July 2026, but handover cannot complete until the system custodian, technical and backup owners plus the maintenance window are confirmed.
+**Current state:** **In Progress** — Status and runbook documentation are updated through 13 August 2026, but handover cannot complete until the system custodian, technical and backup owners plus the maintenance window are confirmed.
 
 1. [ ] Record hardware identity, hostname, reserved IP, LAN URL, interface, and physical location.
 2. [ ] Record current/previous release IDs, application health path, database path, and schema version.
@@ -971,7 +977,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 5. [ ] Record monitoring thresholds and response/escalation actions.
 6. [ ] Record maintenance, safe shutdown/startup, rollback, and recovery procedures.
 7. [ ] Record administrative contacts and access-request process without recording credentials.
-8. [ ] Record known limitations: 32 GB microSD system storage, pending casing/NVMe/LCD, placeholder Learning Hub content, incomplete recovery testing and repository source not synchronised.
+8. [ ] Record known limitations: 32 GB microSD system storage, NVMe controller/HAT not arrived, MHS35 LCD not installed, placeholder Learning Hub content, database recovery deferred and repository source not synchronised.
 9. [ ] Walk the operator through health, logs, backup evidence, shutdown/startup, and escalation.
 10. [ ] Have the operator perform a supervised read-only health/status check.
 11. [ ] Store screenshots/outputs in the approved non-secret evidence location.
@@ -1000,7 +1006,7 @@ df -h /
 
 **Prerequisites:** Phases 1–21 complete; all blocking defects resolved or explicitly rejected from acceptance; acceptance owner present.
 
-**Current state:** **Blocked / PARTIAL** — Physical recovery and the operational hub are confirmed; final hardware, Learning Hub content, kiosk, NVMe migration, database backup/restore, application rollback, source synchronisation, ownership and final approval remain outstanding.
+**Current state:** **Blocked / PARTIAL** — Physical recovery, the operational hub, manual application rollback/restoration and GPU/display-stack recovery are verified. Final hardware, Learning Hub content, kiosk, NVMe migration, deferred database backup/restore, source synchronisation, ownership and final approval remain outstanding.
 
 1. [x] Confirm Raspberry Pi 5, 2 GB RAM and current 32 GB microSD match the confirmed baseline.
 2. [ ] Confirm casing, NVMe, LCD, final power, cooling and temperature after assembly.
@@ -1019,7 +1025,7 @@ df -h /
 14. [ ] Confirm five-device concurrent and offline core-flow tests pass.
 15. [ ] Confirm quiz writes, progress, trainer dashboard, and Smart Tutor results are correct.
 16. [ ] Confirm representative resource results and final-assembly power/cooling/thermal checks pass.
-17. [ ] Confirm rollback rehearsal and forward recovery pass.
+17. [ ] Confirm every required rollback path passes; application rollback/forward recovery passed, while database recovery is deferred.
 18. [ ] Confirm handover is acknowledged and maintenance/review dates are scheduled.
 19. [ ] Record remaining non-blocking limitations and obtain signed MVP pilot acceptance.
 
@@ -1047,7 +1053,7 @@ readlink -f /opt/asth/current
 
 **Expected result:** Every acceptance item has current evidence, no blocking defect remains, and `<acceptance-owner>` approves only the controlled LAN pilot.
 
-**Stop condition:** Do not accept the MVP if any required phase is incomplete/blocked, a core flow fails, backup/restore or rollback is unproven, secrets are exposed, Uvicorn is LAN-facing, internet exposure exists, or resource/thermal limits are exceeded.
+**Stop condition:** Do not accept the MVP if any required phase is incomplete/blocked, a core flow fails, required backup/restore or rollback evidence is absent, secrets are exposed, Uvicorn is LAN-facing, internet exposure exists, or resource/thermal limits are exceeded. Application rollback is verified; database backup/restore remains deferred and cannot satisfy final database acceptance.
 
 **Evidence to record:** Completed acceptance checklist, command-output bundle, test matrix, screenshots, current release/schema IDs, backup/restore/rollback references, known limitations, approver name, decision, and date.
 

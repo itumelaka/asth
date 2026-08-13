@@ -1,6 +1,6 @@
 # ASTH Development Roadmap
 
-**Status date:** 30 July 2026
+**Status date:** 13 August 2026
 
 Status labels used below: **CONFIRMED** for directly verified work, **PARTIAL** for an operational shell or incomplete milestone, **PLANNED** for an approved future direction and **PENDING** for work not yet completed.
 
@@ -122,7 +122,7 @@ The Learning Hub currently contains placeholders for Modul Pembelajaran, Video L
 - minimum lima peranti berjaya masuk;
 - sistem asas berfungsi tanpa internet.
 
-Confirmed: the Raspberry Pi with 2 GB RAM, physical HDMI/USB-keyboard recovery access, local `asthadmin` login, recovered password, `sudo`, normal reboot, portable network, v0.4.0 application service, `/`, `/learn/`, `/health` and `/api/hub-status` are operational. Post-reboot checks also confirmed zero failed units, `/mnt/rog`, `smbd`, Uptime Kuma, Cockpit, phone access through `ASTH-PORTABLE` and internet forwarding through `eth0`. Pending: final casing, NVMe and LCD installation, kiosk mode, post-installation validation, database backup/restore testing, application rollback testing and repository synchronisation of the deployed source.
+Confirmed: the Raspberry Pi with 2 GB RAM, physical HDMI/USB-keyboard recovery access, local `asthadmin` login, recovered password, `sudo`, normal reboot, portable network, v0.4.0 application service, `/`, `/learn/`, `/health` and `/api/hub-status` are operational. Post-reboot checks also confirmed zero failed units, `/mnt/rog`, `smbd`, Uptime Kuma, Cockpit, phone access through `ASTH-PORTABLE` and internet forwarding through `eth0`. On 13 August, manual application rollback to v0.3.0 and restoration to v0.4.0 were verified, and KMS/DRI recovery ended with active `rp1-test.service`, active `asth.service`, zero failed units and healthy ASTH v0.4.0. Pending: compatible casing/LCD installation, NVMe controller/HAT arrival and installation, kiosk mode, post-installation validation and repository synchronisation. Database backup/restore is deferred until a database-backed module exists.
 
 ## Sprint 6 — Testing and Hardening
 
@@ -207,10 +207,10 @@ Selepas versi 0.9:
 ## Immediate Hardware and Content Sequence
 
 1. **PENDING:** Receive and install the casing.
-2. **PENDING:** Receive and install the NVMe base/HAT and SSD, then detect and test the device.
+2. **PENDING:** Receive the NVMe controller/HAT, then install and test the NVMe device.
 3. **PLANNED:** Choose and execute the final NVMe migration method; prefer full-OS boot from NVMe and retain the microSD as recovery media if testing succeeds.
-4. **PENDING:** Receive and install the LCD and suitable display cable; configure kiosk mode to open `/`.
+4. **PENDING:** Install the MHS35 LCD with compatible casing/cable hardware, then run the suitable driver procedure and configure kiosk mode to open `/`; `MHS35-show` was not run during display recovery.
 5. **PENDING:** Populate Learning Hub content and move large content to NVMe when available.
 6. **PENDING:** Complete final power, cooling and temperature validation after assembly.
-7. **PENDING:** Complete database backup/restore and application rollback testing.
+7. **DEFERRED:** Complete database backup/restore after a database-backed module exists; application rollback/restoration is verified.
 8. **PENDING:** Finalise the system custodian and maintenance window.

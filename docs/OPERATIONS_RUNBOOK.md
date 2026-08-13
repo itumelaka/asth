@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Operations Runbook
 
-This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v0.4.0 application as of 30 July 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
+This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v0.4.0 application as verified through 13 August 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
 
 ## Safety rules
 
@@ -45,13 +45,17 @@ This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v
 | Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` |
 | Backend file backup | `/opt/asth/app/main.py.backup-20260726` |
 | Previous 3D Clay UI backup | `/opt/asth/app/main.py.backup-clay-service-hub-20260726` |
+| Pre-rollback-test safety copy | `/opt/asth/app/main.py.pre-rollback-test-20260730` |
+| Boot configuration safety copy | `/boot/firmware/config.txt.before-vc4-fix-20260813` |
 | ASTH storage namespace | `/mnt/rog/ASTH` |
 | Samba service | `smbd`; authenticated shares; SMB1 disabled |
 | Cockpit URLs | `https://192.168.100.187:9090`; `https://10.42.0.1:9090` |
 
 The Ethernet IP may change until a DHCP reservation or another fixed-IP method is approved. The portable hotspot gateway remains `10.42.0.1` under the verified shared-mode connection.
 
-## Verified recovery and operational snapshot — 30 July 2026
+## Verified recovery and operational snapshots
+
+### Physical recovery — 30 July 2026
 
 - HDMI display output and a USB keyboard worked.
 - Local login as `asthadmin` succeeded.
@@ -66,7 +70,16 @@ The Ethernet IP may change until a DHCP reservation or another fixed-IP method i
 - `ASTH-PORTABLE` was active on `wlan0` at `10.42.0.1/24`.
 - A connected phone reached the ASTH health endpoint and received internet forwarding through `eth0`.
 
-Physical recovery access is complete. Database backup/restore and application rollback testing remain pending. Final integrated casing/LCD assembly and NVMe remain pending, and the system custodian and maintenance window are not finalised.
+### Application and display recovery — 13 August 2026
+
+- Manual application-file rollback from active ASTH v0.4.0 to the retained v0.3.0 file succeeded; `asth.service` restarted and health returned HTTP 200, `healthy`, version v0.3.0.
+- Restoration from the v0.4.0 safety copy succeeded; its SHA-256 matched the original, `asth.service` restarted and final health returned HTTP 200, `healthy`, version v0.4.0.
+- `dtoverlay=vc4-kms-v3d` was uncommented after creating `/boot/firmware/config.txt.before-vc4-fix-20260813`.
+- After reboot, the expected `/dev/dri` nodes were present and `vc4`/`v3d` were loaded.
+- `rp1-test.service` initially failed because `/etc/X11/xorg.conf.d` was missing. Creating it with root ownership and mode `755` allowed the service to become active.
+- Final checks showed zero failed units, active `asth.service`, and HTTP 200 healthy ASTH v0.4.0.
+
+Physical recovery, manual application rollback/restoration and the GPU/display stack are verified. Database backup/restore is deferred until a database-backed module exists. The MHS35 LCD is not installed, `MHS35-show` was not run, and the NVMe controller/HAT has not arrived. The system still boots from the 32 GB microSD; the external 512 GB ROG SSD remains `/dev/sda` with `/dev/sda2` mounted at `/mnt/rog`. The system custodian and maintenance window are not finalised.
 
 ## Deployed application checks
 
@@ -751,6 +764,8 @@ Stop immediately if `findmnt` returns no mount, the source/UUID is unexpected, t
 
 ## Backup verification
 
+As of 13 August 2026, `/var/lib/asth/db` exists but is empty, no database file or database reference exists in the current application, and `/etc/asth/asth.env` has no `KEY=value` entries. Do not run a SQLite backup or restore rehearsal until a database-backed module defines the live database and approved procedure. Database backup/restore is **DEFERRED**, not passed or failed.
+
 List backup metadata without reading secret contents:
 
 ```bash
@@ -843,11 +858,23 @@ vcgencmd measure_temp
 vcgencmd get_throttled
 ```
 
-Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. The 30 July recovery reboot completed normally; zero failed units, healthy/running ASTH health, `/mnt/rog`, `smbd`, Uptime Kuma HTTP 200 after redirect, Cockpit on port 9090 with HTTP 200 and `ASTH-PORTABLE` on `wlan0` at `10.42.0.1/24` were verified afterward. Stop storage or NAS work if any required mount check fails.
+Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. The 30 July recovery reboot completed normally; zero failed units, healthy/running ASTH health, `/mnt/rog`, `smbd`, Uptime Kuma HTTP 200 after redirect, Cockpit on port 9090 with HTTP 200 and `ASTH-PORTABLE` on `wlan0` at `10.42.0.1/24` were verified afterward. The 13 August display-stack reboot also ended with zero failed units, active `asth.service`, active `rp1-test.service` and HTTP 200 healthy ASTH v0.4.0. Stop storage or NAS work if any required mount check fails.
 
 ## Basic rollback guidance
 
-Application rollback is not yet production-proven because a current/previous release layout, release identifiers, SQLite schema and schema compatibility record have not been confirmed. Database backup/restore testing also remains pending.
+Manual application-file rollback and forward restoration are verified for the current single-file deployment. A release-directory/symlink rollback and any database-coupled rollback remain unproven because that release layout and a database-backed module do not exist in the confirmed evidence. Database recovery is deferred.
+
+### Verified manual file rollback — 13 August 2026
+
+Before the test, the active ASTH v0.4.0 file was copied to `/opt/asth/app/main.py.pre-rollback-test-20260730`. Both files had SHA-256:
+
+`c984a4b412f00117b763f9daa6fa9f948102b84a913e99fe6201b0fba350a0d3`
+
+The rollback source `/opt/asth/app/main.py.backup-clay-service-hub-20260726` had SHA-256:
+
+`d9ab6ed2312d0fddcae36af94c26df1c7e72a26c84afee0117a5b5b37564726a`
+
+Replacing the active file with the rollback source, restarting `asth.service`, and checking health produced HTTP 200, `healthy`, ASTH v0.3.0. Restoring the safety copy returned the active checksum to the original v0.4.0 value; restart and final health then produced HTTP 200, `healthy`, ASTH v0.4.0.
 
 ### Read-only readiness checks
 
@@ -859,7 +886,7 @@ systemctl show asth.service -p FragmentPath -p WorkingDirectory -p ExecStart
 
 If `/opt/asth/current` or `/opt/asth/releases` does not exist, stop and obtain the actual deployment layout. Do not create or switch symlinks based only on this runbook.
 
-### Controlled application rollback prerequisites
+### Future release-layout rollback prerequisites
 
 - current and previous release IDs/checksums recorded;
 - previous virtual environment complete;
@@ -889,4 +916,4 @@ curl --fail --silent --show-error http://127.0.0.1/health
 
 > **Warning — database data-loss risk:** Never overwrite `/var/lib/asth/db`, copy a live SQLite file or restore a database while ASTH is running. Preserve the failed database, stop the service, verify the matching backup and schema, restore only through an approved recovery procedure, then run integrity and application checks.
 
-Rollback is complete only after health, logs, one approved read, one approved write and any relevant media/database checks pass. Record the failed release, recovery point, operator, duration and evidence.
+Future release-layout or database-coupled rollback is complete only after health, logs, one approved read, one approved write and any relevant media/database checks pass. Record the failed release, recovery point, operator, duration and evidence.

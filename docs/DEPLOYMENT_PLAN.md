@@ -1,8 +1,8 @@
 # ASTH Lightweight MVP Raspberry Pi Deployment Plan
 
-> **Status:** Planning reference reconciled with the deployed state on 30 July 2026. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
+> **Status:** Planning reference reconciled with the deployed state through 13 August 2026. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
 
-## Implemented State — 30 July 2026
+## Implemented State — through 13 August 2026
 
 - **CONFIRMED:** Raspberry Pi 5 with 2 GB RAM is operational and currently boots Raspberry Pi OS from a 32 GB microSD card.
 - **CONFIRMED:** HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery, `sudo` (`SUDO_OK`) and normal reboot passed; physical recovery access is complete.
@@ -14,13 +14,15 @@
 - **PARTIAL:** Learning Hub sections are placeholders; actual modules, PDFs, videos and interactive content are not populated.
 - **CONFIRMED:** Post-reboot checks found zero failed systemd units, healthy/running ASTH health, `/mnt/rog` mounted and `smbd` active.
 - **CONFIRMED:** Uptime Kuma returned HTTP 200 after redirect; Cockpit listened on port 9090 and returned HTTP 200.
-- **PENDING:** Casing, NVMe base/HAT and SSD, LCD and display cable are not installed.
+- **VERIFIED:** Manual application-file rollback from v0.4.0 to v0.3.0 and forward restoration to v0.4.0 passed checksum, service restart, HTTP 200, health and version checks.
+- **VERIFIED:** Enabling `dtoverlay=vc4-kms-v3d` restored the expected DRI devices and `vc4`/`v3d` modules; after creating the missing Xorg configuration directory, `rp1-test.service` was active and final checks found zero failed units with healthy ASTH v0.4.0.
+- **PENDING:** The MHS35 LCD is not installed and `MHS35-show` was not run; the NVMe controller/HAT has not arrived. The system remains on the 32 GB microSD.
 - **PLANNED:** Prefer full-OS boot from NVMe after detection/testing, with the microSD retained as recovery media if migration succeeds.
 - **PENDING:** The deployed v0.4.0 source must be committed to this repository later; it is not yet synchronised.
-- **PENDING:** Database backup/restore and application rollback tests remain incomplete.
+- **DEFERRED:** Database backup/restore has no pass/fail result because `/var/lib/asth/db` is empty and the current application has no database file/reference or `KEY=value` environment configuration.
 - **PENDING:** The system custodian and maintenance window are not finalised.
 
-The external USB SSD, Samba and Cockpit evidence recorded on 25 July remains useful infrastructure history. The external USB SSD must not be confused with the pending NVMe hardware.
+The external 512 GB ROG USB SSD remains `/dev/sda`, with `/dev/sda2` mounted at `/mnt/rog`. It must not be confused with the pending NVMe controller/HAT.
 
 ## 1. Deployment Objectives
 
@@ -513,12 +515,16 @@ After real learning workflows are populated, test at least the MVP target from t
 - [ ] Database and media remain writable only by intended processes.
 - [ ] Journald and Nginx rotation limits are active and storage remains bounded.
 - [ ] A consistent off-device backup completes and passes integrity checking.
-- [ ] A restore is tested and the recovered application passes core checks.
+- [ ] After a database-backed module exists, a database restore is tested and the recovered application passes core checks; this is currently deferred.
 - [x] A normal recovery reboot returned ASTH, `/mnt/rog`, Samba, Uptime Kuma, Cockpit and `ASTH-PORTABLE` to service.
 - [ ] Temperature, throttling, RAM, swap, CPU, and disk usage remain acceptable during the load test.
 - [ ] Site handover notes contain URLs, network details, backup location, recovery steps, and administrative contacts.
 
 ## 19. Rollback Approach
+
+The current single-file application path was verified on 13 August 2026. The active v0.4.0 file and safety copy `/opt/asth/app/main.py.pre-rollback-test-20260730` had SHA-256 `c984a4b412f00117b763f9daa6fa9f948102b84a913e99fe6201b0fba350a0d3`. The v0.3.0 rollback file `/opt/asth/app/main.py.backup-clay-service-hub-20260726` had SHA-256 `d9ab6ed2312d0fddcae36af94c26df1c7e72a26c84afee0117a5b5b37564726a`. Rollback and forward restoration each restarted `asth.service` successfully and returned HTTP 200, `healthy`, with the expected version.
+
+The release-directory procedure below remains the target for a future structured deployment. Database-coupled rollback remains deferred until a database-backed module exists.
 
 Each deployment should preserve:
 
@@ -545,16 +551,16 @@ Rollback is complete only when health, login, a read operation, a write operatio
 ## 20. Final Hardware, Content and Migration Sequence
 
 1. Preserve the working microSD deployment and the two confirmed local application backups.
-2. Receive and install the casing.
-3. Receive and install the NVMe base/HAT and SSD, then detect and test the device before any migration.
-4. Receive and install the LCD and appropriate display cable.
+2. Receive and install compatible casing hardware.
+3. Receive and install the NVMe controller/HAT and SSD, then detect and test the device before any migration.
+4. Install the MHS35 LCD and appropriate display cable; run the compatible LCD driver procedure only then.
 5. Verify power-supply suitability, cooling and temperature with the final assembly.
 6. Decide and execute the NVMe migration method; prefer full-OS boot from NVMe only if testing passes.
 7. Retain and label the microSD as recovery media after a successful full migration.
 8. Configure LCD kiosk mode to open `/` and verify reboot recovery.
 9. Populate `/learn/` with approved modules, PDFs, videos and interactive content, placing large content on NVMe when available.
 10. Perform post-installation endpoint, visual, multi-device and final-assembly validation.
-11. Complete database backup/restore and application rollback testing.
+11. Complete database backup/restore after a database-backed module exists; revalidate application rollback if the deployment layout changes.
 12. Finalise the system custodian and maintenance window.
 13. Bring the deployed v0.4.0 source into this repository through a controlled comparison and commit later; do not overwrite the Pi from the stale repository state.
 

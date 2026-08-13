@@ -1,5 +1,13 @@
 # Changelog
 
+## 13 August 2026 — Rollback and display-stack recovery verification
+
+- Verified manual application rollback from ASTH v0.4.0 to the retained v0.3.0 application file and successful restoration to v0.4.0, with the original/safety/restored v0.4.0 SHA-256 matching, successful service restarts and HTTP 200 healthy results at both stages.
+- Re-enabled `dtoverlay=vc4-kms-v3d` after backing up `config.txt`; after reboot the expected DRI devices and `vc4`/`v3d` modules were present.
+- Recorded the initial `rp1-test.service` failure caused by a missing `/etc/X11/xorg.conf.d`, its correction with root ownership and mode `755`, and the final state of zero failed units, active `asth.service` and healthy ASTH v0.4.0.
+- Deferred database backup/restore because the database directory is empty and the current application has no database file, database reference or `KEY=value` environment configuration; no database restore result is claimed.
+- Kept MHS35 LCD installation and `MHS35-show`, NVMe arrival/installation and boot migration pending. The system remains on the 32 GB microSD; the external 512 GB ROG SSD remains mounted at `/mnt/rog`.
+
 ## 30 July 2026 — Physical recovery and operational verification
 
 - Corrected the Raspberry Pi 5 hardware baseline to 2 GB RAM.

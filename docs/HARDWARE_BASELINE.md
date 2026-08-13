@@ -1,8 +1,8 @@
 # ASTH Raspberry Pi 5 Hardware Baseline
 
-**Baseline date:** 30 July 2026
+**Baseline date:** 13 August 2026
 
-This document distinguishes currently installed hardware from future hardware. Status labels are **CONFIRMED**, **PARTIAL**, **PLANNED** and **PENDING**. In particular, the NVMe base/HAT, NVMe SSD, casing and LCD have **not** been installed.
+This document distinguishes currently installed hardware from future hardware. Status labels are **CONFIRMED**, **VERIFIED**, **PARTIAL**, **DEFERRED**, **PLANNED** and **PENDING**. In particular, the NVMe controller/HAT has not arrived and the MHS35 LCD is not installed.
 
 ## 1. Confirmed current baseline
 
@@ -16,8 +16,9 @@ This document distinguishes currently installed hardware from future hardware. S
 | Application | **CONFIRMED** | FastAPI v0.4.0, main file `/opt/asth/app/main.py` |
 | Static logo assets | **CONFIRMED** | `/var/www/asth-hub/assets/` |
 | Casing | **PENDING** | Final integrated assembly incomplete |
-| NVMe base/HAT and SSD | **PENDING** | Not yet installed |
-| LCD and display cable | **PENDING** | Final integrated assembly incomplete |
+| NVMe controller/HAT | **PENDING** | Has not yet arrived; no installation or boot migration has occurred |
+| LCD | **PENDING** | MHS35 is not installed; the cloned LCD-show repository was not used to run `MHS35-show` during the 13 August recovery |
+| Display stack | **VERIFIED** | KMS/DRI recovered; `vc4` and `v3d` loaded and `rp1-test.service` active |
 | Final power/cooling/thermal result | **PENDING** | Must be verified after final assembly |
 
 The Raspberry Pi has 2 GB RAM. The separate 32 GB figure describes the current microSD storage capacity.
@@ -32,19 +33,28 @@ Physical recovery access is **CONFIRMED complete** as of 30 July 2026:
 - approved `sudo` access returned `SUDO_OK`; and
 - the Raspberry Pi rebooted normally after recovery.
 
-This confirms an available local recovery route for the current microSD deployment. It does not replace the still-pending database backup/restore test or application rollback test.
+This confirms an available local recovery route for the current microSD deployment. Manual application rollback and restoration were subsequently verified on 13 August 2026. Database backup/restore is deferred until a database-backed module exists.
+
+### Display-stack recovery — 13 August 2026
+
+- `/boot/firmware/config.txt` had `dtoverlay=vc4-kms-v3d` commented out.
+- A backup was created at `/boot/firmware/config.txt.before-vc4-fix-20260813`.
+- The only configuration change uncommented `dtoverlay=vc4-kms-v3d`.
+- After reboot, `/dev/dri`, `card0`, `card1`, `renderD128` and `/dev/dri/by-path` were present, and the `vc4` and `v3d` kernel modules were loaded.
+- `rp1-test.service` initially failed because `/etc/X11/xorg.conf.d` did not exist. Creating that directory with root ownership and mode `755` allowed the service to become active.
+- Final checks found zero failed systemd units, active `asth.service`, and HTTP 200 healthy ASTH v0.4.0.
 
 ## 3. Storage architecture
 
 ### Current boot medium
 
-Raspberry Pi OS currently boots and runs entirely from the 32 GB microSD card. The live application and the two confirmed application-file backups are on this microSD filesystem.
+Raspberry Pi OS currently boots and runs entirely from the 32 GB microSD card. The live application and retained application-file recovery copies are on this microSD filesystem.
 
 The microSD must remain the working source until the NVMe hardware arrives and passes detection, compatibility, power and stability tests. No document should imply that NVMe boot is already active.
 
 ### Existing external USB SSD evidence
 
-Repository evidence dated 25 July records an external ASUS ROG STRIX Arion SSD mounted at `/mnt/rog` through `ntfs3`, with an ASTH namespace, Samba shares and manual backup evidence. On 30 July, `/mnt/rog` was confirmed still mounted after reboot and `smbd` was active. This external USB SSD is separate from the pending NVMe base/HAT and NVMe SSD. Its presence does not complete the future NVMe boot migration or prove database restore readiness.
+Repository evidence dated 25 July records an external 512 GB ASUS ROG STRIX Arion SSD as `/dev/sda` (mounted partition `/dev/sda2`) at `/mnt/rog` through `ntfs3`, with an ASTH namespace, Samba shares and manual backup evidence. It remained the external SSD on 13 August. This device is separate from the pending NVMe controller/HAT and does not complete the future NVMe boot migration or prove database restore readiness.
 
 Existing documented namespace:
 
@@ -65,7 +75,7 @@ Existing unrelated data outside `/mnt/rog/ASTH` must remain untouched.
 
 ### Planned NVMe direction
 
-1. **PENDING:** Receive and physically install the NVMe base/HAT and SSD.
+1. **PENDING:** Receive and physically install the NVMe controller/HAT and SSD.
 2. **PENDING:** Confirm detection and device identity without formatting or migrating data prematurely.
 3. **PENDING:** Test power, cooling, temperature, storage stability and boot compatibility.
 4. **PLANNED:** Select the migration method based on the test result.
@@ -75,7 +85,7 @@ Existing unrelated data outside `/mnt/rog/ASTH` must remain untouched.
 
 ## 4. Display and kiosk baseline
 
-The final integrated LCD/casing assembly is pending. The landing page at `/` is the intended LCD kiosk target, but kiosk mode is not yet configured and no final LCD installation is complete.
+The MHS35 LCD is currently not installed. The LCD-show repository was cloned previously, but `MHS35-show` was not executed during display-stack recovery. The landing page at `/` remains the intended LCD kiosk target, but kiosk mode and LCD driver installation are deferred until compatible LCD/casing hardware is installed.
 
 After arrival:
 
@@ -132,12 +142,15 @@ Earlier thermal measurements remain historical evidence only; they do not replac
 
 ## 9. Backup and recovery baseline
 
-Confirmed microSD-local application copies:
+Confirmed microSD-local application copies include:
 
 - `/opt/asth/app/main.py.backup-20260726`;
 - `/opt/asth/app/main.py.backup-clay-service-hub-20260726`.
+- `/opt/asth/app/main.py.pre-rollback-test-20260730`, created as the v0.4.0 safety copy before the 13 August rollback test.
 
-These files are useful local rollback references but are not off-device backups. The external SSD remaining mounted after reboot does not prove database backup/restore. Database backup/restore testing and application rollback testing remain pending, and final acceptance also requires a fresh post-installation test covering the chosen NVMe/microSD architecture.
+The safety copy and active v0.4.0 `main.py` both had SHA-256 `c984a4b412f00117b763f9daa6fa9f948102b84a913e99fe6201b0fba350a0d3`. The v0.3.0 rollback file had SHA-256 `d9ab6ed2312d0fddcae36af94c26df1c7e72a26c84afee0117a5b5b37564726a`. Manual application rollback to v0.3.0 and restoration to v0.4.0 both restarted successfully and returned HTTP 200 healthy results. These files remain same-device recovery references, not off-device backups.
+
+Database backup/restore was neither passed nor failed. The test is **DEFERRED** because `/var/lib/asth/db` exists but is empty, the current application contains no database file or database reference, and `/etc/asth/asth.env` contains no `KEY=value` configuration.
 
 If full-OS NVMe migration succeeds, the microSD should be preserved as recovery media only after:
 
@@ -159,8 +172,9 @@ The hardware milestone remains **PENDING** until all of the following are eviden
 - microSD retained and tested as recovery media if full migration succeeds;
 - kiosk mode opens `/` after boot;
 - large Learning Hub content placement confirmed; and
-- post-installation database backup/restore and application rollback testing passes.
+- application rollback is revalidated after final installation if the deployment layout changes; and
+- database backup/restore is tested after a database-backed module exists.
 
 ## 11. Conclusion
 
-The confirmed current baseline is a Raspberry Pi 5 with 2 GB RAM running Raspberry Pi OS and ASTH v0.4.0 from a 32 GB microSD card. Physical recovery access and the portable hub are operational. The casing, NVMe and LCD remain pending. Database backup/restore and application rollback testing also remain pending. Full-OS boot from NVMe with microSD recovery is a preferred **PLANNED** direction, not a completed deployment state.
+The confirmed current baseline is a Raspberry Pi 5 with 2 GB RAM running Raspberry Pi OS and ASTH v0.4.0 from a 32 GB microSD card. Physical recovery, manual application rollback/restoration and the GPU/display stack are verified. The MHS35 LCD remains uninstalled, the NVMe controller/HAT has not arrived, and database backup/restore is deferred until a database-backed module exists. Full-OS boot from NVMe with microSD recovery is a preferred **PLANNED** direction, not a completed deployment state.
