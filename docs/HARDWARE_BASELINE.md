@@ -12,7 +12,9 @@ This document distinguishes currently installed hardware from future hardware. S
 | Memory | **CONFIRMED** | 2 GB RAM |
 | Current system storage | **CONFIRMED** | Raspberry Pi OS boots and runs from a 32 GB microSD card |
 | Current Pi address | **CONFIRMED** | `192.168.100.187` observed; not documented as permanently reserved |
-| ASTH portable network | **CONFIRMED** | Operational |
+| ASTH portable network | **VERIFIED** | Built-in `wlan0`, AP, `ASTH-PORTABLE`, 5 GHz channel 36 (5180 MHz), 20 MHz width; persisted after reboot |
+| Current internet uplink | **VERIFIED** | `eth0` through NetworkManager profile `Wired connection 1`; 1000 Mbps full-duplex |
+| Optional wireless uplink | **PLANNED** | Alfa USB `wlan1`; disconnected and not involved in the 13 August test |
 | Application | **CONFIRMED** | FastAPI v0.4.0, main file `/opt/asth/app/main.py` |
 | Static logo assets | **CONFIRMED** | `/var/www/asth-hub/assets/` |
 | Casing | **PENDING** | Final integrated assembly incomplete |
@@ -98,9 +100,15 @@ After arrival:
 
 ## 5. Network baseline
 
-The ASTH portable network is operational. On 30 July, `ASTH-PORTABLE` was active on `wlan0` at `10.42.0.1/24`; a connected phone reached the ASTH health endpoint and internet forwarding through `eth0` succeeded. The main landing page obtains live network/system data through `/api/hub-status` and displays connected devices, download/upload rates, cumulative RX/TX, Wi-Fi information, uptime and a real-time activity graph.
+The current interface roles verified on 13 August are: `eth0` uses NetworkManager profile `Wired connection 1` and provides the route to `1.1.1.1` via `192.168.100.1` with source `192.168.100.187`; built-in `wlan0` hosts `ASTH-PORTABLE`; Alfa USB `wlan1` is disconnected; and disconnected `p2p-dev-wlan0` is normal. Ethernet negotiated at 1000 Mbps full-duplex and was not the identified local bottleneck.
 
-Earlier repository evidence documents the existing portable SSID, interface names, local gateway, office-LAN subnet, firewall boundaries and optional uplink mode. These established values may be used for support, but this update does not invent or change network names, credentials, ports or configuration.
+The active hotspot uses 5 GHz channel 36 (5180 MHz), 20 MHz width and AP mode. Malaysia (`MY`) regulatory rules permitted this channel for indoor use; this does not establish outdoor approval or unrestricted operation. Two clients reconnected successfully. Observed link rates included 86.6 Mbps TX and 65–86.6 Mbps RX for one client, and 65 Mbps TX and 96.1 Mbps RX for the other. TX-failure counters remained unchanged during repeated observations after migration.
+
+The prior 2.4 GHz channel 6, 20 MHz configuration remains historical evidence: traffic link rates were generally 57.7–72.2 Mbps, one client temporarily fell to 5.5 Mbps, TX failures increased, and practical throughput was about 3.5 MB/s (around 28 Mbps). Its profile was cloned as `ASTH-PORTABLE-2G-BACKUP` (UUID `5a0b842f-34cf-4892-96e3-c56c1c98e247`) with autoconnect disabled for rollback; no credential is recorded.
+
+One practical post-migration speedtest through `ASTH-PORTABLE` observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. This is not a guaranteed maximum and does not indicate gigabit Wi-Fi. The Raspberry Pi hotspot remains on a 20 MHz channel and is the likely local throughput constraint relative to the gigabit Ethernet uplink. Alfa remains available as a future wireless uplink when Ethernet is unavailable, but it was not tested on 13 August.
+
+After reboot, `wlan0` remained an AP on channel 36 at 5180 MHz with 20 MHz width, `systemctl --failed` returned zero failed units, and ASTH health returned status `healthy`, service `ASTH Adaptive Smart Training Hub`, version `0.4.0`. The first SSH attempt timed out while the Pi was still booting; the following attempt succeeded. The main landing page obtains live network/system data through `/api/hub-status` and displays connected devices, download/upload rates, cumulative RX/TX, Wi-Fi information, uptime and a real-time activity graph.
 
 ## 6. Suitable workloads
 

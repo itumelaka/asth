@@ -65,7 +65,9 @@ Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses mini
 
 - **CONFIRMED:** Akses pemulihan fizikal melalui HDMI dan papan kekunci USB lengkap; login tempatan `asthadmin`, pemulihan kata laluan melalui boot recovery, `sudo` (`SUDO_OK`) dan reboot normal telah disahkan.
 - **CONFIRMED:** Rangkaian portable ASTH dan aplikasi web FastAPI v0.4.0 beroperasi pada Raspberry Pi.
-- **CONFIRMED:** `ASTH-PORTABLE` aktif pada `wlan0` dengan `10.42.0.1/24`; telefon yang disambungkan boleh mencapai health endpoint ASTH dan menggunakan internet melalui forwarding `eth0`.
+- **VERIFIED:** `ASTH-PORTABLE` kekal pada built-in Wi-Fi `wlan0` dengan `10.42.0.1/24` dan kini menggunakan 5 GHz, channel 36 (5180 MHz), lebar 20 MHz. Dua peranti berjaya menyambung semula dan konfigurasi ini kekal selepas reboot.
+- **CONFIRMED:** Uplink internet semasa ialah Gigabit Ethernet `eth0` (`1.1.1.1 via 192.168.100.1 dev eth0 src 192.168.100.187`); Alfa USB `wlan1` disconnected dan tidak terlibat dalam ujian 13 Ogos.
+- **OBSERVED:** Satu speedtest melalui hotspot selepas migrasi merekodkan ping 25 ms, download 48.9 Mbps dan upload 35.8 Mbps. Ini bukan prestasi terjamin atau gigabit Wi-Fi; hotspot 20 MHz pada Raspberry Pi kekal sebagai kemungkinan kekangan tempatan berbanding uplink Ethernet 1000 Mbps full-duplex.
 - **CONFIRMED:** Halaman utama `/` memaparkan status hub, statistik rangkaian masa nyata dan pautan ke Learning Hub, Uptime Kuma serta Cockpit.
 - **VERIFIED:** Rollback manual aplikasi daripada ASTH v0.4.0 kepada salinan v0.3.0 dan pemulihan semula kepada v0.4.0 berjaya; kedua-dua health check akhir mengembalikan HTTP 200 dan keadaan `healthy`.
 - **VERIFIED:** `vc4-kms-v3d` diaktifkan semula; selepas reboot, peranti DRI dan modul kernel `vc4`/`v3d` tersedia, `rp1-test.service` aktif, `asth.service` aktif dan tiada unit systemd gagal.

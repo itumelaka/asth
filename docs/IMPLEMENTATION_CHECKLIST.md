@@ -35,11 +35,13 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Current LAN address | `192.168.100.187` observed | Confirmed current value | 26 July 2026 | Do not treat as permanent until reservation/fixed addressing is confirmed. |
 | Gateway | `192.168.100.1` | Confirmed | 25 July 2026 | None. |
 | LAN and SSH administration subnet | `192.168.100.0/24` | Confirmed | 25 July 2026 | Revalidate if the deployment network changes. |
-| Primary network paths | Ethernet active and built-in `wlan0` hotspot active simultaneously | Confirmed | 25 July 2026 | Ethernet fixed-IP method remains pending. |
-| Portable hotspot | `ASTH-PORTABLE`, access point, 2.4 GHz (`bg`), channel 6, WPA-PSK, IPv4 shared | Confirmed | 25 July 2026 | Password is managed separately and excluded from Git. |
+| Primary network paths | `eth0` current internet uplink and built-in `wlan0` hotspot active simultaneously | Verified | 13 August 2026 | Ethernet negotiated at 1000 Mbps full-duplex; fixed-IP method remains pending. |
+| Current portable hotspot | `ASTH-PORTABLE` profile: access point, 5 GHz (`a`), channel 36, IPv4 shared; `iw` runtime observation: 5180 MHz, 20 MHz width | Verified | 13 August 2026 | Malaysia indoor regulatory allowance verified; password remains excluded from Git. |
+| Historical hotspot baseline | `ASTH-PORTABLE`, access point, 2.4 GHz (`bg`), channel 6, 20 MHz width | Historical verified state | 25 July 2026 | Replaced on 13 August; preserved for rollback as `ASTH-PORTABLE-2G-BACKUP` with autoconnect disabled. |
 | Portable gateway and URL | `10.42.0.1/24`; `http://10.42.0.1` | Confirmed | 25 July 2026 | Same local URL in offline and online portable modes. |
-| Portable internet uplink | ALFA AWUS036NHV on `wlan1`, `rtl8xxxu`, profile `PHONE-UPLINK` | Confirmed | 25 July 2026 | Credentials remain only in local NetworkManager. |
-| Verified wlan1 route | `10.13.68.119/24`; `default via 10.13.68.67 dev wlan1` | Confirmed | 25 July 2026 | Address may change when the phone hotspot renews DHCP. |
+| Portable internet uplink | ALFA AWUS036NHV on `wlan1`, `rtl8xxxu`, profile `PHONE-UPLINK` | Historical verified test | 25 July 2026 | `wlan1` was disconnected and not tested on 13 August; credentials remain only in local NetworkManager. |
+| Historical wlan1 route | `10.13.68.119/24`; `default via 10.13.68.67 dev wlan1` | Historical verified test | 25 July 2026 | Not the current route; future DHCP values may differ. |
+| Current internet route | `1.1.1.1 via 192.168.100.1 dev eth0 src 192.168.100.187` | Verified | 13 August 2026 | Alfa was not involved in this test. |
 | Portable SSH boundary | `10.42.0.0/24` to TCP port 22 on `wlan0` | Confirmed | 25 July 2026 | `ssh asthadmin@10.42.0.1` verified. |
 | Router or DHCP owner | Not assigned | Pending decision | 25 July 2026 | Confirm network owner. |
 | Time zone | `Asia/Kuala_Lumpur` | Confirmed | 25 July 2026 | None. |
@@ -116,6 +118,8 @@ Status as of **13 August 2026**:
 - [x] Uptime Kuma and Cockpit are available as separately linked services.
 - [x] Zero failed units, healthy/running ASTH health, persistent `/mnt/rog`, active `smbd`, Uptime Kuma HTTP 200 after redirect and Cockpit port 9090/HTTP 200 were verified after recovery.
 - [x] A phone on `ASTH-PORTABLE` reached ASTH health and internet forwarding through `eth0` passed.
+- [x] Migrated the `ASTH-PORTABLE` profile to 5 GHz band `a`, channel 36; reconnected two clients and observed through `iw` that the runtime radio used 5180 MHz with 20 MHz width before and after reboot.
+- [x] Recorded one practical result of 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload without treating it as guaranteed throughput.
 - [x] Local application backups exist at `/opt/asth/app/main.py.backup-20260726` and `/opt/asth/app/main.py.backup-clay-service-hub-20260726`.
 - [x] Manual rollback to v0.3.0 and restoration to v0.4.0 passed SHA-256, service restart, HTTP 200, health and version checks.
 - [x] KMS/DRI recovery produced the expected devices and modules; `rp1-test.service` and `asth.service` were active with zero failed units.
@@ -246,12 +250,12 @@ swapon --show
 
 **Prerequisites:** Phase 3 complete; `<asth-hostname>`, `<pi-lan-ip>`, `<lan-cidr>`, and `<network-interface>` confirmed with the network owner.
 
-**Current state:** **In Progress** — `ASTH-PORTABLE` on `wlan0` is complete for offline and online portable use. With Ethernet removed, `PHONE-UPLINK` on `wlan1` supplied the default route and client internet successfully. Ethernet fixed-IP work remains pending for office-LAN mode.
+**Current state:** **In Progress** — `ASTH-PORTABLE` on `wlan0` is complete on 5 GHz channel 36 for offline use and current Ethernet-backed operation. On 13 August, `eth0` supplied the route; `wlan1` was disconnected. The separate 25 July test verified `PHONE-UPLINK` with Ethernet removed, but portable-mode uplink revalidation after the hotspot migration remains pending. Ethernet fixed-IP work also remains pending.
 
 **Portable hotspot deployment:** **Complete**
 
 1. [x] Configure connection/SSID `ASTH-PORTABLE` on built-in interface `wlan0` in access-point mode.
-2. [x] Set 2.4 GHz (`bg`), channel 6, WPA-PSK and IPv4 shared mode without recording the password.
+2. [x] Historically set 2.4 GHz (`bg`), channel 6, WPA-PSK and IPv4 shared mode without recording the password.
 3. [x] Confirm gateway `10.42.0.1/24`, autoconnect enabled and autoconnect priority 100.
 4. [x] Confirm Nginx port 80 is accessible through `wlan0` at `http://10.42.0.1`.
 5. [x] Confirm DHCP issued addresses to a phone and laptop.
@@ -262,6 +266,10 @@ swapon --show
 10. [x] Confirm the v0.4.0 landing page loads and displays the verified live hub interface.
 11. [x] Verify online portable mode through `PHONE-UPLINK` on `wlan1`, including forwarded internet with Ethernet removed.
 12. [x] Verify a phone can reach ASTH health through `ASTH-PORTABLE` and receive internet forwarding through `eth0`.
+13. [x] Clone the historical configuration as `ASTH-PORTABLE-2G-BACKUP` with autoconnect disabled and no credential recorded.
+14. [x] Change the active NetworkManager profile to 5 GHz band `a` and channel 36, then confirm two clients reconnect.
+15. [x] Use `iw` to observe AP mode on channel 36 at 5180 MHz with 20 MHz runtime width; reboot and confirm the same runtime observation, zero failed units and healthy ASTH v0.4.0.
+16. [ ] Revalidate the Alfa `PHONE-UPLINK` path with Ethernet removed after the 5 GHz migration.
 
 **Portable operating steps:**
 
@@ -269,7 +277,7 @@ swapon --show
 2. Connect the participant device to Wi-Fi network `ASTH-PORTABLE` using the separately managed credential.
 3. Open `http://10.42.0.1`.
 
-“Connected without internet” is expected only in offline portable mode. In online portable mode, `PHONE-UPLINK` on `wlan1` provides internet while the same local ASTH URL remains available.
+“Connected without internet” is expected in offline portable mode. The current verified uplink is Ethernet on `eth0`. The 25 July test showed `PHONE-UPLINK` on `wlan1` could provide internet while retaining the same local ASTH URL, but that path was disconnected and not retested on 13 August.
 
 **Safe hotspot verification commands:**
 
@@ -280,8 +288,14 @@ nmcli -f connection.id,connection.interface-name,connection.autoconnect,connecti
 ip -brief address show wlan0
 iw dev wlan0 info
 curl --fail --silent --show-error http://10.42.0.1
-ip -brief address show wlan1
 ip route show default
+```
+
+The general hotspot check above does not require Alfa. On 13 August 2026, `wlan1` was present but disconnected and was not tested as the active uplink. Run the following only when the Alfa adapter is installed, deliberate portable wireless-uplink testing is in scope, and `PHONE-UPLINK` has been intentionally activated:
+
+```bash
+ip -brief address show wlan1
+ip route get 1.1.1.1
 ping -I wlan1 -c 4 1.1.1.1
 ```
 
@@ -903,7 +917,7 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 
 **Prerequisites:** Operational ASTH portable network; representative clients; approved test content and accounts for later learning-flow acceptance.
 
-**Current state:** **In Progress** — The portable network, landing page and live status are confirmed. A phone reached ASTH health through `ASTH-PORTABLE` and received internet forwarding through `eth0`. Populated learning content, participant/trainer workflows and representative concurrency remain pending.
+**Current state:** **In Progress** — The portable network, landing page and live status are confirmed. Two clients reconnected after migration to 5 GHz channel 36, and one Ethernet-backed speedtest observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. This is not a guaranteed maximum. Populated learning content, participant/trainer workflows, portable-mode uplink revalidation and representative concurrency remain pending.
 
 1. [x] Connect intended client devices to the ASTH network.
 2. [x] Open the recorded ASTH URL and visually confirm the v0.4.0 landing page.
@@ -919,6 +933,7 @@ Use `Ctrl+C` to stop `vmstat 1` or `top`; these are observation commands.
 12. [ ] Run the approved complete learning flow concurrently on at least five devices.
 13. [ ] Check logs, data consistency, resources and temperature during representative load.
 14. [x] Retain the previously verified boundary that clients cannot connect directly to port 8000.
+15. [x] Confirm the 5 GHz hotspot returns after reboot and `iw` again reports AP mode on channel 36 at 5180 MHz with 20 MHz runtime width, with zero failed units and healthy ASTH v0.4.0.
 
 **Expected result:** The current hub data remains reliable and, after content implementation, all approved learning flows work for representative clients without requiring upstream internet.
 

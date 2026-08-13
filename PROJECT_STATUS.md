@@ -11,7 +11,10 @@
 - Project principles, charter, executive summary, MVP scope, roadmap and README drafted.
 - Raspberry Pi 5 with 2 GB RAM operational from a 32 GB microSD card.
 - HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery and `sudo` (`SUDO_OK`) verified; the Pi rebooted normally afterward.
-- ASTH portable network operational on `wlan0` at `10.42.0.1/24`; a connected phone reached the ASTH health endpoint and internet forwarding through `eth0` succeeded.
+- ASTH portable network operational on built-in `wlan0` at `10.42.0.1/24`; on 13 August it was migrated from the historical 2.4 GHz channel 6 configuration to 5 GHz channel 36 (5180 MHz), 20 MHz width. Two clients reconnected successfully and the setting persisted across reboot.
+- Current internet routing uses `eth0` via `192.168.100.1`; the link negotiated at 1000 Mbps full-duplex and was not the identified local bottleneck. Alfa USB `wlan1` was disconnected and not involved in the 13 August performance test.
+- One post-migration speedtest through `ASTH-PORTABLE` observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. This is a single observation, not a guaranteed maximum; the 20 MHz Raspberry Pi hotspot remains the likely local throughput constraint relative to Ethernet.
+- The previous 2.4 GHz NetworkManager profile is retained as `ASTH-PORTABLE-2G-BACKUP` (UUID `5a0b842f-34cf-4892-96e3-c56c1c98e247`) with autoconnect disabled for rollback.
 - Main landing page at `/`, Learning Hub shell at `/learn/`, `/health` and live `/api/hub-status` endpoint operational.
 - v0.4.0 syntax validation, service restart and visual landing-page check completed on the Pi.
 - Zero failed systemd units, healthy/running local ASTH health, persistent `/mnt/rog`, active `smbd`, Uptime Kuma HTTP 200 after redirect and Cockpit listening on port 9090 with HTTP 200 verified.
@@ -40,4 +43,5 @@
 - Populate and validate Learning Hub content.
 - Perform database backup/restore testing only after a database-backed module exists.
 - Perform final post-assembly validation after the casing, NVMe and LCD are installed.
+- Revalidate Alfa `wlan1` as the wireless uplink with Ethernet removed after the 5 GHz hotspot migration. The 25 July portable-mode evidence remains historical; `wlan1` was disconnected and not tested on 13 August.
 - Commit the deployed v0.4.0 source into this repository later.

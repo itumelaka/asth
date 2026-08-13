@@ -24,10 +24,13 @@ This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v
 | Portable SSID | `ASTH-PORTABLE` |
 | Hotspot interface | Built-in Wi-Fi `wlan0` |
 | Portable gateway/URL | `10.42.0.1/24`; `http://10.42.0.1` |
-| Hotspot mode | 2.4 GHz (`bg`), channel 6, WPA-PSK, IPv4 shared |
+| Hotspot profile | AP mode, 5 GHz band `a`, channel 36, WPA-PSK, IPv4 shared |
+| Observed runtime radio | `iw`: channel 36, 5180 MHz, 20 MHz width |
 | Hotspot autoconnect | Yes, priority 100 |
-| Portable uplink | ALFA AWUS036NHV `wlan1`, `rtl8xxxu`, profile `PHONE-UPLINK` |
-| Verified wlan1 address/route | `10.13.68.119/24`; `default via 10.13.68.67 dev wlan1` |
+| Current internet uplink | `eth0`, profile `Wired connection 1`; route via `192.168.100.1`; 1000 Mbps full-duplex |
+| Future portable uplink | ALFA AWUS036NHV `wlan1`, `rtl8xxxu`, profile `PHONE-UPLINK`; disconnected on 13 August |
+| Historical wlan1 test | 25 July: `10.13.68.119/24`; `default via 10.13.68.67 dev wlan1` |
+| 2.4 GHz rollback profile | `ASTH-PORTABLE-2G-BACKUP`; UUID `5a0b842f-34cf-4892-96e3-c56c1c98e247`; autoconnect disabled |
 | Administrator | `asthadmin` |
 | Application service | `asth.service` |
 | Application root | `/opt/asth` |
@@ -78,6 +81,16 @@ The Ethernet IP may change until a DHCP reservation or another fixed-IP method i
 - After reboot, the expected `/dev/dri` nodes were present and `vc4`/`v3d` were loaded.
 - `rp1-test.service` initially failed because `/etc/X11/xorg.conf.d` was missing. Creating it with root ownership and mode `755` allowed the service to become active.
 - Final checks showed zero failed units, active `asth.service`, and HTTP 200 healthy ASTH v0.4.0.
+
+### Hotspot optimisation and persistence — 13 August 2026
+
+- `eth0` through `Wired connection 1` supplied the internet route via `192.168.100.1` and negotiated at 1000 Mbps full-duplex.
+- Built-in `wlan0` hosted `ASTH-PORTABLE`; Alfa USB `wlan1` and `p2p-dev-wlan0` were disconnected. Alfa was not involved in this performance test.
+- The historical 2.4 GHz channel 6 profile was cloned as `ASTH-PORTABLE-2G-BACKUP` with autoconnect disabled before the active profile was changed.
+- The active NetworkManager profile used AP mode, band `a` and channel 36. After activation, `iw` reported channel 36 at 5180 MHz with 20 MHz runtime width. Malaysia regulatory rules allowed this channel for indoor use; no outdoor or unrestricted approval is claimed.
+- Two clients reconnected. Observed link rates included 86.6 Mbps TX and 65–86.6 Mbps RX for one client, and 65 Mbps TX and 96.1 Mbps RX for the other. TX-failure counters remained unchanged during repeated observations in the test window.
+- One practical speedtest observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. This is not a guaranteed maximum or gigabit-Wi-Fi result; the 20 MHz Raspberry Pi hotspot remains the likely local constraint relative to Ethernet.
+- The first SSH attempt after reboot timed out while the Pi was still booting; the following attempt succeeded. After reboot, `iw` again reported AP mode on channel 36 at 5180 MHz with 20 MHz runtime width; zero systemd units failed, and health returned `healthy`, service `ASTH Adaptive Smart Training Hub`, version `0.4.0`.
 
 Physical recovery, manual application rollback/restoration and the GPU/display stack are verified. Database backup/restore is deferred until a database-backed module exists. The MHS35 LCD is not installed, `MHS35-show` was not run, and the NVMe controller/HAT has not arrived. The system still boots from the 32 GB microSD; the external 512 GB ROG SSD remains `/dev/sda` with `/dev/sda2` mounted at `/mnt/rog`. The system custodian and maintenance window are not finalised.
 
@@ -133,8 +146,8 @@ Choose the operating mode before the session:
 | Mode | Uplink | Client result |
 |---|---|---|
 | Offline portable | No uplink | ASTH works locally; “connected without internet” is expected. |
-| Online portable | Phone hotspot through `PHONE-UPLINK` on `wlan1` | ASTH and internet access are available. |
-| Office LAN | Approved network through `eth0` | ASTH and internet forwarding are available; phone forwarding was verified on 30 July 2026. |
+| Online portable | Future/previously tested phone hotspot through `PHONE-UPLINK` on `wlan1` | Revalidate after the 5 GHz migration before relying on it for a session. |
+| Office LAN | Approved network through current `eth0` uplink | ASTH and internet forwarding are available; the 13 August performance observation used this mode. |
 
 The `ASTH-PORTABLE` client steps and local URL are the same in all three modes.
 
@@ -157,7 +170,8 @@ Expected values:
 
 - connection `ASTH-PORTABLE` active on `wlan0`;
 - access-point mode;
-- band `bg`, channel 6;
+- NetworkManager profile band `a` and channel 36;
+- `iw` runtime observation of AP mode on channel 36 at 5180 MHz with 20 MHz width;
 - WPA-PSK key management without displaying the password;
 - IPv4 method `shared`;
 - address `10.42.0.1/24`;
@@ -171,6 +185,14 @@ curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 ```
 
 Verify from a connected client by opening `http://10.42.0.1`. DHCP was validated with one phone and one laptop. On 30 July, a phone also reached the ASTH health endpoint through `ASTH-PORTABLE`.
+
+The active 5 GHz state was verified with two reconnected clients on 13 August. A single speedtest observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. Treat these as observations only; do not use them as a service guarantee or claim gigabit hotspot performance.
+
+#### 2.4 GHz rollback option
+
+The previous channel 6 profile is retained as `ASTH-PORTABLE-2G-BACKUP`, UUID `5a0b842f-34cf-4892-96e3-c56c1c98e247`, with autoconnect disabled. It is a rollback option, not the active configuration. Its prior observations included two clients, generally 57.7–72.2 Mbps link rates, one temporary 5.5 Mbps drop, increasing TX failures and about 3.5 MB/s (around 28 Mbps) practical throughput.
+
+Activating the backup changes wireless state and disconnects current clients. Confirm an approved maintenance window, local recovery access, the exact profile name and the rollback reason before any change. Never display or copy the stored Wi-Fi secret.
 
 Listener and firewall checks — **sudo required, read-only**:
 
@@ -232,9 +254,9 @@ sudo ufw status verbose
 
 If the client says “connected without internet” but the local URL works, no repair is required for offline portable mode.
 
-### Portable internet-router mode — verified
+### Portable internet-router mode — historically verified 25 July 2026
 
-Verified architecture:
+Historical verified architecture; `wlan1` was disconnected and not involved in the 13 August test:
 
 ```text
 Phone hotspot
@@ -275,7 +297,7 @@ ip -brief address show wlan0
 ip -brief address show wlan1
 ```
 
-Expected: `ASTH-PORTABLE` on `wlan0`, `PHONE-UPLINK` on `wlan1`, `10.42.0.1/24` on `wlan0`, and the current upstream address on `wlan1`. The verified upstream address was `10.13.68.119/24`, but a phone hotspot may issue a different address later.
+Expected only when deliberately entering online portable mode: `ASTH-PORTABLE` on `wlan0`, `PHONE-UPLINK` on `wlan1`, `10.42.0.1/24` on `wlan0`, and the current upstream address on `wlan1`. The 25 July upstream address was `10.13.68.119/24`, but a phone hotspot may issue a different address later. Revalidate this path after the 5 GHz migration.
 
 #### Verify routes
 
@@ -300,7 +322,7 @@ ping -I wlan1 -c 4 10.13.68.67
 ping -I wlan1 -c 4 1.1.1.1
 ```
 
-Expected during the verified test: successful replies and 0% packet loss. Failure to reach the phone gateway indicates an uplink/profile issue; gateway success with internet failure indicates an upstream phone/mobile-data issue.
+Expected during the historical 25 July test: successful replies and 0% packet loss. Failure to reach the phone gateway indicates an uplink/profile issue; gateway success with internet failure indicates an upstream phone/mobile-data issue. No equivalent `wlan1` result was recorded on 13 August.
 
 #### Verify local ASTH and SSH through wlan0
 
@@ -374,7 +396,7 @@ sudo ufw status verbose
 sudo iptables -S FORWARD
 ```
 
-Expected: the intended office route is selected and the retained `wlan0` to `eth0` forwarding policy is present. Phone internet forwarding through `eth0` passed on 30 July 2026. Do not assume office routing merely because the Ethernet link is up.
+Expected: the intended office route is selected and the retained `wlan0` to `eth0` forwarding policy is present. On 13 August the route to `1.1.1.1` used `192.168.100.1 dev eth0 src 192.168.100.187`, and Ethernet negotiated at 1000 Mbps full-duplex. Do not assume office routing merely because the Ethernet link is up.
 
 ## Samba NAS access
 
@@ -838,8 +860,12 @@ sudo systemctl reboot
 
 After the Pi returns, reconnect and verify:
 
+First obtain the current `eth0` address from the router/DHCP lease table, local console or approved hostname resolution. `192.168.100.187` was the address observed on 13 August 2026, but it is not reserved and may change. If the client is connected to `ASTH-PORTABLE`, use the stable hotspot gateway `10.42.0.1` instead.
+
 ```bash
-ssh asthadmin@192.168.100.187
+ssh asthadmin@<current-eth0-ip>
+# Or, from a client connected to ASTH-PORTABLE:
+ssh asthadmin@10.42.0.1
 findmnt /mnt/rog
 systemctl is-active mnt-rog.mount
 systemctl is-active smbd
@@ -852,13 +878,15 @@ systemctl --failed --no-pager
 curl --fail --silent --show-error http://127.0.0.1/health
 nmcli connection show --active
 ip -brief address show wlan0
+iw dev wlan0 info
+ip route get 1.1.1.1
 curl --fail --silent --show-error http://10.42.0.1
 curl --fail --silent --show-error http://10.42.0.1/api/hub-status
 vcgencmd measure_temp
 vcgencmd get_throttled
 ```
 
-Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. The 30 July recovery reboot completed normally; zero failed units, healthy/running ASTH health, `/mnt/rog`, `smbd`, Uptime Kuma HTTP 200 after redirect, Cockpit on port 9090 with HTTP 200 and `ASTH-PORTABLE` on `wlan0` at `10.42.0.1/24` were verified afterward. The 13 August display-stack reboot also ended with zero failed units, active `asth.service`, active `rp1-test.service` and HTTP 200 healthy ASTH v0.4.0. Stop storage or NAS work if any required mount check fails.
+Expected after reboot: applicable storage and supporting services return, `asth.service` is active, the v0.4.0 landing page loads, `/health` succeeds and `/api/hub-status` returns live status data. On 13 August, the first SSH attempt timed out while the Pi was still booting and the next succeeded; `iw` again reported `ASTH-PORTABLE` on `wlan0` in AP mode at channel 36, 5180 MHz and 20 MHz runtime width. The same verification returned zero failed units and healthy ASTH service `ASTH Adaptive Smart Training Hub`, version `0.4.0`. The display-stack checks also showed active `rp1-test.service` and `asth.service`. Stop storage or NAS work if any required mount or service check fails.
 
 ## Basic rollback guidance
 

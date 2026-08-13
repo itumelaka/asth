@@ -1,7 +1,7 @@
 # ASTH Raspberry Pi 5 Deployment Status
 
 **Snapshot date:** 13 August 2026
-**Overall result:** **PARTIAL — operational v0.4.0 hub with verified application rollback and display-stack recovery; final hardware and content pending, database recovery deferred**
+**Overall result:** **PARTIAL — operational v0.4.0 hub with verified 5 GHz hotspot persistence, application rollback and display-stack recovery; final hardware and content pending, database recovery deferred**
 
 This snapshot records the confirmed deployment state. Status labels mean:
 
@@ -21,7 +21,9 @@ No password, private key, token, API key or private credential is recorded here.
 | Raspberry Pi 5 | **CONFIRMED** | Operational with 2 GB RAM. |
 | System storage | **CONFIRMED** | Raspberry Pi OS boots and runs from a 32 GB microSD card. |
 | Physical recovery access | **CONFIRMED** | HDMI, USB keyboard, local `asthadmin` login, boot-recovery password recovery, `sudo` and normal reboot passed. |
-| Portable network | **CONFIRMED** | `ASTH-PORTABLE` active on `wlan0` at `10.42.0.1/24`; phone health access and internet forwarding through `eth0` passed. |
+| Portable network | **VERIFIED** | `ASTH-PORTABLE` profile active on built-in `wlan0` at `10.42.0.1/24` with band `a` and channel 36; `iw` observed AP mode at 5180 MHz with 20 MHz runtime width before and after reboot. Two clients reconnected. |
+| Current internet uplink | **VERIFIED** | `eth0` through `Wired connection 1`, route via `192.168.100.1`, negotiated at 1000 Mbps full-duplex. |
+| Alfa wireless uplink | **PLANNED** | `wlan1` was disconnected and untested on 13 August; retained for future portable use. Separate 25 July evidence records an earlier `PHONE-UPLINK` test. |
 | ASTH web application | **CONFIRMED** | FastAPI v0.4.0 is deployed and the live landing page was visually confirmed. |
 | Landing page `/` | **CONFIRMED** | Main hub dashboard and intended LCD kiosk page. |
 | Learning Hub `/learn/` | **PARTIAL** | Separate page exists; learning sections remain placeholders and have no network graph. |
@@ -80,17 +82,21 @@ This verifies the GPU/display stack only. The MHS35 LCD is not installed, and no
 
 ## Confirmed network and live hub data
 
-- The ASTH portable network is operational.
-- `ASTH-PORTABLE` was confirmed active on `wlan0` at `10.42.0.1/24`.
-- A phone connected through `ASTH-PORTABLE` successfully accessed the ASTH health endpoint.
-- Internet forwarding for that client through `eth0` was successfully verified.
-- The current Raspberry Pi address observed on 26 July 2026 is `192.168.100.187`.
-- This address is an observed current value; the existing documentation does not establish it as a permanent reserved address.
+- The current interface roles verified on 13 August are `eth0` for internet, built-in `wlan0` for the hotspot, and Alfa USB `wlan1` disconnected. Disconnected `p2p-dev-wlan0` is normal.
+- `eth0` is connected through NetworkManager profile `Wired connection 1`. The observed route was `1.1.1.1 via 192.168.100.1 dev eth0 src 192.168.100.187`; it negotiated at 1000 Mbps full-duplex and was not the identified local bottleneck.
+- The active `ASTH-PORTABLE` NetworkManager profile on `wlan0` was changed from historical 2.4 GHz channel 6 to band `a` and channel 36. After activation, `iw` reported runtime AP mode on channel 36 at 5180 MHz with 20 MHz width. Malaysia (`MY`) regulatory rules permitted channel 36 for indoor use; no outdoor or unrestricted approval is claimed.
+- Before migration, two clients were observed with traffic link rates generally around 57.7–72.2 Mbps, one temporary 5.5 Mbps drop, increasing TX failures, and practical throughput around 3.5 MB/s (about 28 Mbps).
+- The old configuration was cloned as rollback profile `ASTH-PORTABLE-2G-BACKUP`, UUID `5a0b842f-34cf-4892-96e3-c56c1c98e247`, with autoconnect disabled. No Wi-Fi credential is recorded.
+- After migration, two clients reconnected. Observed link rates were 86.6 Mbps TX and 65–86.6 Mbps RX for one client, and 65 Mbps TX and 96.1 Mbps RX for the other; TX-failure counters remained unchanged during repeated observations in that test window.
+- One practical speedtest through `ASTH-PORTABLE` observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. This is not a guaranteed maximum or gigabit-Wi-Fi result. The 20 MHz Raspberry Pi hotspot remains the likely local constraint relative to the gigabit Ethernet uplink.
+- After reboot, `iw` again reported `wlan0` in AP mode on channel 36 at 5180 MHz with 20 MHz runtime width. The first SSH attempt timed out while the Pi was booting; the next succeeded. `systemctl --failed` reported zero failed units, and health returned status `healthy`, service `ASTH Adaptive Smart Training Hub`, version `0.4.0`.
+- Alfa `wlan1` remains available for future wireless uplink use when Ethernet is unavailable. It was disconnected and not involved in the 13 August performance test; the separate 25 July portable-uplink record remains historical evidence only.
+- The current Raspberry Pi address is `192.168.100.187`; it remains an observed value, not a documented permanent reservation.
 - `/api/hub-status` supplies live network and system data used by the landing page.
 - The dashboard displays connected devices, current download and upload rates, cumulative RX/TX, Wi-Fi information and system uptime.
 - The landing page also displays a real-time network activity graph.
 
-Earlier repository evidence documents portable hotspot modes, interface names, local addressing and firewall rules. Those details remain in the operations runbook for support continuity. This update does not introduce a new SSID, interface, credential, port or network configuration.
+Earlier repository evidence documents portable hotspot modes, local addressing, firewall rules and a completed 25 July `PHONE-UPLINK` test through `wlan1`. Those historical details remain in the operations runbook for support continuity and must not be read as the current 13 August uplink state.
 
 ## Confirmed application deployment
 
@@ -186,7 +192,7 @@ Testing is **DEFERRED** until a database-backed module exists.
 
 - **CONFIRMED:** Raspberry Pi 5 with 2 GB RAM is operational from the 32 GB microSD card.
 - **CONFIRMED:** Physical recovery access, local login, password recovery, `sudo` and normal reboot passed.
-- **CONFIRMED:** ASTH portable network, phone health access and internet forwarding through `eth0` are operational.
+- **VERIFIED:** The ASTH portable profile now uses band `a` and channel 36; `iw` observed channel 36 at 5180 MHz with 20 MHz runtime width before and after reboot. `eth0` was the current uplink during the recorded performance observation.
 - **CONFIRMED:** v0.4.0 syntax validation passed.
 - **CONFIRMED:** `asth` service restart succeeded.
 - **CONFIRMED:** Live landing page was visually checked.
