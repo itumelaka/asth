@@ -1,9 +1,9 @@
 # ASTH Raspberry Pi 5 Deployment Status
 
-**Snapshot date:** 13 August 2026
+**Snapshot date:** 6 September 2026
 **Overall result:** **PARTIAL — operational v0.4.0 hub with verified 5 GHz hotspot persistence, application rollback and display-stack recovery; final hardware and content pending, database recovery deferred**
 
-This snapshot records the confirmed deployment state. Status labels mean:
+This snapshot adds the supplied 6 September SSD, Samba, Jellyfin, network-address and reboot evidence. Other application, hardware and network observations retain their July/August verification dates; they were not revalidated by the September record. Status labels mean:
 
 - **CONFIRMED:** directly observed or validated on the deployed Raspberry Pi;
 - **VERIFIED:** a controlled recovery or rollback action completed and its final state was checked;
@@ -31,13 +31,40 @@ No password, private key, token, API key or private credential is recorded here.
 | Health check | **CONFIRMED** | Local ASTH health returned `healthy`/`running`. |
 | System services | **CONFIRMED** | `systemctl --failed` reported zero failed units after recovery reboot. |
 | GPU and display stack | **VERIFIED** | KMS enabled; DRI devices and `vc4`/`v3d` present; `rp1-test.service` active after its missing Xorg directory was created. |
-| External SSD and Samba | **CONFIRMED** | `/mnt/rog` remained mounted after reboot and `smbd` was active. |
+| External SSD and Samba | **VERIFIED** | 6 September: `/dev/sda2`, label `ROG`, mounted persistently at `/mnt/rog` using `ntfs3`, uid/gid 1000; `smbd` active after reboot; `ROG-Drive` writable from Windows. |
+| Jellyfin (auxiliary) | **VERIFIED** | Enabled/running `jellyfin.service`, active after reboot, listener `0.0.0.0:8096`; office-LAN and portable-local access confirmed. Not a core ASTH MVP requirement. |
 | Uptime Kuma and Cockpit | **CONFIRMED** | Uptime Kuma returned HTTP 200 after redirect; Cockpit listened on port 9090 and returned HTTP 200. |
 | Application rollback/restoration | **VERIFIED** | v0.4.0 → v0.3.0 → v0.4.0 manual file rollback passed service restart, HTTP 200 and healthy/version checks. |
 | Database backup/restore | **DEFERRED** | No database-backed module, database file or database reference exists; no pass/fail result is claimed. |
 | Casing, NVMe and LCD | **PENDING** | MHS35 LCD is not installed and NVMe controller/HAT has not arrived. |
 | Repository source sync | **PENDING** | Deployed v0.4.0 source is not yet committed to this repository. |
 | Ownership and maintenance window | **PENDING** | System custodian and maintenance window are not finalised. |
+
+## Infrastructure verification — 6 September 2026
+
+- Hostname: `asth-pi`; administrator: `asthadmin`.
+- Office-LAN address: `192.168.100.187`, subnet `192.168.100.0/24`; ASTH-PORTABLE gateway: `10.42.0.1`.
+- After a full reboot, `hostname -I` returned `192.168.100.187 10.42.0.1`, and both `smbd` and `jellyfin` returned `active`.
+- `findmnt /mnt/rog` succeeded after reboot with the following mounted state:
+
+```text
+/mnt/rog /dev/sda2 ntfs3 rw,relatime,uid=1000,gid=1000,dmask=0022,fmask=0022,iocharset=utf8
+```
+
+The SSD label is `ROG`. Existing folders include `/mnt/rog/ASTH`, `/mnt/rog/ASTH_BACKUP` and `/mnt/rog/Movies`. Persistent mounting is complete. The earlier July desktop-automount path `/media/asthadmin/ROG` is historical and must not be used for current operations. This mount result does not establish backup scheduling, database restore or NVMe boot migration.
+
+Samba share `ROG-Drive` uses path `/mnt/rog`, `valid users = asthadmin`, `force user = asthadmin` and `read only = No`. The Samba account `asthadmin` is confirmed, and Windows clients successfully wrote and renamed files. Earlier read-only-share evidence is superseded for current operation.
+
+Jellyfin Media Server is installed, with enabled/running `jellyfin.service` and listener `0.0.0.0:8096`. Its library is `/mnt/rog/Movies`. Access is confirmed at:
+
+- Office LAN: `http://192.168.100.187:8096`.
+- ASTH-PORTABLE: `http://10.42.0.1:8096`.
+
+Relevant UFW rules are `8096/tcp on wlan0 ALLOW from 10.42.0.0/24` and `8096/tcp ALLOW from 192.168.100.0/24`. Access remains LAN-only / portable-local; the wildcard listener is not a claim of public exposure.
+
+The official Open Subtitles plugin is installed and validated. Preferred subtitle language is Malay; the connected account reported an allowance of 20 subtitle downloads/day at verification time. No account username or password is recorded. Clean naming such as `Movie Title (Year).mp4` helps matching, but timing can differ when subtitle and video releases do not match.
+
+Jellyfin is an auxiliary local media service, outside the mandatory ASTH core MVP. With only 2 GB RAM, avoid heavy transcoding or many concurrent streams; no streaming-capacity test is claimed.
 
 ## Confirmed hardware and storage
 

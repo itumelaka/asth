@@ -61,7 +61,11 @@ Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan
 
 Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan NVMe, servis luaran terkawal atau pengasingan workload tanpa mengubah arah asas projek.
 
-## Status pada 13 Ogos 2026
+## Infrastruktur disahkan pada 6 September 2026
+
+SSD ROG kini dipasang secara kekal di `/mnt/rog` menggunakan `ntfs3` dengan uid/gid 1000 dan kembali selepas reboot. Share Samba `ROG-Drive` menyokong tulis serta penamaan semula fail dari Windows. Jellyfin tersedia melalui LAN di `http://192.168.100.187:8096` dan ASTH-PORTABLE di `http://10.42.0.1:8096`, dengan akses UFW terhad kepada rangkaian tempatan tersebut. Jellyfin ialah servis media tambahan, bukan keperluan teras MVP ASTH; elakkan transcoding berat atau banyak strim serentak pada Pi 2 GB RAM. Lihat [Deployment Status](docs/DEPLOYMENT_STATUS.md) dan [Operations Runbook](docs/OPERATIONS_RUNBOOK.md).
+
+## Rekod aplikasi dan perkakasan pada 13 Ogos 2026
 
 - **CONFIRMED:** Akses pemulihan fizikal melalui HDMI dan papan kekunci USB lengkap; login tempatan `asthadmin`, pemulihan kata laluan melalui boot recovery, `sudo` (`SUDO_OK`) dan reboot normal telah disahkan.
 - **CONFIRMED:** Rangkaian portable ASTH dan aplikasi web FastAPI v0.4.0 beroperasi pada Raspberry Pi.

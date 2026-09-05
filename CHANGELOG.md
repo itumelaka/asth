@@ -1,5 +1,14 @@
 # Changelog
 
+## 6 September 2026 — ROG SSD, Samba and auxiliary Jellyfin verification
+
+- Recorded `/dev/sda2` (label `ROG`) persistently mounted at `/mnt/rog` using Linux `ntfs3`, uid/gid 1000 and the supplied runtime mount options after a full reboot.
+- Updated Samba `ROG-Drive` to authenticated read/write at `/mnt/rog`, with `valid users` and `force user` set to `asthadmin`; Windows write/rename succeeded and `smbd` remained active after reboot.
+- Documented enabled/running Jellyfin, listener `0.0.0.0:8096`, library `/mnt/rog/Movies`, LAN and ASTH-PORTABLE URLs, and subnet-limited UFW rules for TCP 8096.
+- Recorded the validated official Open Subtitles plugin, Malay preference and observed 20-download/day allowance without account credentials; added naming and release-timing guidance.
+- Added September reboot checks and kept Jellyfin auxiliary to the ASTH core MVP, with a 2 GB RAM warning against heavy transcoding or many concurrent streams.
+- Preserved dated July/August evidence, including former storage/share behavior, without treating unrelated application, backup or hardware work as newly complete. Documentation only; no host configuration changes.
+
 ## 13 August 2026 — Network optimisation, rollback and display-stack recovery verification
 
 - Verified manual application rollback from ASTH v0.4.0 to the retained v0.3.0 application file and successful restoration to v0.4.0, with the original/safety/restored v0.4.0 SHA-256 matching, successful service restarts and HTTP 200 healthy results at both stages.

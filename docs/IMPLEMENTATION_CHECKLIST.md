@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 MVP Implementation Checklist
 
-This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **13 August 2026**. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work, deferred or blocked. Physical recovery, the operational hub, manual application rollback/restoration and GPU/display-stack recovery are **VERIFIED**. Learning content, final hardware, kiosk, migration and MVP acceptance remain incomplete; database backup/restore is **DEFERRED** until a database-backed module exists.
+This document translates the approved [ASTH Raspberry Pi 5 Deployment Plan](DEPLOYMENT_PLAN.md) into small, independently verifiable implementation phases and records the deployment snapshot updated on **6 September 2026**. The September update covers SSD, Samba, Jellyfin, local access and reboot evidence only; other checks retain their July/August verification dates. It remains an execution checklist only. Checked items are confirmed by the supplied validation record; unchecked items remain follow-up work, deferred or blocked. Physical recovery, the operational hub, manual application rollback/restoration and GPU/display-stack recovery are **VERIFIED**. Learning content, final hardware, kiosk, migration and MVP acceptance remain incomplete; database backup/restore is **DEFERRED** until a database-backed module exists.
 
 ## Scope and operating rules
 
@@ -53,11 +53,12 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | SQLite location | `/var/lib/asth/db` exists and is empty; no database file/reference exists in the current application | Deferred | 13 August 2026 | Resume backup/restore work after a database-backed module defines the live database. |
 | Maximum request body | Not defined | Pending decision | 25 July 2026 | Set from real application requirements. |
 | Environment file | `/etc/asth/asth.env`, previously confirmed `root:root` mode `0600`; no `KEY=value` entries | Partial | 13 August 2026 | Define required variable names when a module needs runtime configuration; never expose secret values. |
-| Persistent SSD mount | `/dev/sda2` at `/mnt/rog`; UUID `8E5AAE985AAE7C99`; NTFS via `ntfs3` | Confirmed complete | 30 July 2026 | Remained mounted after the recovery reboot; existing data preserved. |
+| Persistent SSD mount | `/dev/sda2`, label `ROG`, at `/mnt/rog`; `ntfs3`, uid/gid 1000 | Verified complete | 6 September 2026 | Returned automatically after full reboot; earlier UUID evidence remains in the runbook. |
 | ASTH SSD namespace | `/mnt/rog/ASTH` with NAS, app-data, database, backups, logs and staging directories | Confirmed complete | 25 July 2026 | All directories owned by `asthadmin`; do not modify unrelated SSD contents. |
 | Manual backup destination | `/mnt/rog/ASTH_BACKUP` | Confirmed preserved | 25 July 2026 | Production schedule, retention and alerting remain pending. |
 | Configuration snapshot | `/mnt/rog/ASTH_BACKUP/config-snapshot` | Confirmed preserved | 25 July 2026 | Existing snapshot remained available after reboot. |
-| Basic Samba NAS | `ASTH-Public`, `ASTH-Staff`, `ASTH-Uploads` read/write; `ROG-Drive` read-only | Confirmed complete | 30 July 2026 | `smbd` remained active after recovery reboot; Windows read/write and read-only denial were previously verified. |
+| Basic Samba NAS | `ROG-Drive` at `/mnt/rog`, `valid users = asthadmin`, `force user = asthadmin`, `read only = No` | Verified complete | 6 September 2026 | Windows write/rename passed; `smbd` active after reboot. July evidence for the three ASTH shares and former ROG-Drive read-only denial remains historical in the runbook. |
+| Auxiliary Jellyfin | Enabled/running `jellyfin.service`, `0.0.0.0:8096`, library `/mnt/rog/Movies` | Verified complete | 6 September 2026 | Active after reboot; LAN and portable-local access only; outside mandatory ASTH core MVP. |
 | Uptime Kuma | Redirect followed by HTTP 200 | Confirmed | 30 July 2026 | Advanced monitoring/alerting acceptance is not implied. |
 | Cockpit console | HTTPS port 9090 on office LAN and `ASTH-PORTABLE` | Confirmed complete | 30 July 2026 | TCP 9090 listening and HTTP 200 verified; self-signed certificate warning expected. |
 | Post-recovery service state | Zero failed units; ASTH health `healthy`/`running` | Confirmed | 30 July 2026 | Recheck after future maintenance. |
@@ -71,6 +72,19 @@ Do not record passwords, private keys, tokens or secret values in this table.
 | Backup owner | Not assigned | Pending decision | 25 July 2026 | Confirm backup and restore-test owner. |
 | Maintenance window | Not assigned | Pending decision | 25 July 2026 | Confirm routine and emergency windows. |
 | MVP acceptance approver | Not assigned | Pending decision | 25 July 2026 | Confirm before final application acceptance. |
+
+## Verified infrastructure update — 6 September 2026
+
+- [x] Confirm persistent `/mnt/rog` after full reboot: `/dev/sda2`, label `ROG`, `ntfs3`, `rw,relatime,uid=1000,gid=1000,dmask=0022,fmask=0022,iocharset=utf8`.
+- [x] Confirm existing `/mnt/rog/ASTH`, `/mnt/rog/ASTH_BACKUP` and `/mnt/rog/Movies` folders without inventorying personal filenames.
+- [x] Verify writable Samba `ROG-Drive` and Windows write/rename; `smbd` active after reboot.
+- [x] Verify installed, enabled/running Jellyfin, listener `0.0.0.0:8096`, library `/mnt/rog/Movies` and active service after reboot.
+- [x] Verify Jellyfin access at `http://192.168.100.187:8096` and `http://10.42.0.1:8096`.
+- [x] Verify official Open Subtitles plugin, Malay preference and observed 20 subtitles/day allowance; exclude account username/password.
+- [x] Record UFW `8096/tcp on wlan0 ALLOW from 10.42.0.0/24` and `8096/tcp ALLOW from 192.168.100.0/24`.
+- [x] Confirm post-reboot `hostname -I` returned `192.168.100.187 10.42.0.1` on `asth-pi`, administered by `asthadmin`.
+
+Jellyfin is auxiliary local media, not a mandatory ASTH core MVP item. Avoid heavy transcoding or many concurrent streams on the 2 GB Pi. These checks do not complete application acceptance, backup scheduling/retention, database restore or unrelated pending work. See the runbook for verification commands and preserved historical evidence.
 
 ## Implementation Progress
 
@@ -134,7 +148,7 @@ Status as of **13 August 2026**:
 - [x] Persistent SSD mount by UUID at `/mnt/rog`, with `mnt-rog.mount` active after full reboot.
 - [x] Existing SSD data and `ASTH_BACKUP` preserved; no formatting or repartitioning performed.
 - [x] ASTH storage namespace and directory ownership created under `/mnt/rog/ASTH`.
-- [x] Basic Samba NAS deployed with three authenticated read/write ASTH shares and intentionally read-only `ROG-Drive`; SMB1 disabled.
+- [x] Basic Samba NAS deployed with three authenticated read/write ASTH shares and SMB1 disabled (July evidence); `ROG-Drive` is now authenticated read/write, with Windows write/rename verified on 6 September.
 - [x] Cockpit deployed with Storage, Networking and administration components; socket and TCP 9090 verified after reboot.
 - [x] UFW restricted Samba and Cockpit to `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`.
 
@@ -983,7 +997,7 @@ sqlite3 <restored-test-database> "PRAGMA integrity_check;"
 
 **Prerequisites:** Phases 19 and 20 complete; operational owners identified; evidence repository selected.
 
-**Current state:** **In Progress** — Status and runbook documentation are updated through 13 August 2026, but handover cannot complete until the system custodian, technical and backup owners plus the maintenance window are confirmed.
+**Current state:** **In Progress** — Status and runbook documentation include the supplied infrastructure evidence through 6 September 2026, but handover cannot complete until the system custodian, technical and backup owners plus the maintenance window are confirmed.
 
 1. [ ] Record hardware identity, hostname, reserved IP, LAN URL, interface, and physical location.
 2. [ ] Record current/previous release IDs, application health path, database path, and schema version.

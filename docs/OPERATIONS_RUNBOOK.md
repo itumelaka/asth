@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Operations Runbook
 
-This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v0.4.0 application as verified through 13 August 2026. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
+This runbook includes SSD, Samba, Jellyfin and network-address verification from 6 September 2026. Other application, hardware and network observations retain their July/August dates and are not newly verified by that record. It does not contain passwords, private keys, tokens, environment-file contents or application secrets.
 
 ## Safety rules
 
@@ -52,6 +52,9 @@ This runbook covers the operational ASTH Raspberry Pi hub and deployed FastAPI v
 | Boot configuration safety copy | `/boot/firmware/config.txt.before-vc4-fix-20260813` |
 | ASTH storage namespace | `/mnt/rog/ASTH` |
 | Samba service | `smbd`; authenticated shares; SMB1 disabled |
+| ROG-Drive share (6 September) | `/mnt/rog`; authenticated read/write as `asthadmin` |
+| Jellyfin service/library | `jellyfin.service`; `/mnt/rog/Movies` |
+| Jellyfin URLs | `http://192.168.100.187:8096`; `http://10.42.0.1:8096` |
 | Cockpit URLs | `https://192.168.100.187:9090`; `https://10.42.0.1:9090` |
 
 The Ethernet IP may change until a DHCP reservation or another fixed-IP method is approved. The portable hotspot gateway remains `10.42.0.1` under the verified shared-mode connection.
@@ -400,14 +403,14 @@ Expected: the intended office route is selected and the retained `wlan0` to `eth
 
 ## Samba NAS access
 
-Samba `4.22.10-Debian-4.22.10+dfsg-0+deb13u1` is enabled through `smbd`. Use the separately managed Samba account for `asthadmin`; do not use or record its password in commands, documentation or tickets.
+The earlier July record identified Samba `4.22.10-Debian-4.22.10+dfsg-0+deb13u1` and the three ASTH shares below. On 6 September, `smbd` was active after reboot and the Samba account `asthadmin` and writable `ROG-Drive` were confirmed. Use the separately managed Samba credential; do not record its password in commands, documentation or tickets.
 
 | Share | Server path | Access |
 |---|---|---|
 | `ASTH-Public` | `/mnt/rog/ASTH/nas/public` | Authenticated read/write |
 | `ASTH-Staff` | `/mnt/rog/ASTH/nas/staff` | Authenticated read/write |
 | `ASTH-Uploads` | `/mnt/rog/ASTH/nas/uploads` | Authenticated read/write |
-| `ROG-Drive` | `/mnt/rog` | Authenticated read-only by design |
+| `ROG-Drive` | `/mnt/rog` | Authenticated read/write; verified 6 September 2026 |
 
 ### Access through the office LAN
 
@@ -421,7 +424,7 @@ Samba `4.22.10-Debian-4.22.10+dfsg-0+deb13u1` is enabled through `smbd`. Use the
 2. In File Explorer, enter the exact UNC path `\\10.42.0.1\ASTH-Public`, `\\10.42.0.1\ASTH-Staff`, `\\10.42.0.1\ASTH-Uploads` or `\\10.42.0.1\ROG-Drive`.
 3. Authenticate as `asthadmin` with the separately managed Samba credential.
 
-Windows mapping and creation of `NAS-TEST.txt` were verified on `\\192.168.100.187\ASTH-Public`. `ROG-Drive` deliberately exposes the SSD read-only; `NT_STATUS_ACCESS_DENIED` on an attempted write is the expected result, not a fault.
+Historical July evidence: Windows mapping and creation of `NAS-TEST.txt` were verified on `\\192.168.100.187\ASTH-Public`; `ROG-Drive` was then read-only and its write attempt returned `NT_STATUS_ACCESS_DENIED`. That denial is not the expected current behavior. On 6 September, Windows clients successfully wrote and renamed files through `ROG-Drive`, whose verified settings are `path = /mnt/rog`, `valid users = asthadmin`, `force user = asthadmin` and `read only = No`. Write access does not authorize changing unrelated personal SSD contents.
 
 Read-only server verification:
 
@@ -438,7 +441,29 @@ Use the complete UNC path, including the share name. `\\192.168.100.187` or `\\1
 
 Windows can cache a different username or an old Samba password for the same server. If authentication fails unexpectedly, close mappings and File Explorer sessions for that server, remove only the matching saved entry for `192.168.100.187` or `10.42.0.1` in Windows Credential Manager, then reconnect as `asthadmin`. Do not record the replacement password.
 
-If a read/write share fails, verify the mount and `smbd` first. If only `ROG-Drive` rejects writes, no repair is required because that share is intentionally read-only.
+If a read/write share, including `ROG-Drive`, rejects writes, verify the mount, `smbd` and the authenticated account first. Compare the share settings with the verified values above; a write denial is no longer expected for `ROG-Drive`.
+
+## Jellyfin auxiliary local media
+
+Verified on 6 September 2026: Jellyfin Media Server is installed; `jellyfin.service` is enabled/running and returned active after a full reboot. The listener is `0.0.0.0:8096`, and the media library is `/mnt/rog/Movies`.
+
+Open `http://192.168.100.187:8096` from the office LAN or `http://10.42.0.1:8096` after connecting to ASTH-PORTABLE. Access stays within the LAN / portable-local boundary documented in the UFW section below. A wildcard listener does not establish public exposure.
+
+Read-only operational checks:
+
+```bash
+findmnt /mnt/rog
+test -d /mnt/rog/Movies
+systemctl is-enabled jellyfin.service
+systemctl is-active jellyfin.service
+ss -lnt | grep ':8096'
+```
+
+Expect the SSD mount, an existing library directory, `enabled`, `active` and listener `0.0.0.0:8096`. Check browser access from the intended local network separately. Do not inventory personal movie filenames.
+
+The official Open Subtitles plugin is installed and validated. The preferred subtitle language is currently Malay, and the connected account reported 20 subtitle downloads/day at verification time; this is an observed allowance, not a guaranteed permanent quota. Keep the account username and password out of documentation. Clean naming such as `Movie Title (Year).mp4` helps matching. Subtitle timing can still differ if the subtitle release does not match the source video.
+
+Jellyfin is auxiliary and is not a mandatory ASTH core MVP requirement. Avoid heavy transcoding or many concurrent streams on the 2 GB Raspberry Pi 5; no maximum stream count or load-test result is established.
 
 ## Cockpit web console
 
@@ -711,6 +736,7 @@ Expected policy and rules:
 - SSH TCP port 22 on `wlan0` allowed only from `10.42.0.0/24`;
 - Samba is allowed only from `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`;
 - Cockpit TCP 9090 is allowed only from `192.168.100.0/24` and `10.42.0.0/24` on `wlan0`; and
+- Jellyfin rules verified on 6 September are `8096/tcp on wlan0 ALLOW from 10.42.0.0/24` and `8096/tcp ALLOW from 192.168.100.0/24`; access remains LAN-only / portable-local;
 - no exposure of port 8000 or port 111.
 
 > **Warning — firewall lockout risk:** Do not add, delete, reset, disable or reload firewall rules without local console access, an existing SSH session, the approved source subnet and a tested rollback. This runbook intentionally provides no firewall-change command.
@@ -778,9 +804,17 @@ test -d /mnt/rog/ASTH_BACKUP
 test -d /mnt/rog/ASTH/nas/public
 ```
 
-Expected result: source `/dev/sda2`, label `ROG`, UUID `8E5AAE985AAE7C99`, NTFS through driver `ntfs3`, target `/mnt/rog`, and active unit `mnt-rog.mount`. The `/etc/fstab` options are `uid=1000,gid=1000,umask=0022,nofail,x-systemd.device-timeout=10`. The verified capacity was approximately 477 GB total, 305 GB used and 173 GB available.
+Expected current result: source `/dev/sda2`, label `ROG`, NTFS through driver `ntfs3`, target `/mnt/rog`, read/write with uid/gid 1000. The supplied 6 September result after a full reboot was:
 
-`findmnt --verify` produced 0 parse errors and 0 errors. One warning is expected because the on-disk type is reported as `ntfs` while the Linux driver name is `ntfs3`.
+```text
+/mnt/rog /dev/sda2 ntfs3 rw,relatime,uid=1000,gid=1000,dmask=0022,fmask=0022,iocharset=utf8
+```
+
+Existing folders include `/mnt/rog/ASTH`, `/mnt/rog/ASTH_BACKUP` and `/mnt/rog/Movies`. Persistent mounting is complete; older July desktop-automount references to `/media/asthadmin/ROG` are historical only.
+
+Historical July evidence recorded UUID `8E5AAE985AAE7C99`, active `mnt-rog.mount`, `/etc/fstab` options `uid=1000,gid=1000,umask=0022,nofail,x-systemd.device-timeout=10`, and approximately 477 GB total, 305 GB used and 173 GB available. These details are retained for comparison, not claimed as freshly verified September configuration or capacity. The current runtime mount options above do not establish the exact current fstab entry.
+
+The historical July `findmnt --verify` check produced 0 parse errors and 0 errors, with one warning because the on-disk type was reported as `ntfs` while the Linux driver name was `ntfs3`. No fresh September result for that check was supplied.
 
 Stop immediately if `findmnt` returns no mount, the source/UUID is unexpected, the path resolves to the microSD filesystem, the mount is unexpectedly read-only or available space is insufficient. Never write into an unmounted `/mnt/rog` directory. Modify only `/mnt/rog/ASTH`; preserve unrelated contents outside that namespace.
 
@@ -837,6 +871,18 @@ sha256sum --check <confirmed-configuration-manifest>
 Do not use `cat`, `grep` or similar content commands on snapshots of `/etc/asth/asth.env`, private keys or other secret-bearing files. Verify those files by metadata/checksum only and restrict evidence to non-secret results.
 
 ## Controlled reboot
+
+The 6 September full reboot verified automatic return of `/mnt/rog` with `ntfs3` and uid/gid 1000, `smbd = active`, `jellyfin = active`, and `hostname -I` output `192.168.100.187 10.42.0.1`. A missing mount after reboot is a failure, not expected desktop-automount behavior. Earlier ASTH and other-service checks below retain their original verification dates.
+
+Include these checks before and after a controlled reboot:
+
+```bash
+findmnt -no TARGET,SOURCE,FSTYPE,OPTIONS /mnt/rog
+systemctl is-active smbd jellyfin.service
+hostname -I
+```
+
+Expect the mounted state in the SSD section, both services active and the two verified addresses. Stop storage, NAS, backup or media work if the required mount is absent. Recheck Jellyfin through the appropriate LAN or portable URL after services return.
 
 Pre-reboot checks:
 

@@ -1,6 +1,12 @@
 # ASTH Lightweight MVP Raspberry Pi Deployment Plan
 
-> **Status:** Planning reference reconciled with the deployed state through 13 August 2026. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
+> **Status:** Planning reference with a 6 September 2026 SSD, Samba and auxiliary Jellyfin update. Other deployed-state observations retain their July/August dates. Actual status is tracked in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and checklist evidence in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
+
+## Infrastructure update — 6 September 2026
+
+Persistent external SSD mounting is complete: `/dev/sda2`, label `ROG`, returns at `/mnt/rog` after full reboot using `ntfs3`, uid/gid 1000. Samba `ROG-Drive` is writable as `asthadmin`, Windows write/rename succeeded, and `smbd` returned active after reboot. This does not complete production backup scheduling, retention or database restore.
+
+Jellyfin is installed, enabled/running and active after reboot, with listener `0.0.0.0:8096` and library `/mnt/rog/Movies`. Its URLs are `http://192.168.100.187:8096` and `http://10.42.0.1:8096`. Relevant UFW rules allow TCP 8096 from `192.168.100.0/24` and on `wlan0` from `10.42.0.0/24`; retain the LAN-only / portable-local boundary. Jellyfin is auxiliary local media, not a mandatory ASTH core MVP requirement. Avoid heavy transcoding or many concurrent streams on the 2 GB Pi. Exact mount output, subtitle details and read-only operational checks are in [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md).
 
 ## Implemented State — through 13 August 2026
 

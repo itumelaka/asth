@@ -1,6 +1,6 @@
 # ASTH Raspberry Pi 5 Hardware Baseline
 
-**Baseline date:** 13 August 2026
+**Baseline date:** 6 September 2026 (SSD and local media update; other observations retain their July/August dates)
 
 This document distinguishes currently installed hardware from future hardware. Status labels are **CONFIRMED**, **VERIFIED**, **PARTIAL**, **DEFERRED**, **PLANNED** and **PENDING**. In particular, the NVMe controller/HAT has not arrived and the MHS35 LCD is not installed.
 
@@ -11,6 +11,7 @@ This document distinguishes currently installed hardware from future hardware. S
 | Platform | **CONFIRMED** | Raspberry Pi 5 |
 | Memory | **CONFIRMED** | 2 GB RAM |
 | Current system storage | **CONFIRMED** | Raspberry Pi OS boots and runs from a 32 GB microSD card |
+| External ROG SSD | **VERIFIED** | 6 September: `/dev/sda2`, label `ROG`, persistent `/mnt/rog`, Linux `ntfs3`, uid/gid 1000; returned automatically after full reboot |
 | Current Pi address | **CONFIRMED** | `192.168.100.187` observed; not documented as permanently reserved |
 | ASTH portable network | **VERIFIED** | Built-in `wlan0`, AP, `ASTH-PORTABLE`, 5 GHz channel 36 (5180 MHz), 20 MHz width; persisted after reboot |
 | Current internet uplink | **VERIFIED** | `eth0` through NetworkManager profile `Wired connection 1`; 1000 Mbps full-duplex |
@@ -74,6 +75,18 @@ Existing documented namespace:
 ```
 
 Existing unrelated data outside `/mnt/rog/ASTH` must remain untouched.
+
+### Current SSD and auxiliary media — 6 September 2026
+
+The verified mounted state after a full reboot was:
+
+```text
+/mnt/rog /dev/sda2 ntfs3 rw,relatime,uid=1000,gid=1000,dmask=0022,fmask=0022,iocharset=utf8
+```
+
+Existing folders include `/mnt/rog/ASTH`, `/mnt/rog/ASTH_BACKUP` and `/mnt/rog/Movies`. Earlier July references to desktop automount `/media/asthadmin/ROG` are historical; current operations use `/mnt/rog`. Mount persistence is complete, while production backup and database recovery require their separate validation.
+
+Samba `ROG-Drive` exposes `/mnt/rog` for authenticated read/write as `asthadmin`; Windows write/rename and active `smbd` after reboot are confirmed. Jellyfin uses `/mnt/rog/Movies` and returned active after reboot. It is an auxiliary local media service, not mandatory ASTH core MVP functionality. Avoid heavy transcoding or many concurrent streams on this 2 GB Pi; no tested stream count is established. Access URLs and local UFW boundaries are recorded in [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md).
 
 ### Planned NVMe direction
 
