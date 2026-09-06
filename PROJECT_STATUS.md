@@ -22,6 +22,8 @@
 - Manual application rollback from the active ASTH v0.4.0 file to the retained v0.3.0 file, followed by restoration to the original v0.4.0 file, was verified on 13 August 2026. Both service restarts succeeded; rollback and final health checks returned HTTP 200 and `healthy` at the expected versions.
 - The Raspberry Pi display stack was recovered by enabling `dtoverlay=vc4-kms-v3d`; after reboot the expected `/dev/dri` devices and `vc4`/`v3d` modules were present. After creating the missing `/etc/X11/xorg.conf.d` directory with root ownership and mode `755`, `rp1-test.service` became active. Final checks showed zero failed units, active `asth.service`, and healthy ASTH v0.4.0 over HTTP 200.
 - Office-media integration is verified through the persistent split tunnel `asth-office`: authenticated SMB3 content from Windows server `ITUNAS` is mounted read-only at `/mnt/office-movies`, returns after reboot through systemd automount ordering, and feeds the separate Jellyfin library `Movies ITUNAS`. Jellyfin Media Player 1.12.0 on `BurnRogZ13` verified Direct Play of *Thor: Love and Thunder* without an active `ffmpeg` transcoding process. See [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md).
+- Tailscale 1.102.3 is installed from the official Debian Trixie repository and `tailscaled.service` is active on Pi device `asth-pi`. An Android phone on cellular data remotely loaded the ASTH Service Hub through the Pi overlay address; the HUD remained operational and showed Office Tunnel Connected.
+- Remote Jellyfin access through Tailscale is verified after enabling Jellyfin Remote Access: `asth-media` 10.11.11 responded through its public-information API, its web interface loaded, and the `Movies ITUNAS` library was visible. This is private overlay access, not direct public Internet exposure. See [Tailscale Remote Access](docs/REMOTE_ACCESS_TAILSCALE.md).
 
 ## Partial
 
@@ -29,6 +31,7 @@
 - Uptime Kuma and Cockpit are available as linked supporting services; advanced monitoring, alerting and security completion is not claimed.
 - Retained application-file copies, including the pre-test v0.4.0 safety copy, are present on the microSD filesystem.
 - Database backup/restore is deferred, not passed or failed: `/var/lib/asth/db` exists but is empty, the current application has no database file or reference, and `/etc/asth/asth.env` has no `KEY=value` configuration.
+- Tailscale least-privilege hardening is **PARTIAL / PENDING**: an owner-specific rule limits access to the Pi and required ports, but the pre-existing broad all-users/devices to all-users/devices rule still permits all ports and protocols. It has not been removed, and the restricted rule has not been validated as the sole access path.
 
 ## Pending
 

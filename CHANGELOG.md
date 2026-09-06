@@ -1,5 +1,14 @@
 # Changelog
 
+## 6 September 2026 — Tailscale remote access for ASTH and Jellyfin
+
+- **VERIFIED:** Installed Tailscale 1.102.3 from the official Debian Trixie repository; `tailscaled.service` is active and the Pi appears as `asth-pi` at overlay IPv4 `100.87.140.5`.
+- **VERIFIED:** An Android phone on cellular data loaded the ASTH Service Hub through Tailscale. The HUD remained operational and displayed Office Tunnel as Connected; no ASTH service was intentionally exposed directly to the public Internet.
+- **VERIFIED:** Enabled Jellyfin Remote Access through its UI after the disabled setting blocked the initial remote API request. After restart, `asth-media` 10.11.11, its web interface and `Movies ITUNAS` were accessible through Tailscale.
+- **OBSERVED:** UFW remained active, the existing LAN/portable rules remained in place, and services listened on ports 80, 3001, 8096 and 9090. No `tailscale0` UFW rule was added in this phase.
+- **PARTIAL / PENDING HARDENING:** Added an owner-specific Tailscale rule for the Pi on ports 22, 80, 3001, 8096 and 9090, but the broad pre-existing all-users/devices allow-all rule remains active. It has not been removed, and the restricted rule has not been validated as the sole access path.
+- Kept Tailscale client access separate from the `asth-office` Pi-to-office WireGuard tunnel and recorded no authentication URLs, account email, credentials, keys, tokens or public WAN address.
+
 ## 6 September 2026 — Office WireGuard media integration and Jellyfin Direct Play
 
 - Documented the reboot-persistent `asth-office` split tunnel between `ASTH-PORTABLE` (`10.42.0.0/24`) and the office LAN (`192.168.1.0/24`).

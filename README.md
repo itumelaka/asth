@@ -108,6 +108,12 @@ Private key, pre-shared key, kelayakan, QR code dan konfigurasi penuh WireGuard 
 
 Integrasi media pejabat turut disahkan pada 6 September 2026. Share SMB3 `Movies` pada pelayan Windows `ITUNAS` dipasang secara read-only di `/mnt/office-movies` melalui tunnel `asth-office`, kekal tersedia selepas reboot, dan digunakan oleh library Jellyfin `Movies ITUNAS`. Jellyfin Media Player 1.12.0 pada `BurnRogZ13` memainkan *Thor: Love and Thunder* melalui Direct Play tanpa proses transcoding `ffmpeg` aktif. Library tempatan `/mnt/rog/Movies` kekal berasingan. Lihat [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md) untuk seni bina, kawalan akses dan batas operasi yang disahkan.
 
+## Remote Access / Tailscale
+
+Pada 6 September 2026, akses peribadi jarak jauh ke ASTH dan Jellyfin disahkan dari telefon Android menggunakan data selular melalui Tailscale. Pi `asth-pi` menjalankan Tailscale 1.102.3 pada alamat overlay `100.87.140.5`; Service Hub, HUD dan Jellyfin `asth-media` 10.11.11 boleh dicapai tanpa pendedahan langsung servis ASTH ke Internet awam. Tailscale menyediakan akses klien dipercayai ke Pi, manakala tunnel WireGuard `asth-office` yang berasingan menghubungkan Pi ke media pejabat.
+
+Keadaan keselamatan Tailscale masih **PARTIAL / PENDING HARDENING**. Peraturan khusus pemilik kepada port 22, 80, 3001, 8096 dan 9090 pada Pi telah dibuat, tetapi peraturan broad allow-all sedia ada masih aktif dan belum diuji selepas dinyahaktifkan. Lihat [Tailscale Remote Access](docs/REMOTE_ACCESS_TAILSCALE.md) untuk bukti, sempadan keselamatan dan kerja pengukuhan yang masih diperlukan.
+
 ## Dokumen Utama
 
 - [Project Principles](docs/ASTH_PROJECT_PRINCIPLES.md)
@@ -119,6 +125,7 @@ Integrasi media pejabat turut disahkan pada 6 September 2026. Share SMB3 `Movies
 - [Deployment Status](docs/DEPLOYMENT_STATUS.md)
 - [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
 - [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md)
+- [Tailscale Remote Access](docs/REMOTE_ACCESS_TAILSCALE.md)
 
 ## Pemilikan Projek
 
