@@ -372,6 +372,51 @@ LANDING_PAGE = """
             transform: translateY(-2px);
         }
 
+
+        .services details {
+            margin-top: 17px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .services summary {
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .services .access-value {
+            display: block;
+            margin: 7px 0 10px;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.65);
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            user-select: text;
+        }
+
+        .services .access-actions {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .services button.service-button {
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .services :is(summary, button, a):focus-visible {
+            outline: 3px solid var(--dark-blue);
+            outline-offset: 3px;
+        }
+
+        .services .copy-status {
+            margin-top: 12px;
+            overflow-wrap: anywhere;
+        }
+
         footer {
             margin-top: 23px;
             color: var(--muted);
@@ -472,48 +517,48 @@ LANDING_PAGE = """
         <section class="grid">
             <article class="card">
                 <div class="metric-top">
-                    <div class="metric-icon devices-icon">ðŸ‘¥</div>
+                    <div class="metric-icon devices-icon">&#128101;</div>
                     <p class="card-label">Peranti Tersambung</p>
                 </div>
 
-                <p id="devices" class="card-value">â€”</p>
+                <p id="devices" class="card-value">&#8212;</p>
                 <p class="card-note">Connected ke hotspot ASTH</p>
             </article>
 
             <article class="card">
                 <div class="metric-top">
-                    <div class="metric-icon download-icon">â†“</div>
+                    <div class="metric-icon download-icon">&#8595;</div>
                     <p class="card-label">Muat Turun</p>
                 </div>
 
-                <p id="rxRate" class="card-value">â€”</p>
-                <p id="rxTotal" class="card-note">Jumlah RX: â€”</p>
+                <p id="rxRate" class="card-value">&#8212;</p>
+                <p id="rxTotal" class="card-note">Jumlah RX: &#8212;</p>
             </article>
 
             <article class="card">
                 <div class="metric-top">
-                    <div class="metric-icon upload-icon">â†‘</div>
+                    <div class="metric-icon upload-icon">&#8593;</div>
                     <p class="card-label">Muat Naik</p>
                 </div>
 
-                <p id="txRate" class="card-value">â€”</p>
-                <p id="txTotal" class="card-note">Jumlah TX: â€”</p>
+                <p id="txRate" class="card-value">&#8212;</p>
+                <p id="txTotal" class="card-note">Jumlah TX: &#8212;</p>
             </article>
 
             <article class="card">
                 <div class="metric-top">
-                    <div class="metric-icon uptime-icon">â±</div>
+                    <div class="metric-icon uptime-icon">&#9201;</div>
                     <p class="card-label">System Uptime</p>
                 </div>
 
-                <p id="uptime" class="card-value">â€”</p>
-                <p id="ssid" class="card-note">Wi-Fi: â€”</p>
+                <p id="uptime" class="card-value">&#8212;</p>
+                <p id="ssid" class="card-note">Wi-Fi: &#8212;</p>
             </article>
 
             <article class="card chart-card">
                 <div class="chart-heading">
                     <div class="chart-title">
-                        <div class="metric-icon download-icon">ðŸ“Š</div>
+                        <div class="metric-icon download-icon">&#128202;</div>
                         <h2>Aktiviti Rangkaian Masa Nyata</h2>
                     </div>
 
@@ -540,7 +585,17 @@ LANDING_PAGE = """
 
                 <div class="service-links">
                     <a class="service-button" href="/learn/">
-                        ðŸŽ“ Learning Hub
+                        &#127891; Learning Hub
+                    </a>
+
+                    <a
+                        id="jellyfinLink"
+                        class="service-button"
+                        href="#"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        🎬 Jellyfin
                     </a>
 
                     <a
@@ -550,7 +605,7 @@ LANDING_PAGE = """
                         target="_blank"
                         rel="noopener"
                     >
-                        ðŸ“ˆ Uptime Kuma
+                        &#128200; Uptime Kuma
                     </a>
 
                     <a
@@ -560,14 +615,43 @@ LANDING_PAGE = """
                         target="_blank"
                         rel="noopener"
                     >
-                        ðŸ–¥ï¸ Cockpit
+                        &#128421;&#65039; Cockpit
                     </a>
                 </div>
+
+                <details>
+                    <summary>ROG Drive</summary>
+                    <p>Network Address:</p>
+                    <code id="rogAddress" class="access-value"></code>
+                    <p>Username: <strong>asthadmin</strong></p>
+                    <p>Password stored privately.</p>
+                    <p>Tampal alamat dalam bar alamat Windows File Explorer.</p>
+                    <div class="access-actions">
+                        <button type="button" class="service-button" id="copyRog">
+                            Copy network address
+                        </button>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>SSH</summary>
+                    <p>SSH Command:</p>
+                    <code id="sshCommand" class="access-value"></code>
+                    <p>Username: <strong>asthadmin</strong></p>
+                    <p>Use the ASTH server administrator account.</p>
+                    <p>Jalankan perintah dalam terminal dengan klien SSH.</p>
+                    <div class="access-actions">
+                        <button type="button" class="service-button" id="copySsh">
+                            Copy SSH command
+                        </button>
+                    </div>
+                </details>
+                <p id="copyStatus" class="copy-status" aria-live="polite"></p>
             </article>
         </section>
 
         <footer>
-            Data dikemas kini automatik setiap 5 saat Â· ASTH v0.4.0
+            Data dikemas kini automatik setiap 5 saat &#183; ASTH v0.4.0
         </footer>
     </main>
 
@@ -585,10 +669,45 @@ LANDING_PAGE = """
         const context = canvas.getContext("2d");
 
         document.getElementById("uptimeLink").href =
-            `${location.protocol}//${location.hostname}:3001`;
+            `http://${location.hostname}:3001`;
 
         document.getElementById("cockpitLink").href =
             `https://${location.hostname}:9090`;
+
+
+        document.getElementById("jellyfinLink").href =
+            `http://${location.hostname}:8096`;
+
+        // Construct separators without Python/JavaScript backslash ambiguity.
+        const uncSeparator = String.fromCharCode(92);
+        const rogAddress = document.getElementById("rogAddress");
+        const sshCommand = document.getElementById("sshCommand");
+        rogAddress.textContent =
+            uncSeparator.repeat(2) + location.hostname + uncSeparator + "ROG-Drive";
+        sshCommand.textContent = `ssh asthadmin@${location.hostname}`;
+
+        async function copyAccess(source, successMessage) {
+            const feedback = document.getElementById("copyStatus");
+            feedback.textContent = "";
+            try {
+                if (!navigator.clipboard ||
+                    typeof navigator.clipboard.writeText !== "function") {
+                    throw new Error("Clipboard unavailable");
+                }
+                await navigator.clipboard.writeText(source.textContent);
+                feedback.textContent = successMessage;
+            } catch (error) {
+                feedback.textContent =
+                    "Salinan automatik tidak tersedia. Sila salin teks secara manual.";
+            }
+        }
+
+        document.getElementById("copyRog").addEventListener("click", () =>
+            copyAccess(rogAddress, "Alamat ROG Drive disalin.")
+        );
+        document.getElementById("copySsh").addEventListener("click", () =>
+            copyAccess(sshCommand, "Perintah SSH disalin.")
+        );
 
         let previous = null;
         let rxHistory = Array(30).fill(0);
@@ -1031,11 +1150,11 @@ LEARNING_PAGE = """
                 </div>
             </div>
 
-            <a class="back" href="/">â† Kembali ke Hub</a>
+            <a class="back" href="/">&#8592; Kembali ke Hub</a>
         </header>
 
         <section class="intro">
-            <h2>Selamat datang ke Learning Hub ðŸŽ“</h2>
+            <h2>Selamat datang ke Learning Hub &#127891;</h2>
             <p>
                 Ruang ini disediakan untuk modul pembelajaran, nota,
                 video, bahan kursus dan latihan interaktif yang boleh
@@ -1045,7 +1164,7 @@ LEARNING_PAGE = """
 
         <section class="modules">
             <article class="module">
-                <div class="icon">ðŸ“š</div>
+                <div class="icon">&#128218;</div>
                 <h3>Modul Pembelajaran</h3>
                 <p>
                     Koleksi modul kursus dan bahan rujukan untuk peserta
@@ -1055,7 +1174,7 @@ LEARNING_PAGE = """
             </article>
 
             <article class="module">
-                <div class="icon">ðŸŽ¬</div>
+                <div class="icon">&#127916;</div>
                 <h3>Video Latihan</h3>
                 <p>
                     Video demonstrasi, tutorial dan kandungan latihan
@@ -1065,7 +1184,7 @@ LEARNING_PAGE = """
             </article>
 
             <article class="module">
-                <div class="icon">ðŸ§ª</div>
+                <div class="icon">&#129514;</div>
                 <h3>Latihan Interaktif</h3>
                 <p>
                     Aktiviti praktikal, kuiz dan bahan pembelajaran
@@ -1076,7 +1195,7 @@ LEARNING_PAGE = """
         </section>
 
         <footer>
-            ASTH Learning Hub Â· Institut Teknologi Unggas
+            ASTH Learning Hub &#183; Institut Teknologi Unggas
         </footer>
     </main>
 </body>
