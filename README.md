@@ -106,6 +106,8 @@ Validasi langsung menunjukkan pengguna aplikasi `asthadmin` tidak boleh menjalan
 
 Private key, pre-shared key, kelayakan, QR code dan konfigurasi penuh WireGuard tidak boleh dikomit. API hanya menambah `office_tunnel`; ia tidak mendedahkan identiti peer, endpoint atau output mentah sistem.
 
+Integrasi media pejabat turut disahkan pada 6 September 2026. Share SMB3 `Movies` pada pelayan Windows `ITUNAS` dipasang secara read-only di `/mnt/office-movies` melalui tunnel `asth-office`, kekal tersedia selepas reboot, dan digunakan oleh library Jellyfin `Movies ITUNAS`. Jellyfin Media Player 1.12.0 pada `BurnRogZ13` memainkan *Thor: Love and Thunder* melalui Direct Play tanpa proses transcoding `ffmpeg` aktif. Library tempatan `/mnt/rog/Movies` kekal berasingan. Lihat [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md) untuk seni bina, kawalan akses dan batas operasi yang disahkan.
+
 ## Dokumen Utama
 
 - [Project Principles](docs/ASTH_PROJECT_PRINCIPLES.md)
@@ -116,6 +118,7 @@ Private key, pre-shared key, kelayakan, QR code dan konfigurasi penuh WireGuard 
 - [Hardware Baseline](docs/HARDWARE_BASELINE.md)
 - [Deployment Status](docs/DEPLOYMENT_STATUS.md)
 - [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
+- [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md)
 
 ## Pemilikan Projek
 

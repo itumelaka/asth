@@ -1,5 +1,14 @@
 # Changelog
 
+## 6 September 2026 — Office WireGuard media integration and Jellyfin Direct Play
+
+- Documented the reboot-persistent `asth-office` split tunnel between `ASTH-PORTABLE` (`10.42.0.0/24`) and the office LAN (`192.168.1.0/24`).
+- Recorded authenticated SMB3 access to the `Movies` share on `ITUNAS` (`192.168.1.254`), mounted read-only at `/mnt/office-movies` with protected root-only credentials and Jellyfin-compatible ownership/modes.
+- Recorded the persistent `_netdev,nofail,x-systemd.automount` setup ordered and required after `wg-quick@asth-office.service`, including successful reboot validation of `mnt-office\x2dmovies.automount`.
+- Added the Jellyfin library `Movies ITUNAS` while preserving `/mnt/rog/Movies` as a separate library. Jellyfin on the Windows server was not configured or changed.
+- Verified Jellyfin Media Player 1.12.0 on `BurnRogZ13` playing *Thor: Love and Thunder* by Direct Play, with no active `ffmpeg` transcoding process; observed `ffprobe` processes were library scanning.
+- Documented the 30-minute media scan schedule, possible temporary buffering during an initial full scan, the 2 GB Pi preference for Direct Play, and the decision to retain authenticated, signed SMB3 rather than weaken SMB security.
+
 ## 6 September 2026 — ROG SSD, Samba and auxiliary Jellyfin verification
 
 - Recorded `/dev/sda2` (label `ROG`) persistently mounted at `/mnt/rog` using Linux `ntfs3`, uid/gid 1000 and the supplied runtime mount options after a full reboot.

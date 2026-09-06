@@ -1,6 +1,6 @@
 # ASTH Project Status
 
-**Status date:** 13 August 2026
+**Status date:** 6 September 2026
 **Deployed application version:** v0.4.0
 **Current phase:** Raspberry Pi integration and Learning Hub content preparation
 **Overall status:** Active — operational foundation, partial learning experience
@@ -21,6 +21,7 @@
 - Physical recovery access complete.
 - Manual application rollback from the active ASTH v0.4.0 file to the retained v0.3.0 file, followed by restoration to the original v0.4.0 file, was verified on 13 August 2026. Both service restarts succeeded; rollback and final health checks returned HTTP 200 and `healthy` at the expected versions.
 - The Raspberry Pi display stack was recovered by enabling `dtoverlay=vc4-kms-v3d`; after reboot the expected `/dev/dri` devices and `vc4`/`v3d` modules were present. After creating the missing `/etc/X11/xorg.conf.d` directory with root ownership and mode `755`, `rp1-test.service` became active. Final checks showed zero failed units, active `asth.service`, and healthy ASTH v0.4.0 over HTTP 200.
+- Office-media integration is verified through the persistent split tunnel `asth-office`: authenticated SMB3 content from Windows server `ITUNAS` is mounted read-only at `/mnt/office-movies`, returns after reboot through systemd automount ordering, and feeds the separate Jellyfin library `Movies ITUNAS`. Jellyfin Media Player 1.12.0 on `BurnRogZ13` verified Direct Play of *Thor: Love and Thunder* without an active `ffmpeg` transcoding process. See [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md).
 
 ## Partial
 
