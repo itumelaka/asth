@@ -1,4 +1,8 @@
 import subprocess
+import os
+import shutil
+import threading
+import time
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -417,6 +421,23 @@ LANDING_PAGE = """
             overflow-wrap: anywhere;
         }
 
+
+        .hud { grid-column: 1 / -1; }
+        .hud h2 { margin: 0 0 12px; font-size: 1.1rem; }
+        .hud-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+            gap: 12px;
+        }
+        .hud-grid div {
+            padding: 10px;
+            border-radius: 14px;
+            background: #edf4fc;
+            overflow-wrap: anywhere;
+        }
+        .hud dt { color: var(--muted); font-size: 0.8rem; }
+        .hud dd { margin: 6px 0 0; font-weight: 900; }
+
         footer {
             margin-top: 23px;
             color: var(--muted);
@@ -648,6 +669,21 @@ LANDING_PAGE = """
                 </details>
                 <p id="copyStatus" class="copy-status" aria-live="polite"></p>
             </article>
+            <article class="card hud">
+                <h2>Status Sistem</h2>
+                <dl class="hud-grid">
+                    <div><dt>CPU temperature</dt><dd id="hudTemp">Unavailable</dd></div>
+                    <div><dt>RAM usage</dt><dd id="hudRam">Unavailable</dd></div>
+                    <div><dt>ROG SSD</dt><dd id="hudMount">Unavailable</dd></div>
+                    <div><dt>ROG free / total</dt><dd id="hudSpace">Unavailable</dd></div>
+                    <div><dt>ASTH App</dt><dd id="hudAsth">Unavailable</dd></div>
+                    <div><dt>Nginx</dt><dd id="hudNginx">Unavailable</dd></div>
+                    <div><dt>Jellyfin</dt><dd id="hudJellyfin">Unavailable</dd></div>
+                    <div><dt>Samba</dt><dd id="hudSamba">Unavailable</dd></div>
+                    <div><dt>Uptime Kuma</dt><dd id="hudKuma">Unavailable</dd></div>
+                </dl>
+                <p class="card-note" id="hudNote">Updates every 30 seconds. Running indicates process state, not service reachability.</p>
+            </article>
         </section>
 
         <footer>
@@ -811,6 +847,24 @@ LANDING_PAGE = """
                 isOnline ? "Hub Online" : "Hub Offline";
         }
 
+
+        function renderHud(data) {
+            const set = (id, value) => { document.getElementById(id).textContent = value; };
+            set("hudTemp", Number.isFinite(data.cpu_temperature_c) ? data.cpu_temperature_c + " °C" : "Unavailable");
+            set("hudRam", Number.isFinite(data.ram_used_percent) ? data.ram_used_percent + "%" : "Unavailable");
+            set("hudMount", data.rog_mounted === true ? "Mounted" : data.rog_mounted === false ? "Not mounted / unexpected device" : "Unavailable");
+            set("hudSpace", Number.isFinite(data.rog_free_bytes) && Number.isFinite(data.rog_total_bytes)
+                ? formatBytes(data.rog_free_bytes) + " / " + formatBytes(data.rog_total_bytes) : "Unavailable");
+            const labels = {active: "Running", inactive: "Stopped", failed: "Failed", activating: "Starting", deactivating: "Stopping"};
+            for (const [id, field] of Object.entries({
+                hudAsth: "service_asth", hudNginx: "service_nginx",
+                hudJellyfin: "service_jellyfin", hudSamba: "service_smbd",
+                hudKuma: "service_uptime_kuma"
+            })) set(id, Object.prototype.hasOwnProperty.call(labels, data[field]) ? labels[data[field]] : "Unavailable");
+            document.getElementById("hudNote").textContent =
+                "Updates every 30 seconds. Running indicates process state, not service reachability.";
+        }
+
         async function refreshStatus() {
             try {
                 const response = await fetch(
@@ -823,6 +877,7 @@ LANDING_PAGE = """
                 }
 
                 const data = await response.json();
+                renderHud(data);
                 const now = Date.now();
 
                 let currentRxRate = 0;
@@ -876,6 +931,8 @@ LANDING_PAGE = """
                 drawChart();
             } catch (error) {
                 setConnectionStatus(false);
+                renderHud({});
+                document.getElementById("hudNote").textContent = "System status unavailable.";
             }
         }
 
@@ -1278,6 +1335,116 @@ def _hub_uptime_seconds() -> int:
         return 0
 
 
+
+_HUD_UNITS = {
+    "asth.service": "service_asth",
+    "nginx.service": "service_nginx",
+    "jellyfin.service": "service_jellyfin",
+    "smbd.service": "service_smbd",
+    "pm2-asthadmin.service": "service_pm2",
+}
+_hud_lock = threading.Lock()
+_hud_cache = None
+_hud_expires = 0.0
+
+
+def _hud_text(path):
+    with open(path, encoding="ascii") as source:
+        return source.read()
+
+
+def _hud_rog_identity():
+    for line in _hud_text("/proc/self/mountinfo").splitlines():
+        left, right = line.split(" - ", 1)
+        fields, filesystem = left.split(), right.split()
+        if fields[4] == "/mnt/rog":
+            if filesystem[:2] == ["ntfs3", "/dev/sda2"]:
+                return tuple(fields[:6] + filesystem[:2])
+            return None
+    return None
+
+
+def _hud_collect():
+    data = {
+        "cpu_temperature_c": None, "ram_used_percent": None,
+        "rog_mounted": None, "rog_free_bytes": None, "rog_total_bytes": None,
+        **{field: "unknown" for field in _HUD_UNITS.values()},
+        "service_uptime_kuma": "unknown",
+    }
+    try:
+        if _hud_text("/sys/class/thermal/thermal_zone0/type").strip() == "cpu-thermal":
+            value = int(_hud_text("/sys/class/thermal/thermal_zone0/temp")) / 1000
+            if 0 <= value <= 150:
+                data["cpu_temperature_c"] = round(value, 1)
+    except (OSError, ValueError):
+        pass
+    try:
+        memory = {}
+        for line in _hud_text("/proc/meminfo").splitlines():
+            key, value = line.split(":", 1)
+            if key in ("MemTotal", "MemAvailable"):
+                memory[key] = int(value.split()[0])
+        total, available = memory["MemTotal"], memory["MemAvailable"]
+        if total > 0 and 0 <= available <= total:
+            data["ram_used_percent"] = round(100 * (total - available) / total, 1)
+    except (OSError, ValueError, KeyError, IndexError):
+        pass
+    try:
+        identity = _hud_rog_identity()
+        data["rog_mounted"] = identity is not None
+        if identity is not None:
+            usage = shutil.disk_usage("/mnt/rog")
+            if identity == _hud_rog_identity():
+                data["rog_free_bytes"] = usage.free
+                data["rog_total_bytes"] = usage.total
+            else:
+                data["rog_mounted"] = None
+    except (OSError, ValueError, IndexError):
+        data["rog_mounted"] = None
+    try:
+        result = subprocess.run(
+            ["/usr/bin/systemctl", "show", "--no-pager",
+             "--property=Id,LoadState,ActiveState", *_HUD_UNITS],
+            capture_output=True, text=True, errors="replace", timeout=2,
+            check=False,
+        )
+        for block in result.stdout.strip().split("\n\n"):
+            properties = dict(line.split("=", 1) for line in block.splitlines() if "=" in line)
+            field = _HUD_UNITS.get(properties.get("Id"))
+            state = properties.get("ActiveState")
+            if field and properties.get("LoadState") == "loaded":
+                if state in ("active", "inactive", "failed", "activating", "deactivating"):
+                    data[field] = state
+    except (OSError, subprocess.SubprocessError):
+        pass
+    # Never invoke PM2 CLI: it may start a daemon or expose process environments.
+    # A matching process name is evidence of a process, not HTTP health.
+    if data["service_pm2"] == "active":
+        try:
+            with os.scandir("/proc") as entries:
+                for entry in entries:
+                    if entry.name.isdecimal():
+                        try:
+                            if _hud_text("/proc/" + entry.name + "/comm").strip() == "uptime-kuma":
+                                data["service_uptime_kuma"] = "active"
+                                break
+                        except (OSError, ValueError):
+                            continue
+        except OSError:
+            pass
+    return data
+
+
+def _hud_status():
+    global _hud_cache, _hud_expires
+    with _hud_lock:
+        now = time.monotonic()
+        if _hud_cache is None or now >= _hud_expires:
+            _hud_cache = _hud_collect()
+            _hud_expires = time.monotonic() + 30
+        return dict(_hud_cache)
+
+
 @app.get("/api/hub-status")
 def hub_status():
     return {
@@ -1291,4 +1458,5 @@ def hub_status():
         ),
         "uptime_seconds": _hub_uptime_seconds(),
         "wifi_ssid": _hub_wifi_ssid(),
+        **_hud_status(),
     }
