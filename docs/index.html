@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Launch local ASTH learning and training services from the appropriate ASTH or institute network.">
+  <title>ASTH | Adaptive Smart Training Hub</title>
+  <style>
+    :root { color-scheme: light; --navy: #17335b; --blue: #2458bd; --muted: #4f627c; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; color: var(--navy); background: #edf4fc;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    .page { width: min(100% - 32px, 1000px); margin: auto; padding: 48px 0 24px; }
+    header { padding: 8px 0 28px; }
+    .eyebrow { margin: 0; color: var(--blue); font-weight: 750; letter-spacing: .13em; text-transform: uppercase; font-size: .8rem; }
+    h1 { margin: 4px 0 0; font-size: clamp(3rem, 10vw, 5rem); line-height: 1.1; letter-spacing: -.04em; }
+    .name { margin: 12px 0; font-size: clamp(1.15rem, 4vw, 1.6rem); font-weight: 650; }
+    .description { max-width: 650px; margin: 0; color: var(--muted); }
+    .notice, .card { border: 1px solid #cad8e9; border-radius: 22px; padding: 24px; }
+    .notice { background: #fff2cd; border-color: #e1ca8c; margin-bottom: 24px; }
+    h2 { margin: 0 0 10px; font-size: 1.25rem; line-height: 1.35; }
+    p { margin: 0 0 12px; }
+    ol { margin: 8px 0 12px; padding-left: 24px; }
+    .notice p:last-child { margin-bottom: 0; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: #fff; box-shadow: 0 8px 24px rgba(23, 51, 91, .06); min-width: 0; }
+    .card > p { color: var(--muted); }
+    .links { display: grid; gap: 12px; margin-top: 20px; }
+    .button {
+      display: flex; align-items: center; min-height: 52px; padding: 13px 18px;
+      border: 2px solid var(--blue); border-radius: 13px;
+      background: var(--blue); color: #fff; text-decoration: none;
+      font-weight: 700; line-height: 1.4; overflow-wrap: anywhere;
+    }
+    .button.secondary { background: #f1f6ff; color: var(--navy); border-color: #b6c9e8; }
+    .button:hover { background: #173f8e; border-color: #173f8e; color: #fff; }
+    a:focus-visible { outline: 3px solid #17335b; outline-offset: 4px; }
+    .support { margin-top: 20px; }
+    .support .links { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .browser-note { padding: 22px 4px 0; color: var(--muted); font-size: .9rem; }
+    footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid #cad8e9; color: var(--muted); font-size: .85rem; }
+    footer p { margin: 0; }
+    @media (max-width: 680px) {
+      .page { padding-top: 28px; }
+      .grid, .support .links { grid-template-columns: 1fr; }
+      .notice, .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="eyebrow">Institut Teknologi Unggas</p>
+      <h1>ASTH</h1>
+      <p class="name">Adaptive Smart Training Hub</p>
+      <p class="description">Portable digital learning and training hub for Institut Teknologi Unggas.</p>
+    </header>
+
+    <section class="notice" aria-labelledby="connection-title">
+      <h2 id="connection-title">Connect before you launch</h2>
+      <ol>
+        <li>Connect to Wi-Fi <strong>ASTH-PORTABLE</strong>.</li>
+        <li>Select <strong>Open ASTH Portable</strong> below.</li>
+      </ol>
+      <p>Local ASTH services are available only when connected to ASTH-PORTABLE or the ITU local network.</p>
+      <p>This page is a launcher for local services, not the ASTH application itself.</p>
+    </section>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="portable-title">
+        <h2 id="portable-title">ASTH Portable</h2>
+        <p>Use while connected to ASTH-PORTABLE Wi-Fi.</p>
+        <div class="links">
+          <a class="button" href="http://10.42.0.1">Open ASTH Portable</a>
+          <a class="button secondary" href="http://10.42.0.1/learn/">Learning Hub Portable</a>
+        </div>
+      </section>
+      <section class="card" aria-labelledby="lan-title">
+        <h2 id="lan-title">ASTH LAN</h2>
+        <p>Use while connected to the ITU local network.</p>
+        <div class="links">
+          <a class="button" href="http://192.168.100.187">Open ASTH LAN</a>
+          <a class="button secondary" href="http://192.168.100.187/learn/">Learning Hub LAN</a>
+        </div>
+      </section>
+    </div>
+
+    <section class="card support" aria-labelledby="services-title">
+      <h2 id="services-title">More portable services</h2>
+      <p>Media, monitoring and administrator access on ASTH-PORTABLE.</p>
+      <div class="links">
+        <a class="button secondary" href="http://10.42.0.1:8096">Jellyfin Portable</a>
+        <a class="button secondary" href="http://10.42.0.1:3001">Uptime Kuma Portable</a>
+        <a class="button secondary" href="https://10.42.0.1:9090">Cockpit Portable</a>
+      </div>
+    </section>
+
+    <p class="browser-note">Local links open services hosted inside the ASTH or ITU network. Your browser may show a warning when opening HTTP or self-signed HTTPS services.</p>
+
+    <footer>
+      <p>Institut Teknologi Unggas</p>
+      <p>Adaptive Smart Training Hub</p>
+    </footer>
+  </main>
+</body>
+</html>
+
