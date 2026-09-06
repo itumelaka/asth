@@ -81,6 +81,31 @@ SSD ROG kini dipasang secara kekal di `/mnt/rog` menggunakan `ntfs3` dengan uid/
 
 Butiran semasa direkodkan dalam [Deployment Status](docs/DEPLOYMENT_STATUS.md).
 
+
+## Office Connectivity / Always-On Office Tunnel
+
+Seni bina yang disahkan melalui validasi rangkaian yang dibekalkan:
+
+```text
+ASTH-PORTABLE (10.42.0.0/24)
+    -> Pi ASTH
+    -> WireGuard asth-office
+    -> UDM Pro
+    -> Office LAN (192.168.1.0/24)
+```
+
+- Interface `asth-office` menggunakan subnet WireGuard `192.168.3.0/24`; servis `wg-quick@asth-office.service` bermula secara automatik melalui systemd.
+- Split tunnel menghantar trafik `192.168.1.0/24` melalui `asth-office`. Trafik Internet biasa kekal melalui Internet rumah.
+- Polisi routed UFW diperlukan untuk membenarkan `10.42.0.0/24` dari `wlan0` ke `192.168.1.0/24` melalui `asth-office`.
+- Router upstream mempunyai port forward UDP 51820 ke WAN UDM Pro.
+- Semasa validasi yang dibekalkan, servis dan interface aktif selepas reboot serta laluan pejabat tersedia. Pi mencapai `192.168.1.254`, dan klien ASTH-PORTABLE mencapai TCP 80 serta 445 pada pelayan tersebut. Alamat ini ialah sasaran ujian, bukan kebergantungan tetap tunnel.
+
+HUD **Office Tunnel** menggunakan cache metrik 30 saat dan hanya memaparkan Connected, Disconnected atau Unavailable. Connected memerlukan servis aktif, interface `asth-office` wujud dan laluan tepat `192.168.1.0/24` menggunakan interface tersebut. Ini ialah petunjuk keadaan servis, interface dan laluan setempat, bukan jaminan capaian aplikasi pejabat; tiada ping atau probe pelayan dilakukan.
+
+Validasi langsung menunjukkan pengguna aplikasi `asthadmin` tidak boleh menjalankan `wg show` tanpa keistimewaan tambahan. ASTH sengaja tidak menaikkan keistimewaan hanya untuk pemantauan HUD. Pemeriksaan menggunakan keadaan systemd, kewujudan interface dan output laluan setempat yang tidak memerlukan sudo; kegagalan pemeriksaan menghasilkan Unavailable.
+
+Private key, pre-shared key, kelayakan, QR code dan konfigurasi penuh WireGuard tidak boleh dikomit. API hanya menambah `office_tunnel`; ia tidak mendedahkan identiti peer, endpoint atau output mentah sistem.
+
 ## Dokumen Utama
 
 - [Project Principles](docs/ASTH_PROJECT_PRINCIPLES.md)

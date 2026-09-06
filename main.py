@@ -681,6 +681,7 @@ LANDING_PAGE = """
                     <div><dt>Jellyfin</dt><dd id="hudJellyfin">Unavailable</dd></div>
                     <div><dt>Samba</dt><dd id="hudSamba">Unavailable</dd></div>
                     <div><dt>Uptime Kuma</dt><dd id="hudKuma">Unavailable</dd></div>
+                    <div><dt>Office Tunnel</dt><dd id="hudOffice">Unavailable</dd></div>
                 </dl>
                 <p class="card-note" id="hudNote">Updates every 30 seconds. Running indicates process state, not service reachability.</p>
             </article>
@@ -855,6 +856,8 @@ LANDING_PAGE = """
             set("hudMount", data.rog_mounted === true ? "Mounted" : data.rog_mounted === false ? "Not mounted / unexpected device" : "Unavailable");
             set("hudSpace", Number.isFinite(data.rog_free_bytes) && Number.isFinite(data.rog_total_bytes)
                 ? formatBytes(data.rog_free_bytes) + " / " + formatBytes(data.rog_total_bytes) : "Unavailable");
+            set("hudOffice", data.office_tunnel === "connected" ? "Connected"
+                : data.office_tunnel === "disconnected" ? "Disconnected" : "Unavailable");
             const labels = {active: "Running", inactive: "Stopped", failed: "Failed", activating: "Starting", deactivating: "Stopping"};
             for (const [id, field] of Object.entries({
                 hudAsth: "service_asth", hudNginx: "service_nginx",
@@ -1364,12 +1367,47 @@ def _hud_rog_identity():
     return None
 
 
+
+def _hud_office_tunnel(service_state):
+    if service_state in ("inactive", "failed", "activating", "deactivating"):
+        return "disconnected"
+    if service_state != "active":
+        return "unavailable"
+    try:
+        os.stat("/sys/class/net/asth-office")
+    except FileNotFoundError:
+        return "disconnected"
+    except OSError:
+        return "unavailable"
+    try:
+        result = subprocess.run(
+            ["/usr/sbin/ip", "route", "show", "192.168.1.0/24"],
+            capture_output=True, text=True, errors="replace",
+            timeout=2, check=True,
+        )
+        lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        if not lines:
+            return "disconnected"
+        if len(lines) != 1:
+            return "unavailable"
+        fields = lines[0].split()
+        if not fields or fields[0] != "192.168.1.0/24":
+            return "unavailable"
+        device_fields = [index for index, value in enumerate(fields) if value == "dev"]
+        if len(device_fields) != 1 or device_fields[0] + 1 >= len(fields):
+            return "unavailable"
+        return "connected" if fields[device_fields[0] + 1] == "asth-office" else "disconnected"
+    except (OSError, subprocess.SubprocessError):
+        return "unavailable"
+
+
 def _hud_collect():
     data = {
         "cpu_temperature_c": None, "ram_used_percent": None,
         "rog_mounted": None, "rog_free_bytes": None, "rog_total_bytes": None,
         **{field: "unknown" for field in _HUD_UNITS.values()},
         "service_uptime_kuma": "unknown",
+        "office_tunnel": "unavailable",
     }
     try:
         if _hud_text("/sys/class/thermal/thermal_zone0/type").strip() == "cpu-thermal":
@@ -1401,15 +1439,20 @@ def _hud_collect():
                 data["rog_mounted"] = None
     except (OSError, ValueError, IndexError):
         data["rog_mounted"] = None
+    office_service = "unknown"
     try:
         result = subprocess.run(
             ["/usr/bin/systemctl", "show", "--no-pager",
-             "--property=Id,LoadState,ActiveState", *_HUD_UNITS],
+             "--property=Id,LoadState,ActiveState", *_HUD_UNITS,
+             "wg-quick@asth-office.service"],
             capture_output=True, text=True, errors="replace", timeout=2,
             check=False,
         )
         for block in result.stdout.strip().split("\n\n"):
             properties = dict(line.split("=", 1) for line in block.splitlines() if "=" in line)
+            if properties.get("Id") == "wg-quick@asth-office.service":
+                if properties.get("LoadState") == "loaded":
+                    office_service = properties.get("ActiveState", "unknown")
             field = _HUD_UNITS.get(properties.get("Id"))
             state = properties.get("ActiveState")
             if field and properties.get("LoadState") == "loaded":
@@ -1417,6 +1460,7 @@ def _hud_collect():
                     data[field] = state
     except (OSError, subprocess.SubprocessError):
         pass
+    data["office_tunnel"] = _hud_office_tunnel(office_service)
     # Never invoke PM2 CLI: it may start a daemon or expose process environments.
     # A matching process name is evidence of a process, not HTTP health.
     if data["service_pm2"] == "active":
