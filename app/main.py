@@ -1354,7 +1354,7 @@ def _run_itunas_action(action):
     for systemctl_action, unit in operations:
         try:
             result = subprocess.run(
-                ["/usr/bin/systemctl", systemctl_action, unit],
+                ["/usr/bin/sudo", "-n", "/usr/bin/systemctl", systemctl_action, unit],
                 capture_output=True,
                 text=True,
                 errors="replace",

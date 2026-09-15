@@ -262,8 +262,8 @@ class ItunasControlTests(unittest.TestCase):
         self.assertEqual(result["itunas_status"], "connected")
         self.assertNotIn("secret", str(result))
         self.assertEqual([call[0] for call in calls], [
-            ["/usr/bin/systemctl", "start", r"mnt-office\x2dmovies.automount"],
-            ["/usr/bin/systemctl", "start", r"mnt-office\x2dmovies.mount"],
+            ["/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", r"mnt-office\x2dmovies.automount"],
+            ["/usr/bin/sudo", "-n", "/usr/bin/systemctl", "start", r"mnt-office\x2dmovies.mount"],
         ])
         self.assertTrue(all(call[1]["timeout"] == 10 for call in calls))
         self.assertNotIn("wg-quick@asth-office.service", str(calls))
@@ -284,8 +284,8 @@ class ItunasControlTests(unittest.TestCase):
 
         self.assertTrue(result["success"])
         self.assertEqual(calls, [
-            ["/usr/bin/systemctl", "stop", r"mnt-office\x2dmovies.automount"],
-            ["/usr/bin/systemctl", "stop", r"mnt-office\x2dmovies.mount"],
+            ["/usr/bin/sudo", "-n", "/usr/bin/systemctl", "stop", r"mnt-office\x2dmovies.automount"],
+            ["/usr/bin/sudo", "-n", "/usr/bin/systemctl", "stop", r"mnt-office\x2dmovies.mount"],
         ])
         self.assertNotIn("wg-quick@asth-office.service", str(calls))
 
