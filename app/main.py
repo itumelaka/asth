@@ -1,3 +1,4 @@
+import html
 import json
 import os
 import re
@@ -21,6 +22,256 @@ app.mount(
     StaticFiles(directory="/var/www/asth-hub/assets"),
     name="assets",
 )
+
+
+_ASTH_WIFI_SSID = "ASTH-PORTABLE"
+_ASTH_PORTAL_URL = "http://10.42.0.1/"
+_QR_LOW_VERSIONS = (
+    (1, 19, 7, ()),
+    (2, 34, 10, (6, 18)),
+    (3, 55, 15, (6, 22)),
+    (4, 80, 20, (6, 26)),
+    (5, 108, 26, (6, 30)),
+)
+
+
+def _qr_append_bits(bits, value, length):
+    bits.extend((value >> index) & 1 for index in range(length - 1, -1, -1))
+
+
+def _qr_multiply(left, right):
+    result = 0
+    for index in range(7, -1, -1):
+        result = (result << 1) ^ ((result >> 7) * 0x11D)
+        if (right >> index) & 1:
+            result ^= left
+    return result
+
+
+def _qr_divisor(degree):
+    result = [0] * (degree - 1) + [1]
+    root = 1
+    for _ in range(degree):
+        for index in range(degree):
+            result[index] = _qr_multiply(result[index], root)
+            if index + 1 < degree:
+                result[index] ^= result[index + 1]
+        root = _qr_multiply(root, 2)
+    return result
+
+
+def _qr_remainder(data, divisor):
+    result = [0] * len(divisor)
+    for value in data:
+        factor = value ^ result.pop(0)
+        result.append(0)
+        for index, coefficient in enumerate(divisor):
+            result[index] ^= _qr_multiply(coefficient, factor)
+    return result
+
+
+def _qr_mask(mask, x, y):
+    tests = (
+        (x + y) % 2 == 0,
+        y % 2 == 0,
+        x % 3 == 0,
+        (x + y) % 3 == 0,
+        (x // 3 + y // 2) % 2 == 0,
+        x * y % 2 + x * y % 3 == 0,
+        (x * y % 2 + x * y % 3) % 2 == 0,
+        ((x + y) % 2 + x * y % 3) % 2 == 0,
+    )
+    return tests[mask]
+
+
+def _qr_penalty(modules):
+    size = len(modules)
+    score = 0
+    for lines in (modules, zip(*modules)):
+        for line in lines:
+            values = list(line)
+            run_colour = values[0]
+            run_length = 1
+            for value in values[1:]:
+                if value == run_colour:
+                    run_length += 1
+                else:
+                    if run_length >= 5:
+                        score += run_length - 2
+                    run_colour = value
+                    run_length = 1
+            if run_length >= 5:
+                score += run_length - 2
+            pattern = "".join("1" if value else "0" for value in values)
+            score += 40 * (pattern.count("10111010000") + pattern.count("00001011101"))
+    for y in range(size - 1):
+        for x in range(size - 1):
+            colour = modules[y][x]
+            if all(modules[y + dy][x + dx] == colour for dy in (0, 1) for dx in (0, 1)):
+                score += 3
+    dark = sum(sum(row) for row in modules)
+    score += abs(dark * 20 - size * size * 10) // (size * size) * 10
+    return score
+
+
+def _qr_matrix(payload):
+    encoded = payload.encode("utf-8")
+    selected = next(
+        (entry for entry in _QR_LOW_VERSIONS if len(encoded) <= entry[1] - 2),
+        None,
+    )
+    if selected is None:
+        raise ValueError("QR payload is too long")
+    version, data_codewords, error_codewords, alignment_positions = selected
+    bits = []
+    _qr_append_bits(bits, 0b0100, 4)
+    _qr_append_bits(bits, len(encoded), 8)
+    for value in encoded:
+        _qr_append_bits(bits, value, 8)
+    bits.extend([0] * min(4, data_codewords * 8 - len(bits)))
+    bits.extend([0] * ((-len(bits)) % 8))
+    data = [sum(bits[index + offset] << (7 - offset) for offset in range(8))
+            for index in range(0, len(bits), 8)]
+    for pad in (0xEC, 0x11) * data_codewords:
+        if len(data) >= data_codewords:
+            break
+        data.append(pad)
+    codewords = data + _qr_remainder(data, _qr_divisor(error_codewords))
+    size = version * 4 + 17
+    modules = [[False] * size for _ in range(size)]
+    functions = [[False] * size for _ in range(size)]
+
+    def set_function(x, y, value):
+        if 0 <= x < size and 0 <= y < size:
+            modules[y][x] = value
+            functions[y][x] = True
+
+    def draw_finder(center_x, center_y):
+        for dy in range(-4, 5):
+            for dx in range(-4, 5):
+                distance = max(abs(dx), abs(dy))
+                set_function(center_x + dx, center_y + dy, distance not in (2, 4))
+
+    def draw_alignment(center_x, center_y):
+        for dy in range(-2, 3):
+            for dx in range(-2, 3):
+                set_function(center_x + dx, center_y + dy, max(abs(dx), abs(dy)) != 1)
+
+    def draw_format(mask):
+        value = (1 << 3) | mask
+        remainder = value
+        for _ in range(10):
+            remainder = (remainder << 1) ^ ((remainder >> 9) * 0x537)
+        value = ((value << 10) | remainder) ^ 0x5412
+        bit = lambda index: ((value >> index) & 1) != 0
+        for index in range(6):
+            set_function(8, index, bit(index))
+        set_function(8, 7, bit(6))
+        set_function(8, 8, bit(7))
+        set_function(7, 8, bit(8))
+        for index in range(9, 15):
+            set_function(14 - index, 8, bit(index))
+        for index in range(8):
+            set_function(size - 1 - index, 8, bit(index))
+        for index in range(8, 15):
+            set_function(8, size - 15 + index, bit(index))
+        set_function(8, size - 8, True)
+
+    for index in range(8, size - 8):
+        set_function(6, index, index % 2 == 0)
+        set_function(index, 6, index % 2 == 0)
+    draw_finder(3, 3)
+    draw_finder(size - 4, 3)
+    draw_finder(3, size - 4)
+    for center_y in alignment_positions:
+        for center_x in alignment_positions:
+            if not functions[center_y][center_x]:
+                draw_alignment(center_x, center_y)
+    draw_format(0)
+
+    data_index = 0
+    right = size - 1
+    while right >= 1:
+        if right == 6:
+            right = 5
+        upward = ((right + 1) & 2) == 0
+        for vertical in range(size):
+            y = size - 1 - vertical if upward else vertical
+            for offset in range(2):
+                x = right - offset
+                if not functions[y][x] and data_index < len(codewords) * 8:
+                    modules[y][x] = ((codewords[data_index >> 3] >> (7 - (data_index & 7))) & 1) != 0
+                    data_index += 1
+        right -= 2
+
+    best = None
+    best_score = None
+    for mask in range(8):
+        candidate = [row[:] for row in modules]
+        for y in range(size):
+            for x in range(size):
+                if not functions[y][x] and _qr_mask(mask, x, y):
+                    candidate[y][x] = not candidate[y][x]
+        modules_before_format = modules
+        modules = candidate
+        draw_format(mask)
+        candidate = modules
+        modules = modules_before_format
+        score = _qr_penalty(candidate)
+        if best_score is None or score < best_score:
+            best = candidate
+            best_score = score
+    return best
+
+
+def _qr_svg(payload, element_id, title):
+    modules = _qr_matrix(payload)
+    quiet_zone = 4
+    size = len(modules) + quiet_zone * 2
+    path = "".join(
+        f"M{x + quiet_zone} {y + quiet_zone}h1v1h-1z"
+        for y, row in enumerate(modules)
+        for x, dark in enumerate(row)
+        if dark
+    )
+    escaped_id = html.escape(element_id, quote=True)
+    escaped_payload = html.escape(payload, quote=True)
+    escaped_title = html.escape(title)
+    return (
+        f'<svg id="{escaped_id}" data-qr-target="{escaped_payload}" role="img" '
+        f'aria-label="{escaped_title}" viewBox="0 0 {size} {size}" shape-rendering="crispEdges">'
+        f'<rect width="{size}" height="{size}" fill="#ffffff"/>'
+        f'<path fill="#000000" d="{path}"/></svg>'
+    )
+
+
+def _wifi_qr_payload(password):
+    escaped = re.sub(r'([\\;,":])', r'\\\1', password)
+    return f"WIFI:T:WPA;S:{_ASTH_WIFI_SSID};P:{escaped};;"
+
+
+def _wifi_access_markup():
+    password = os.environ.get("ASTH_WIFI_PASSWORD")
+    if not password:
+        return (
+            '<div class="wifi-unconfigured" role="status">'
+            'PASSWORD WI-FI BELUM DIKONFIGURASI</div>'
+            f'<p class="qr-detail">SSID: {_ASTH_WIFI_SSID}</p>'
+        )
+    payload = _wifi_qr_payload(password)
+    try:
+        svg = _qr_svg(payload, "wifiQr", "Kod QR Wi-Fi ASTH-PORTABLE")
+    except ValueError:
+        return (
+            '<div class="wifi-unconfigured" role="status">'
+            'PASSWORD WI-FI BELUM DIKONFIGURASI</div>'
+            f'<p class="qr-detail">SSID: {_ASTH_WIFI_SSID}</p>'
+        )
+    return (
+        svg
+        + f'<p class="qr-detail">SSID: {_ASTH_WIFI_SSID}<br>'
+        + f'Password: {html.escape(password)}</p>'
+    )
 
 
 LANDING_PAGE = """
@@ -179,33 +430,44 @@ LANDING_PAGE = """
         .dialog-actions button { min-height: 44px; padding: 8px 14px; border: 0; border-radius: 9px; }
         #studentQrDialog {
             width: min(960px, calc(100% - 32px)); max-width: none;
-            height: min(568px, calc(100% - 32px)); max-height: none;
-            padding: 16px 18px; overflow: hidden; border: 3px solid #102846;
+            height: min(568px, calc(100% - 32px)); max-height: none; margin: auto;
+            padding: 12px 14px; overflow: hidden; border: 3px solid #102846;
         }
         .student-layout {
-            display: grid; grid-template-columns: minmax(330px, 390px) minmax(0, 1fr);
-            align-items: center; gap: 26px; height: 100%;
+            display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto;
+            gap: 7px; height: 100%;
         }
-        .qr-panel { display: grid; place-items: center; }
-        #portalQr {
-            display: block; width: min(100%, 350px); height: auto;
-            border: 8px solid white; background: white; image-rendering: pixelated;
+        .student-layout > h2 {
+            margin: 0; color: #102846; font-size: 1.35rem; line-height: 1.1; text-align: center;
         }
-        .student-copy { display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 8px 0; }
-        .student-copy h2 { margin: 0; color: #102846; font-size: 1.8rem; }
-        .student-copy .ssid {
-            margin: 12px 0 6px; padding: 10px 12px; border: 2px solid #075fc8;
-            border-radius: 10px; color: #102846; background: #e8f2ff; font-size: 1.25rem;
-            font-weight: 900;
+        .qr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-height: 0; }
+        .qr-card {
+            display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0;
+            padding: 8px 10px; overflow: hidden; border: 3px solid #075fc8;
+            border-radius: 13px; background: #eef5fc;
         }
-        .portal-address { margin: 3px 0 10px; color: #253d59; font-size: 1rem; font-weight: 700; }
-        .student-steps { display: grid; gap: 10px; margin: 4px 0 10px; }
+        .qr-card h3 { margin: 0; color: #071a31; font-size: 1.08rem; text-align: center; }
+        .qr-panel { display: grid; min-height: 0; place-items: center; }
+        .qr-panel svg {
+            display: block; width: auto; max-width: 100%; height: min(100%, 300px);
+            border: 6px solid white; background: white; image-rendering: pixelated;
+        }
+        .qr-detail {
+            min-height: 38px; margin: 3px 0 0; overflow-wrap: anywhere;
+            color: #071a31; font-size: .86rem; line-height: 1.18; text-align: center;
+        }
+        .wifi-unconfigured {
+            display: grid; place-items: center; min-height: 180px; padding: 14px;
+            border: 4px solid #a91f32; color: #7d1022; background: white;
+            font-size: 1.12rem; font-weight: 900; line-height: 1.25; text-align: center;
+        }
+        .student-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; }
         .student-steps p {
-            margin: 0; padding: 9px 11px; border-left: 6px solid #075fc8;
-            color: #102846; background: #eef4fa; font-size: 1.05rem; font-weight: 800;
+            margin: 0; padding: 5px 7px; border-left: 5px solid #075fc8;
+            color: #102846; background: #e0ebf6; font-size: .78rem; font-weight: 800;
         }
         #closeStudentQr {
-            min-height: 56px; margin-top: auto; border: 2px solid #102846; border-radius: 11px;
+            width: 100%; min-height: 52px; border: 2px solid #102846; border-radius: 11px;
             color: white; background: #102846; font-size: 1rem; font-weight: 900;
         }
         :focus-visible { outline: 3px solid #f3ad29; outline-offset: 2px; }
@@ -315,24 +577,30 @@ LANDING_PAGE = """
 
     <dialog id="studentQrDialog" aria-labelledby="studentQrTitle">
         <div class="student-layout">
-            <div class="qr-panel">
+            <h2 id="studentQrTitle">Akses Pelajar / Pelawat</h2>
+            <div class="qr-grid">
+                <section class="qr-card" aria-labelledby="wifiQrHeading">
+                    <h3 id="wifiQrHeading">SAMBUNG WI-FI</h3>
+                    <div class="qr-panel"><!-- ASTH_WIFI_ACCESS --></div>
+                </section>
+                <section class="qr-card" aria-labelledby="portalQrHeading">
+                    <h3 id="portalQrHeading">BUKA PORTAL ASTH</h3>
+                    <div class="qr-panel">
                 <svg id="portalQr" data-qr-target="http://10.42.0.1/" role="img" aria-labelledby="portalQrTitle" viewBox="0 0 33 33" shape-rendering="crispEdges">
                     <title id="portalQrTitle">Kod QR Portal ASTH http://10.42.0.1/</title>
                     <rect width="33" height="33" fill="#ffffff"/>
                     <path fill="#000000" d="M4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM13 4h1v1h-1zM16 4h1v1h-1zM17 4h1v1h-1zM18 4h1v1h-1zM20 4h1v1h-1zM22 4h1v1h-1zM23 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM27 4h1v1h-1zM28 4h1v1h-1zM4 5h1v1h-1zM10 5h1v1h-1zM14 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM18 5h1v1h-1zM19 5h1v1h-1zM20 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM17 6h1v1h-1zM18 6h1v1h-1zM19 6h1v1h-1zM22 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM28 6h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM17 7h1v1h-1zM18 7h1v1h-1zM22 7h1v1h-1zM24 7h1v1h-1zM25 7h1v1h-1zM26 7h1v1h-1zM28 7h1v1h-1zM4 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM14 8h1v1h-1zM18 8h1v1h-1zM19 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM25 8h1v1h-1zM26 8h1v1h-1zM28 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM20 9h1v1h-1zM22 9h1v1h-1zM28 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM23 10h1v1h-1zM24 10h1v1h-1zM25 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM28 10h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM14 11h1v1h-1zM16 11h1v1h-1zM17 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM14 12h1v1h-1zM15 12h1v1h-1zM18 12h1v1h-1zM21 12h1v1h-1zM22 12h1v1h-1zM26 12h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM8 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM18 13h1v1h-1zM21 13h1v1h-1zM22 13h1v1h-1zM23 13h1v1h-1zM28 13h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM12 14h1v1h-1zM13 14h1v1h-1zM17 14h1v1h-1zM20 14h1v1h-1zM21 14h1v1h-1zM24 14h1v1h-1zM26 14h1v1h-1zM27 14h1v1h-1zM28 14h1v1h-1zM5 15h1v1h-1zM15 15h1v1h-1zM20 15h1v1h-1zM21 15h1v1h-1zM22 15h1v1h-1zM23 15h1v1h-1zM27 15h1v1h-1zM4 16h1v1h-1zM5 16h1v1h-1zM6 16h1v1h-1zM7 16h1v1h-1zM8 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM16 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM12 17h1v1h-1zM13 17h1v1h-1zM15 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM22 17h1v1h-1zM23 17h1v1h-1zM25 17h1v1h-1zM28 17h1v1h-1zM4 18h1v1h-1zM8 18h1v1h-1zM10 18h1v1h-1zM11 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM16 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM21 18h1v1h-1zM22 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM27 18h1v1h-1zM28 18h1v1h-1zM5 19h1v1h-1zM13 19h1v1h-1zM16 19h1v1h-1zM17 19h1v1h-1zM18 19h1v1h-1zM19 19h1v1h-1zM21 19h1v1h-1zM23 19h1v1h-1zM25 19h1v1h-1zM27 19h1v1h-1zM4 20h1v1h-1zM6 20h1v1h-1zM7 20h1v1h-1zM8 20h1v1h-1zM10 20h1v1h-1zM12 20h1v1h-1zM14 20h1v1h-1zM15 20h1v1h-1zM18 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM18 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM25 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM7 22h1v1h-1zM8 22h1v1h-1zM9 22h1v1h-1zM10 22h1v1h-1zM12 22h1v1h-1zM17 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM27 22h1v1h-1zM28 22h1v1h-1zM4 23h1v1h-1zM10 23h1v1h-1zM12 23h1v1h-1zM15 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM7 24h1v1h-1zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h1v1h-1zM13 24h1v1h-1zM16 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM28 24h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM7 25h1v1h-1zM8 25h1v1h-1zM10 25h1v1h-1zM13 25h1v1h-1zM14 25h1v1h-1zM15 25h1v1h-1zM16 25h1v1h-1zM17 25h1v1h-1zM19 25h1v1h-1zM20 25h1v1h-1zM21 25h1v1h-1zM24 25h1v1h-1zM26 25h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM7 26h1v1h-1zM8 26h1v1h-1zM10 26h1v1h-1zM12 26h1v1h-1zM15 26h1v1h-1zM16 26h1v1h-1zM18 26h1v1h-1zM19 26h1v1h-1zM21 26h1v1h-1zM24 26h1v1h-1zM25 26h1v1h-1zM28 26h1v1h-1zM4 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM16 27h1v1h-1zM17 27h1v1h-1zM18 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM21 27h1v1h-1zM24 27h1v1h-1zM25 27h1v1h-1zM27 27h1v1h-1zM4 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM7 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM10 28h1v1h-1zM12 28h1v1h-1zM13 28h1v1h-1zM14 28h1v1h-1zM15 28h1v1h-1zM18 28h1v1h-1zM20 28h1v1h-1zM23 28h1v1h-1zM27 28h1v1h-1zM28 28h1v1h-1z"/>
                 </svg>
+                    </div>
+                    <p class="qr-detail"><strong>Portal:</strong> http://10.42.0.1/</p>
+                </section>
             </div>
-            <section class="student-copy">
-                <h2 id="studentQrTitle">Akses Pelajar / Pelawat</h2>
-                <p class="ssid">SSID: ASTH-PORTABLE</p>
-                <p class="portal-address">Portal: http://10.42.0.1/</p>
-                <div class="student-steps" aria-label="Langkah akses">
-                    <p>1. Sambung ke Wi-Fi ASTH-PORTABLE</p>
-                    <p>2. Imbas QR Portal</p>
-                    <p>3. Akses perkhidmatan ASTH</p>
-                </div>
-                <button id="closeStudentQr" type="button">KEMBALI / TUTUP</button>
-            </section>
+            <div class="student-steps" aria-label="Langkah akses">
+                <p>1. Sambung ke Wi-Fi ASTH-PORTABLE</p>
+                <p>2. Imbas QR Portal</p>
+                <p>3. Akses perkhidmatan ASTH</p>
+            </div>
+            <button id="closeStudentQr" type="button">KEMBALI / TUTUP</button>
         </div>
     </dialog>
 
@@ -871,7 +1139,9 @@ LEARNING_PAGE = """
 
 @app.get("/", response_class=HTMLResponse)
 def root() -> HTMLResponse:
-    return HTMLResponse(content=LANDING_PAGE)
+    return HTMLResponse(
+        content=LANDING_PAGE.replace("<!-- ASTH_WIFI_ACCESS -->", _wifi_access_markup())
+    )
 
 
 @app.get("/learn/", response_class=HTMLResponse)

@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import re
 import subprocess
 import sys
@@ -408,20 +409,35 @@ class StudentQrAccessTests(unittest.TestCase):
     def setUpClass(cls):
         cls.main = _load_main()
 
-    def test_root_page_exposes_student_portal_dialog_and_instructions(self):
-        page = self.main.root().content
+    def test_configured_password_renders_wifi_qr_payload_and_visible_credentials(self):
+        test_password = "TEST-ONLY-WIFI-VALUE"
+        with mock.patch.dict(
+            self.main.os.environ,
+            {"ASTH_WIFI_PASSWORD": test_password},
+            clear=False,
+        ):
+            page = self.main.root().content
 
         self.assertIn('id="studentAccessButton"', page)
         self.assertIn('id="studentQrDialog"', page)
         self.assertIn('id="closeStudentQr"', page)
         self.assertIn("AKSES PELAJAR / QR", page)
+        self.assertIn("SAMBUNG WI-FI", page)
+        self.assertIn('id="wifiQr"', page)
+        self.assertIn(
+            "WIFI:T:WPA;S:ASTH-PORTABLE;P:TEST-ONLY-WIFI-VALUE;;",
+            page,
+        )
         self.assertIn("SSID: ASTH-PORTABLE", page)
+        self.assertIn("Password: TEST-ONLY-WIFI-VALUE", page)
+        self.assertIn("BUKA PORTAL ASTH", page)
         self.assertIn("1. Sambung ke Wi-Fi ASTH-PORTABLE", page)
         self.assertIn("2. Imbas QR Portal", page)
         self.assertIn("3. Akses perkhidmatan ASTH", page)
 
     def test_portal_qr_is_inline_black_on_white_and_has_exact_target(self):
-        page = self.main.root().content
+        with mock.patch.dict(self.main.os.environ, {}, clear=True):
+            page = self.main.root().content
         match = re.search(r'(<svg[^>]+id="portalQr"[\s\S]*?</svg>)', page)
 
         self.assertIsNotNone(match)
@@ -433,6 +449,32 @@ class StudentQrAccessTests(unittest.TestCase):
         self.assertIn("#000000", fills)
         self.assertNotIn("<image", match.group(1))
         self.assertNotRegex(match.group(1), r'https?://[^\s"\']+\.(?:png|svg|js)')
+
+    def test_missing_password_shows_safe_fallback_and_keeps_portal_qr(self):
+        with mock.patch.dict(self.main.os.environ, {}, clear=True):
+            page = self.main.root().content
+
+        self.assertNotIn('id="wifiQr"', page)
+        self.assertIn("PASSWORD WI-FI BELUM DIKONFIGURASI", page)
+        self.assertIn('id="portalQr"', page)
+        self.assertIn('data-qr-target="http://10.42.0.1/"', page)
+
+    def test_wifi_password_is_not_added_to_hub_status(self):
+        test_password = "TEST-ONLY-WIFI-VALUE"
+        with mock.patch.dict(
+            self.main.os.environ,
+            {"ASTH_WIFI_PASSWORD": test_password},
+            clear=False,
+        ), mock.patch.object(self.main, "_hud_status", return_value={}), mock.patch.object(
+            self.main, "_hub_connected_stations", return_value=0
+        ), mock.patch.object(self.main, "_hub_read_int", return_value=0), mock.patch.object(
+            self.main, "_hub_uptime_seconds", return_value=0
+        ), mock.patch.object(self.main, "_hub_wifi_ssid", return_value="ASTH-PORTABLE"):
+            status = self.main.hub_status()
+
+        self.assertNotIn("wifi_password", status)
+        self.assertNotIn("ASTH_WIFI_PASSWORD", status)
+        self.assertNotIn(test_password, json.dumps(status))
 
 
 class DashboardVisualTests(unittest.TestCase):
