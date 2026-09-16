@@ -132,15 +132,33 @@ Pengesahan produksi menunjukkan `asth.service` aktif, dashboard berjaya dimuatka
 
 WireGuard kekal `CONNECTED` sepanjang kedua-dua tindakan. Ini mengesahkan kawalan dashboard hanya memutasi mount/automount ITUNAS dan tidak memutasi WireGuard.
 
-## PARTIAL — Learning Hub
+## LIVE — Learning Hub Core v1
 
-`/learn/` tersedia sebagai pintu masuk Learning Hub. Kandungan sebenar dan fungsi pembelajaran akan dibangunkan secara berperingkat.
+`/learn/` ialah pintu masuk Learning Hub offline-first. Core v1 kini mempunyai tiga Learning Pack live:
+
+| Learning Pack | Sumber | Route |
+|---|---|---|
+| **Persediaan Reban & Brooder** | Kandungan latihan asas ASTH | `/learn/packs/reban-brooder/` |
+| **Biosekuriti Asas Ladang** | WIM `A014-006-3:2022-C08` — Laksana Sistem Biosekuriti Ladang Poltri | `/learn/packs/biosekuriti/` |
+| **Pengendalian Telur Sajian & Telur Tetasan** | WIM `A014-006-3:2022-C05` — Laksana Pengendalian Telur Poltri | `/learn/packs/pengendalian-telur/` |
+
+Peserta telah disahkan boleh menyambung ke `ASTH-PORTABLE` dan membuka `http://10.42.0.1/` walaupun telefon melaporkan tiada akses Internet. Learning Hub kekal boleh dicapai secara setempat tanpa Internet luaran. Internet boleh digunakan sebagai tambahan, tetapi tidak diperlukan untuk penyampaian latihan setempat. Tiada tuntutan dibuat bahawa captive portal akan dibuka secara automatik pada semua peranti.
+
+## VERIFIED — Kuasa Mudah Alih dan Media
+
+- UGREEN powerbank berjaya menghidupkan spare Raspberry Pi 5, termasuk ujian `stress-ng` CPU empat teras selama 120 saat tanpa petunjuk throttling (`throttled=0x0` sebelum dan selepas; suhu selepas ujian 55.4 C).
+- Raspberry Pi utama ASTH berjaya boot ke desktop menggunakan powerbank yang sama; `asth.service` aktif, `/learn/` mengembalikan HTTP 200 dan telefon berjaya mengakses Learning Hub melalui `ASTH-PORTABLE`.
+- Jellyfin aktif dan dua peranti memainkan media ITUNAS melalui tunnel WireGuard `asth-office` dengan lancar semasa ujian; purata receive throughput yang diukur ialah kira-kira 64.51 Mbps.
+- Sasaran media praktikal semasa ialah 1080p. Ujian ini bukan pengesahan throughput maksimum, sokongan 4K atau runtime powerbank jangka panjang.
+- Monitor kekal menggunakan `DC 12V 2A` dan memerlukan penyelesaian kuasa 12V yang sesuai secara berasingan.
+
+Dokumentasi pertandingan semasa merangkumi **Manual Penggunaan ASTH v1.2**, **Poster Konsep Operasi v1.2** dan **Infografik Learning Hub v1.2**. Bahan pertandingan akhir masih belum lengkap.
 
 ## FUTURE — Hala Tuju Pembelajaran
 
-- video dan kandungan latihan;
-- nota, PDF dan bahan rujukan;
-- latihan interaktif dan kuiz;
+- perluasan video dan kandungan latihan;
+- penambahan nota, PDF dan bahan rujukan;
+- penambahan Learning Pack dan aktiviti interaktif;
 - kemajuan pelajar dan penyelesaian modul;
 - integrasi ringan dengan SPDK untuk enrolmen atau kemajuan;
 - pilihan adapter Wi-Fi USB sebagai uplink/klien berasingan daripada hotspot terbina dalam;
@@ -148,7 +166,7 @@ WireGuard kekal `CONNECTED` sepanjang kedua-dua tindakan. Ini mengesahkan kawala
 
 ## Status Prototaip
 
-ASTH kini ialah prototaip mudah alih yang berfungsi dengan kiosk automatik, konsol kesihatan skrin sentuh, hotspot peserta, akses QR offline, media tempatan, Jellyfin, seni bina media ITUNAS jarak jauh, WireGuard, periferal input/audio Bluetooth dan asas Learning Hub.
+ASTH kini ialah prototaip mudah alih yang berfungsi dengan kiosk automatik, konsol kesihatan skrin sentuh, hotspot peserta, akses QR offline, tiga Learning Pack live, media tempatan, Jellyfin, seni bina media ITUNAS jarak jauh, WireGuard dan periferal input/audio Bluetooth.
 
 ## Teknologi Utama
 

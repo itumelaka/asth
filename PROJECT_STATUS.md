@@ -2,9 +2,9 @@
 
 **Tarikh status:** 16 September 2026
 **Versi aplikasi live yang direkodkan:** v0.4.0
-**Fasa semasa:** Prototaip mudah alih berfungsi; penyediaan kandungan Learning Hub dan pemantapan operasi
-**Status keseluruhan:** Aktif — asas operasi dan penyampaian setempat tersedia, pengalaman pembelajaran masih separa
-**Tindakan utama seterusnya:** Teruskan pengisian dan pengesahan kandungan Learning Hub sambil mengekalkan pemantauan operasi prototaip.
+**Fasa semasa:** Learning Hub Core v1 dengan tiga Learning Pack live; penyediaan bukti pertandingan dan pemantapan perkakasan mudah alih
+**Status keseluruhan:** Aktif — operasi offline-first, penyampaian setempat dan tiga Learning Pack telah disahkan
+**Tindakan utama seterusnya:** Lengkapkan bukti pertandingan, ujian pengguna/pilot, BOM/kos dan penyelesaian kuasa 12V monitor tanpa mengganggu Core v1.
 
 ## Sempadan Skop
 
@@ -62,6 +62,18 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - Aliran offline: sambung ke hotspot, imbas QR Portal, kemudian akses perkhidmatan ASTH.
 - QR portal berfungsi tanpa perkhidmatan internet luar.
 
+### Learning Hub Core v1
+
+Tiga Learning Pack kini live:
+
+1. **Persediaan Reban & Brooder** — `/learn/packs/reban-brooder/`
+2. **Biosekuriti Asas Ladang** — `/learn/packs/biosekuriti/`
+   - Sumber: WIM `A014-006-3:2022-C08` — Laksana Sistem Biosekuriti Ladang Poltri.
+3. **Pengendalian Telur Sajian & Telur Tetasan** — `/learn/packs/pengendalian-telur/`
+   - Sumber: WIM `A014-006-3:2022-C05` — Laksana Pengendalian Telur Poltri.
+
+Pack 2 dan Pack 3 telah dideploy ke produksi. Learning Hub Core v1 kini menyediakan tiga pack yang boleh dicapai secara setempat.
+
 ### Media
 
 - **Local Media Storage:** `/mnt/rog`, untuk penggunaan setempat/offline.
@@ -71,6 +83,34 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - Kawalan ITUNAS hanya mengawal mount/automount media, bukan tunnel WireGuard.
 
 ## VERIFIED — Pengesahan Operasi dan Keselamatan
+
+### Pengesahan Offline ASTH-PORTABLE — 16 September 2026
+
+- Peranti peserta berjaya menyambung ke `ASTH-PORTABLE` walaupun telefon memaparkan `No Internet access`.
+- Portal tempatan kekal boleh dicapai pada `http://10.42.0.1/`.
+- Learning Hub boleh digunakan tanpa sambungan Internet luaran.
+- Keputusan ini menyokong kenyataan bahawa ASTH tidak memerlukan Internet untuk penyampaian latihan setempat; Internet hanya tambahan.
+- Tiada tuntutan dibuat bahawa captive portal akan dilancarkan secara automatik.
+
+### Pengesahan UGREEN Powerbank — 16 September 2026
+
+Spare Raspberry Pi 5:
+
+- boot selesai;
+- LAN dan SSH aktif;
+- `vcgencmd get_throttled` menunjukkan `throttled=0x0`;
+- `dmesg` tidak menunjukkan amaran voltan atau throttle;
+- ujian `stress-ng` CPU empat teras berjalan selama 120 saat;
+- selepas ujian, `throttled=0x0` dan suhu direkodkan pada 55.4 C.
+
+Raspberry Pi utama ASTH:
+
+- berjaya boot ke desktop menggunakan UGREEN powerbank;
+- `vcgencmd get_throttled` menunjukkan `throttled=0x0`;
+- `asth.service` aktif dan `/learn/` mengembalikan HTTP 200;
+- telefon berjaya menyambung ke `ASTH-PORTABLE` dan membuka Learning Hub.
+
+Had bukti: ujian ini tidak mengesahkan runtime jangka panjang, pensijilan beban penuh ASTH atau kuasa monitor. Monitor `DC 12V 2A` masih memerlukan penyelesaian kuasa 12V yang sesuai secara berasingan.
 
 ### Kawalan ITUNAS
 
@@ -101,7 +141,20 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - Systemd automount disusun dan diperlukan selepas `wg-quick@asth-office.service`; mount kembali tersedia selepas reboot.
 - Jellyfin mengekalkan `Movies ITUNAS` sebagai library berasingan daripada `/mnt/rog/Movies`.
 - Jellyfin Media Player 1.12.0 pada `BurnRogZ13` telah memainkan *Thor: Love and Thunder* melalui Direct Play tanpa proses transcoding `ffmpeg` aktif.
+- Jellyfin service disahkan aktif semasa ujian 16 September 2026.
+- Dua peranti menjalankan main balik aktif daripada ITUNAS melalui tunnel WireGuard `asth-office`; kedua-dua stream diperhatikan bermain dengan lancar.
+- Purata receive throughput semasa ujian dua peranti ialah kira-kira 64.51 Mbps.
+- Satu snapshot throughput sementara 215.73 Mbps kekal **tidak divalidasi** dan tidak digunakan sebagai bukti tiga peranti kerana iPad belum memulakan main balik pada ketika itu.
+- Ujian ini tidak menentukan throughput maksimum WireGuard atau menjamin main balik 4K. Sasaran praktikal kandungan media ASTH kekal 1080p.
 - Rujuk [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md).
+
+### Dokumentasi Pertandingan — 16 September 2026
+
+- **Manual Penggunaan ASTH v1.2** telah dikemas kini untuk tiga Learning Pack live, bukti ujian powerbank, bukti WireGuard/ITUNAS/Jellyfin dan status Core v1.
+- **Poster Konsep Operasi v1.2** telah dikemas kini.
+- **Infografik Learning Hub v1.2** telah dikemas kini.
+- Infografik lain tidak diubah apabila kandungannya masih semasa.
+- Bahan akhir pertandingan NTRIC belum dinyatakan lengkap.
 
 ### Tailscale Remote Access
 
@@ -133,7 +186,13 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 
 ### Operasi dan Kandungan
 
-- Populate dan sahkan kandungan sebenar Learning Hub.
+- Jalankan ujian pilot/pengguna dan rekodkan bukti penggunaan.
+- Lengkapkan BOM dan anggaran kos.
+- Siapkan poster pertandingan A1 akhir.
+- Siapkan slide deck akhir.
+- Siapkan video pertandingan 3–5 minit.
+- Siapkan laporan inovasi akhir.
+- Tentukan penyelesaian kuasa sesuai untuk monitor `DC 12V 2A`; powerbank Pi tidak disahkan membekalkan monitor.
 - Tentukan pasukan projek, peranan, penjaga sistem dan maintenance window.
 - Sahkan modul sumber, SOP dan keperluan pertandingan.
 - Jalankan ujian backup/restore apabila modul berpangkalan data benar-benar wujud; `/var/lib/asth/db` direkodkan kosong dalam pengesahan terdahulu.
@@ -159,6 +218,6 @@ ASTH ialah prototaip mudah alih yang berfungsi dengan:
 - storan media tempatan dan Jellyfin;
 - seni bina media ITUNAS melalui WireGuard;
 - periferal input dan audio Bluetooth;
-- asas Learning Hub.
+- Learning Hub Core v1 dengan tiga Learning Pack live.
 
 Fungsi pengurusan kursus penuh kekal dalam SPDK. ASTH menumpukan penyampaian latihan dan kemajuan pelajar.

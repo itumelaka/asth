@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-16 — Learning Hub Core v1 and field validation
+
+- Deployed **Biosekuriti Asas Ladang** at `/learn/packs/biosekuriti/`, based on WIM `A014-006-3:2022-C08 — Laksana Sistem Biosekuriti Ladang Poltri`.
+- Deployed **Pengendalian Telur Sajian & Telur Tetasan** at `/learn/packs/pengendalian-telur/`, based on WIM `A014-006-3:2022-C05 — Laksana Pengendalian Telur Poltri`.
+- Confirmed Learning Hub Core v1 now has three live packs, including **Persediaan Reban & Brooder** at `/learn/packs/reban-brooder/`.
+- Verified a participant phone could remain connected to `ASTH-PORTABLE` while reporting no Internet access, open `http://10.42.0.1/` and use the Learning Hub locally. No captive-portal auto-launch claim is made.
+- Verified a UGREEN powerbank powered a spare Raspberry Pi 5 through boot, LAN/SSH operation and a 120-second four-core `stress-ng` test with `throttled=0x0` before and after and a post-test temperature of 55.4 C.
+- Verified the main ASTH Pi booted to desktop from the UGREEN powerbank, retained `throttled=0x0`, ran `asth.service`, returned HTTP 200 for `/learn/` and served the Learning Hub through `ASTH-PORTABLE`.
+- Kept the power evidence bounded: no long-duration runtime or full-load certification is claimed, and the `DC 12V 2A` monitor still requires a separate suitable power solution.
+- Verified Jellyfin active and two concurrent devices playing ITUNAS media smoothly through WireGuard `asth-office`; average receive throughput during the validated test was approximately 64.51 Mbps. This is not a maximum-throughput or reliable-4K claim; 1080p remains the practical content target.
+- Updated **Manual Penggunaan ASTH v1.2**, **Poster Konsep Operasi v1.2** and **Learning Hub infographic v1.2**. Other still-current infographics were unchanged, and final NTRIC competition materials remain pending.
+
 ## 16 September 2026 — ITUNAS live deployment and production verification
 
 - Deployed the exact-match CIFS/autofs parser correction to the Raspberry Pi; `asth.service` restarted successfully and remained active/running.
