@@ -569,7 +569,7 @@ class LearningHubTests(unittest.TestCase):
     def setUpClass(cls):
         cls.main = _load_main()
 
-    def test_learning_hub_lists_three_packs_with_only_pack_one_available(self):
+    def test_learning_hub_lists_three_packs_with_first_two_available(self):
         page = _route_content(self.main, "/learn/")
         pack_one = _learning_card(page, "Persediaan Reban &amp; Brooder")
         pack_two = _learning_card(page, "Biosekuriti Asas Ladang")
@@ -584,10 +584,136 @@ class LearningHubTests(unittest.TestCase):
         self.assertIn('href="/learn/packs/reban-brooder/"', pack_one)
         self.assertIn("MULA", pack_one)
         self.assertNotIn("AKAN DATANG", pack_one)
-        self.assertIn("AKAN DATANG", pack_two)
+        self.assertIn("LIVE", pack_two)
+        self.assertIn("Offline", pack_two)
+        self.assertIn('href="/learn/packs/biosekuriti/"', pack_two)
+        self.assertIn("MULA", pack_two)
+        self.assertNotIn("AKAN DATANG", pack_two)
         self.assertIn("AKAN DATANG", pack_three)
         self.assertNotIn('href="/learn/modules/', page)
         self.assertNotIn("Asas Penternakan Ayam Kampung", page)
+
+    def test_biosecurity_pack_contains_validated_structure_and_source_identity(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/")
+
+        for heading in (
+            "01 Pengenalan Biosekuriti",
+            "02 Kawalan Kemasukan Personel &amp; Kenderaan",
+            "03 Kawalan Makhluk Perosak",
+            "04 Penyelenggaraan Parit",
+            "05 Penyelenggaraan Pagar",
+            "06 Audit Biosekuriti Ladang",
+            "07 Quick Quiz &amp; Tamat Pack",
+        ):
+            with self.subTest(heading=heading):
+                self.assertIn(heading, page)
+
+        for content in (
+            "Biosekuriti mengawal kemasukan dan penyebaran kuman dalam ladang.",
+            "kawasan luar",
+            "kawasan bukan produksi",
+            "kawasan produksi",
+            "satu pintu utama",
+            "Kehadiran pelawat diminimumkan",
+            "Bersihkan lumpur, jerami dan kotoran yang kelihatan sebelum proses nyah kuman.",
+            "Kenal pasti jenis dan lokasi makhluk perosak.",
+            "tanah runtuh",
+            "rumput panjang",
+            "sampah sarap",
+            "pagar sempadan",
+            "pagar yang memisahkan kawasan produksi dan kawasan pengurusan",
+        ):
+            with self.subTest(content=content):
+                self.assertIn(content, page)
+
+        self.assertIn("WIM A014-006-3:2022-C08", page)
+        self.assertIn("Laksana Sistem Biosekuriti Ladang Poltri", page)
+        self.assertIn("Diadaptasi untuk mikro-pembelajaran ASTH", page)
+        self.assertIn('content: "\\2713"', page)
+
+    def test_biosecurity_pack_has_five_offline_audit_scenarios(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/")
+
+        self.assertEqual(page.count('class="audit-card"'), 5)
+        for number, scenario, expected_action in (
+            (1, "Pelawat mahu memasuki kawasan produksi.", "Dapatkan kebenaran, gunakan laluan terkawal dan lalui proses nyah kuman."),
+            (2, "Tayar dan gerbang roda kenderaan mempunyai lumpur atau jerami.", "Bersihkan kotoran sebelum nyah kuman dan beri perhatian kepada roda serta bahagian bawah kenderaan."),
+            (3, "Tanda makhluk perosak ditemui dalam reban.", "Kenal pasti jenis dan lokasi, ikut proses kerja, gunakan PPE dan rekod tindakan."),
+            (4, "Parit dipenuhi rumput, sampah dan tanah.", "Pakai PPE, buang halangan, bersihkan perangkap sampah dan rekod kerja."),
+            (5, "Pagar berlubang, roboh dan terdapat lubang tanah.", "Tampal lubang, tegakkan pagar, timbus lubang tanah, bersihkan kawasan dan rekod kerja."),
+        ):
+            with self.subTest(number=number):
+                self.assertIn(f'data-audit-scenario="{number}"', page)
+                self.assertIn(scenario, page)
+                self.assertIn(expected_action, page)
+                self.assertIn(f'id="auditFeedback{number}"', page)
+
+        self.assertIn("Maklum balas", page)
+        self.assertNotIn("fetch(", page)
+        self.assertNotIn("localStorage", page)
+        self.assertNotIn("sessionStorage", page)
+
+    def test_biosecurity_pack_has_five_question_quiz_with_feedback_and_retry(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/")
+
+        questions = (
+            "Mengapakah proses nyah kuman personel dan kenderaan dilakukan?",
+            "Yang manakah tiga kategori kawasan ladang poltri dalam C08?",
+            "Mengapakah PPE digunakan ketika membuat penyemburan racun serangga?",
+            "Apakah yang perlu dilakukan sebelum personel dan kenderaan memasuki kawasan produksi?",
+            "Yang manakah tiga punca parit tersumbat menurut C08?",
+        )
+        for number, question in enumerate(questions, start=1):
+            with self.subTest(number=number):
+                self.assertIn(question, page)
+                self.assertEqual(page.count(f'name="bioQ{number}"'), 4)
+                self.assertIn(f'id="bioQuizFeedback{number}"', page)
+
+        for correct_answer in (
+            "Untuk mencegah jangkitan penyakit pada ayam.",
+            "Kawasan luar, kawasan bukan produksi, kawasan produksi.",
+            "Mengelakkan kesan sampingan bahan toksik kepada pekerja.",
+            "Melalui proses nyah kuman.",
+            "Tanah runtuh, rumput panjang dan sampah sarap.",
+        ):
+            with self.subTest(correct_answer=correct_answer):
+                self.assertIn(correct_answer, page)
+
+        self.assertIn("SEMAK SKOR", page)
+        self.assertIn("CUBA SEMULA", page)
+        self.assertIn("daripada 5", page)
+
+    def test_biosecurity_pack_completion_is_non_persistent_and_excludes_unapproved_content(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/")
+
+        self.assertIn("Learning Pack Selesai", page)
+        self.assertIn("Nyah kuman personel dan kenderaan", page)
+        self.assertIn("Kawalan makhluk perosak", page)
+        self.assertIn("Penyelenggaraan parit dan pagar", page)
+        self.assertIn(
+            "Learning Pack ASTH ini ialah mikro-pembelajaran dan bukan pengganti WIM atau penilaian kompetensi rasmi.",
+            page,
+        )
+        self.assertIn('href="/learn/"', page)
+
+        for forbidden in (
+            "1:150",
+            "1:300",
+            "Warfarin",
+            "Brodifacoum",
+            "cencurut",
+            "Darkling",
+            "Dung Beetle",
+            "2-4 kg",
+            "bebas kuman",
+            "air mengalir deras",
+            ">Player<",
+            "localStorage",
+            "sessionStorage",
+            "fetch(",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, page)
 
     def test_reban_brooder_pack_contains_sections_and_practical_checklist(self):
         page = _route_content(self.main, "/learn/packs/reban-brooder/")
@@ -693,6 +819,7 @@ class LearningHubTests(unittest.TestCase):
             pages = (
                 _route_content(self.main, "/learn/"),
                 _route_content(self.main, "/learn/packs/reban-brooder/"),
+                _route_content(self.main, "/learn/packs/biosekuriti/"),
                 _route_content(self.main, "/learn/modules/ayam-kampung/"),
             )
 

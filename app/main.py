@@ -1207,9 +1207,13 @@ LEARNING_PAGE = """
 
             <article class="module">
                 <div class="icon">&#128737;</div>
+                <span class="available">LIVE</span>
                 <h3>Biosekuriti Asas Ladang</h3>
-                <p>Amalan kebersihan dan kawalan asas untuk persekitaran latihan ladang.</p>
-                <span class="coming">AKAN DATANG</span>
+                <p>Kawalan kemasukan, makhluk perosak serta penyelenggaraan parit dan pagar.</p>
+                <div class="module-meta">
+                    <span>7 bahagian</span><span>Praktikal</span><span>Offline</span>
+                </div>
+                <a class="module-action" href="/learn/packs/biosekuriti/">MULA</a>
             </article>
 
             <article class="module">
@@ -1723,6 +1727,373 @@ REBAN_BROODER_PACK_PAGE = """
 """
 
 
+BIOSECURITY_PACK_PAGE = """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biosekuriti Asas Ladang | ASTH Learning Hub</title>
+    <style>
+""" + LEARNING_SUBPAGE_STYLE + """
+    .pack-meta, .zone-grid, .topic-grid {
+        display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px;
+    }
+    .pack-meta span, .zone-grid span {
+        padding: 8px 11px; border: 2px solid var(--line); border-radius: 999px;
+        color: var(--dark); background: #edf4ff; font-size: .78rem; font-weight: 850;
+    }
+    .pack-intro { background: linear-gradient(145deg, #fff2b7, #ffd275); }
+    .pack-intro p { color: #51421f; }
+    .source-note {
+        margin-top: 16px; padding: 13px 15px; border: 2px solid #9a7619;
+        border-radius: 14px; color: #43350e; background: #fff8d9;
+        font-size: .82rem; font-weight: 750; line-height: 1.5;
+    }
+    .pack-section {
+        margin-top: 18px; padding: clamp(19px, 4vw, 28px); border: 3px solid #9fb6d8;
+        border-radius: 23px; background: #ffffff; box-shadow: var(--shadow);
+    }
+    .section-kicker {
+        margin: 0 0 6px; color: #245bc5; font-size: .72rem; font-weight: 900;
+        letter-spacing: .08em; text-transform: uppercase;
+    }
+    .pack-section h2 { margin: 0 0 10px; font-size: clamp(1.3rem, 3vw, 1.75rem); }
+    .pack-section > p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .topic-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .topic-card {
+        padding: 16px; border: 2px solid #aac0df; border-radius: 16px;
+        color: #243b5b; background: #f6f9ff; line-height: 1.5;
+    }
+    .topic-card strong { display: block; margin-bottom: 7px; color: #17335b; }
+    .practical-list {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+        margin: 18px 0 0; padding: 0; list-style: none;
+    }
+    .practical-list li {
+        display: flex; gap: 11px; align-items: flex-start; padding: 14px;
+        border: 2px solid #aac0df; border-radius: 15px; background: #f6f9ff;
+        color: #243b5b; font-size: .9rem; line-height: 1.45;
+    }
+    .practical-list li::before {
+        content: "\\2713"; display: grid; flex: 0 0 26px; width: 26px; height: 26px;
+        place-items: center; border-radius: 50%; color: white; background: #147647;
+        font-weight: 900;
+    }
+    .audit-grid { display: grid; gap: 13px; margin-top: 18px; }
+    .audit-card {
+        padding: 17px; border: 3px solid #8ba7cd; border-radius: 18px; background: #f7faff;
+    }
+    .audit-card h3 { margin: 0 0 7px; color: #17335b; font-size: 1rem; }
+    .audit-card p { color: #3b5375; line-height: 1.5; }
+    .audit-action[hidden] { display: none; }
+    .audit-action {
+        margin-top: 12px; padding: 13px; border: 2px solid #278b58; border-radius: 13px;
+        color: #17472f; background: #e5f8ed; font-weight: 800;
+    }
+    .pack-button {
+        min-height: 46px; padding: 11px 17px; border: 0; border-radius: 13px;
+        color: white; background: #225fcf; box-shadow: 0 4px 0 #123c8e;
+        font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer;
+    }
+    .pack-button.secondary { color: #17335b; background: #d8e6fb; box-shadow: 0 4px 0 #9ab3d8; }
+    .feedback { min-height: 24px; margin: 11px 0 0; color: #17335b; font-weight: 850; }
+    .quiz-question {
+        margin: 15px 0 0; padding: 16px; border: 2px solid #afc1dc;
+        border-radius: 17px; background: #f8faff;
+    }
+    .quiz-question legend { padding: 0 4px; color: #17335b; font-weight: 850; line-height: 1.4; }
+    .quiz-question label { display: block; margin-top: 9px; color: #334d70; line-height: 1.4; }
+    .quiz-question input { width: 19px; height: 19px; margin-right: 8px; vertical-align: middle; accent-color: #225fcf; }
+    .quiz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
+    .completion { border-color: #33865d; background: linear-gradient(145deg, #e1f7e9, #c5efd5); }
+    .completion p { color: #274f39; }
+    .completion ul { color: #274f39; line-height: 1.7; }
+    .official-note {
+        margin-top: 14px; padding: 12px 14px; border-left: 5px solid #245bc5;
+        color: #243b5b; background: #edf4ff; font-size: .82rem; line-height: 1.5;
+    }
+    @media (max-width: 720px) {
+        .topic-grid, .practical-list { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
+        .learning-page { width: min(100% - 20px, 980px); padding-top: 10px; }
+        .pack-section { padding: 17px; }
+        .pack-button { width: 100%; }
+    }
+    </style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">ASTH Learning Pack</p>
+                    <h1>Biosekuriti Asas Ladang</h1>
+                    <div class="pack-meta"><span>7 bahagian</span><span>Praktikal</span><span>Offline</span></div>
+                </div>
+            </div>
+            <a class="learning-back" href="/learn/">&#8592; Learning Hub</a>
+        </header>
+
+        <section class="learning-panel pack-intro">
+            <p class="section-kicker">01 Pengenalan Biosekuriti</p>
+            <h2>Asas sistem biosekuriti ladang poltri</h2>
+            <p>Biosekuriti mengawal kemasukan dan penyebaran kuman dalam ladang.</p>
+            <div class="topic-grid">
+                <div class="topic-card"><strong>Tiga aktiviti utama C08</strong>Nyah kuman personel dan kenderaan; kawalan makhluk perosak; penyelenggaraan parit dan pagar.</div>
+                <div class="topic-card"><strong>Amalan kerja</strong>Patuhi kebersihan ladang dan amalkan prinsip 5S.</div>
+            </div>
+            <div class="zone-grid" aria-label="Tiga kawasan ladang">
+                <span>kawasan luar</span><span>kawasan bukan produksi</span><span>kawasan produksi</span>
+            </div>
+            <div class="source-note">
+                Diadaptasi untuk mikro-pembelajaran ASTH daripada WIM A014-006-3:2022-C08 —
+                Laksana Sistem Biosekuriti Ladang Poltri.
+            </div>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">02 Kawalan Kemasukan Personel &amp; Kenderaan</p>
+            <h2>Kawal laluan masuk sebelum ke kawasan produksi</h2>
+            <ul class="practical-list">
+                <li>Gunakan satu pintu utama dan pastikan pintu sentiasa ditutup.</li>
+                <li>Dapatkan kebenaran pengurusan. Kehadiran pelawat diminimumkan.</li>
+                <li>Gunakan laluan keluar dan masuk yang dikawal.</li>
+                <li>Personel dan kenderaan melalui proses nyah kuman sebelum memasuki kawasan produksi.</li>
+                <li>Lokasi yang dinyatakan ialah bilik mandi, celupan kaki dan semburan kenderaan.</li>
+                <li>Bersihkan lumpur, jerami dan kotoran yang kelihatan sebelum proses nyah kuman.</li>
+                <li>Gunakan PPE mengikut keperluan kerja.</li>
+                <li>Pantau proses dan rekodkan aktiviti yang dilakukan.</li>
+            </ul>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">03 Kawalan Makhluk Perosak</p>
+            <h2>Kenal pasti, kawal persekitaran dan rekod</h2>
+            <ul class="practical-list">
+                <li>Kenal pasti jenis dan lokasi makhluk perosak.</li>
+                <li>Pastikan persekitaran ladang sentiasa bersih.</li>
+                <li>Urus rumput dan selenggara parit serta pagar.</li>
+                <li>Keluarkan sampah, bahan terkumpul dan peralatan yang tidak digunakan.</li>
+                <li>Gunakan PPE mengikut keperluan kerja.</li>
+                <li>Baca label produk dan Risalah Data Keselamatan Kimia apabila berkenaan.</li>
+                <li>Ikut proses kerja kawalan yang ditetapkan.</li>
+                <li>Rekod aktiviti kawalan makhluk perosak.</li>
+            </ul>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">04 Penyelenggaraan Parit</p>
+            <h2>Pastikan laluan air tidak terhalang</h2>
+            <p>Punca biasa parit tersumbat ialah tanah runtuh, rumput panjang dan sampah sarap.</p>
+            <ul class="practical-list">
+                <li>Periksa lokasi kerja dan jadual penyelenggaraan.</li>
+                <li>Pakai PPE sebelum memulakan kerja.</li>
+                <li>Buang rumput, tumbuhan dan dahan yang menghalang.</li>
+                <li>Buang sampah dan keluarkan tanah yang terkumpul.</li>
+                <li>Bersihkan perangkap sampah supaya air dapat mengalir.</li>
+                <li>Bersihkan dan simpan peralatan selepas digunakan.</li>
+                <li>Rekod aktiviti penyelenggaraan parit.</li>
+            </ul>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">05 Penyelenggaraan Pagar</p>
+            <h2>Periksa dan selenggara pagar ladang</h2>
+            <p>Periksa pagar sempadan serta pagar yang memisahkan kawasan produksi dan kawasan pengurusan.</p>
+            <ul class="practical-list">
+                <li>Periksa lubang dan bahagian pagar yang roboh.</li>
+                <li>Periksa tumbuhan, dahan melampai, lubang tanah dan sampah.</li>
+                <li>Tampal pagar yang berlubang dan tegakkan semula pagar yang roboh.</li>
+                <li>Timbus lubang tanah dan bersihkan tumbuhan serta kawasan pagar.</li>
+                <li>Bersihkan dan simpan peralatan selepas digunakan.</li>
+                <li>Rekod aktiviti penyelenggaraan pagar.</li>
+            </ul>
+        </section>
+
+        <section class="pack-section" id="audit-biosekuriti">
+            <p class="section-kicker">06 Audit Biosekuriti Ladang</p>
+            <h2>Semak tindakan bagi setiap situasi</h2>
+            <p>Tekan butang pada setiap kad untuk melihat tindakan yang disokong oleh C08.</p>
+            <div class="audit-grid">
+                <article class="audit-card" data-audit-scenario="1">
+                    <h3>Situasi 1</h3>
+                    <p>Pelawat mahu memasuki kawasan produksi.</p>
+                    <button class="pack-button audit-reveal" type="button" data-target="auditAction1" data-feedback="auditFeedback1">LIHAT TINDAKAN</button>
+                    <div class="audit-action" id="auditAction1" hidden>Dapatkan kebenaran, gunakan laluan terkawal dan lalui proses nyah kuman.</div>
+                    <p class="feedback" id="auditFeedback1" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
+                </article>
+                <article class="audit-card" data-audit-scenario="2">
+                    <h3>Situasi 2</h3>
+                    <p>Tayar dan gerbang roda kenderaan mempunyai lumpur atau jerami.</p>
+                    <button class="pack-button audit-reveal" type="button" data-target="auditAction2" data-feedback="auditFeedback2">LIHAT TINDAKAN</button>
+                    <div class="audit-action" id="auditAction2" hidden>Bersihkan kotoran sebelum nyah kuman dan beri perhatian kepada roda serta bahagian bawah kenderaan.</div>
+                    <p class="feedback" id="auditFeedback2" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
+                </article>
+                <article class="audit-card" data-audit-scenario="3">
+                    <h3>Situasi 3</h3>
+                    <p>Tanda makhluk perosak ditemui dalam reban.</p>
+                    <button class="pack-button audit-reveal" type="button" data-target="auditAction3" data-feedback="auditFeedback3">LIHAT TINDAKAN</button>
+                    <div class="audit-action" id="auditAction3" hidden>Kenal pasti jenis dan lokasi, ikut proses kerja, gunakan PPE dan rekod tindakan.</div>
+                    <p class="feedback" id="auditFeedback3" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
+                </article>
+                <article class="audit-card" data-audit-scenario="4">
+                    <h3>Situasi 4</h3>
+                    <p>Parit dipenuhi rumput, sampah dan tanah.</p>
+                    <button class="pack-button audit-reveal" type="button" data-target="auditAction4" data-feedback="auditFeedback4">LIHAT TINDAKAN</button>
+                    <div class="audit-action" id="auditAction4" hidden>Pakai PPE, buang halangan, bersihkan perangkap sampah dan rekod kerja.</div>
+                    <p class="feedback" id="auditFeedback4" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
+                </article>
+                <article class="audit-card" data-audit-scenario="5">
+                    <h3>Situasi 5</h3>
+                    <p>Pagar berlubang, roboh dan terdapat lubang tanah.</p>
+                    <button class="pack-button audit-reveal" type="button" data-target="auditAction5" data-feedback="auditFeedback5">LIHAT TINDAKAN</button>
+                    <div class="audit-action" id="auditAction5" hidden>Tampal lubang, tegakkan pagar, timbus lubang tanah, bersihkan kawasan dan rekod kerja.</div>
+                    <p class="feedback" id="auditFeedback5" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="pack-section" id="biosecurity-quiz">
+            <p class="section-kicker">07 Quick Quiz &amp; Tamat Pack</p>
+            <h2>Uji pemahaman anda</h2>
+            <form id="biosecurityQuiz">
+                <fieldset class="quiz-question" data-quiz-question="1">
+                    <legend>1. Mengapakah proses nyah kuman personel dan kenderaan dilakukan?</legend>
+                    <label><input type="radio" name="bioQ1" value="A">A. Untuk kebersihan ladang poltri.</label>
+                    <label><input type="radio" name="bioQ1" value="B">B. Untuk mewangikan ladang ayam.</label>
+                    <label><input type="radio" name="bioQ1" value="C" data-correct="true">C. Untuk mencegah jangkitan penyakit pada ayam.</label>
+                    <label><input type="radio" name="bioQ1" value="D">D. Untuk memastikan pelawat suka melawat ladang poltri.</label>
+                    <p class="feedback" id="bioQuizFeedback1" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="2">
+                    <legend>2. Yang manakah tiga kategori kawasan ladang poltri dalam C08?</legend>
+                    <label><input type="radio" name="bioQ2" value="A" data-correct="true">A. Kawasan luar, kawasan bukan produksi, kawasan produksi.</label>
+                    <label><input type="radio" name="bioQ2" value="B">B. Pelawat, pekerja, pembekal.</label>
+                    <label><input type="radio" name="bioQ2" value="C">C. Bilik mandi, celupan kaki, semburan kenderaan.</label>
+                    <label><input type="radio" name="bioQ2" value="D">D. Parit, pagar, reban.</label>
+                    <p class="feedback" id="bioQuizFeedback2" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="3">
+                    <legend>3. Mengapakah PPE digunakan ketika membuat penyemburan racun serangga?</legend>
+                    <label><input type="radio" name="bioQ3" value="A" data-correct="true">A. Mengelakkan kesan sampingan bahan toksik kepada pekerja.</label>
+                    <label><input type="radio" name="bioQ3" value="B">B. Menentukan lokasi makhluk perosak.</label>
+                    <label><input type="radio" name="bioQ3" value="C">C. Menyediakan rekod pengawalan.</label>
+                    <label><input type="radio" name="bioQ3" value="D">D. Mengemas kini jadual penyelenggaraan pagar.</label>
+                    <p class="feedback" id="bioQuizFeedback3" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="4">
+                    <legend>4. Apakah yang perlu dilakukan sebelum personel dan kenderaan memasuki kawasan produksi?</legend>
+                    <label><input type="radio" name="bioQ4" value="A" data-correct="true">A. Melalui proses nyah kuman.</label>
+                    <label><input type="radio" name="bioQ4" value="B">B. Personel menggunakan semburan kenderaan.</label>
+                    <label><input type="radio" name="bioQ4" value="C">C. Kenderaan melalui bilik mandi.</label>
+                    <label><input type="radio" name="bioQ4" value="D">D. Masuk melalui mana-mana laluan.</label>
+                    <p class="feedback" id="bioQuizFeedback4" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="5">
+                    <legend>5. Yang manakah tiga punca parit tersumbat menurut C08?</legend>
+                    <label><input type="radio" name="bioQ5" value="A" data-correct="true">A. Tanah runtuh, rumput panjang dan sampah sarap.</label>
+                    <label><input type="radio" name="bioQ5" value="B">B. Pagar berlubang, rumput panjang dan sampah sarap.</label>
+                    <label><input type="radio" name="bioQ5" value="C">C. Pagar roboh, lubang tanah dan pokok menjalar.</label>
+                    <label><input type="radio" name="bioQ5" value="D">D. Tikus, burung liar dan lalat.</label>
+                    <p class="feedback" id="bioQuizFeedback5" role="status" aria-live="polite"></p>
+                </fieldset>
+                <div class="quiz-actions">
+                    <button class="pack-button" type="submit">SEMAK SKOR</button>
+                    <button class="pack-button secondary" id="retryBiosecurityQuiz" type="button">CUBA SEMULA</button>
+                </div>
+                <p class="feedback" id="biosecurityQuizResult" role="status" aria-live="polite">Keputusan akan memaparkan jumlah betul daripada 5.</p>
+            </form>
+        </section>
+
+        <section class="pack-section completion">
+            <p class="section-kicker">Learning Pack Selesai</p>
+            <h2>Anda telah selesai Learning Pack: Biosekuriti Asas Ladang.</h2>
+            <p>Tiga aktiviti utama C08 yang telah dipelajari:</p>
+            <ul>
+                <li>Nyah kuman personel dan kenderaan</li>
+                <li>Kawalan makhluk perosak</li>
+                <li>Penyelenggaraan parit dan pagar</li>
+            </ul>
+            <div class="source-note">
+                Diadaptasi untuk mikro-pembelajaran ASTH daripada WIM A014-006-3:2022-C08 —
+                Laksana Sistem Biosekuriti Ladang Poltri.
+            </div>
+            <div class="official-note">Learning Pack ASTH ini ialah mikro-pembelajaran dan bukan pengganti WIM atau penilaian kompetensi rasmi.</div>
+            <a class="learning-action" href="/learn/">KEMBALI KE LEARNING HUB</a>
+        </section>
+
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
+    </main>
+
+    <script>
+        (() => {
+            document.querySelectorAll(".audit-reveal").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const action = document.getElementById(button.dataset.target);
+                    const feedback = document.getElementById(button.dataset.feedback);
+                    action.hidden = false;
+                    feedback.textContent = "Tindakan dipaparkan berdasarkan aliran kerja C08.";
+                    button.textContent = "TINDAKAN DIPAPARKAN";
+                });
+            });
+
+            const quiz = document.getElementById("biosecurityQuiz");
+            const result = document.getElementById("biosecurityQuizResult");
+            const retry = document.getElementById("retryBiosecurityQuiz");
+            const explanations = {
+                1: "Tujuannya ialah mencegah personel dan kenderaan menjadi punca jangkitan penyakit.",
+                2: "C08 membahagikan ladang kepada kawasan luar, bukan produksi dan produksi.",
+                3: "PPE digunakan untuk mengurangkan pendedahan pekerja kepada bahan toksik.",
+                4: "Personel dan kenderaan melalui proses nyah kuman sebelum memasuki kawasan produksi.",
+                5: "C08 menyenaraikan tanah runtuh, rumput panjang dan sampah sarap sebagai punca parit tersumbat."
+            };
+
+            quiz.querySelectorAll('input[type="radio"]').forEach((choice) => {
+                choice.addEventListener("change", () => {
+                    const question = choice.closest("[data-quiz-question]").dataset.quizQuestion;
+                    const feedback = document.getElementById(`bioQuizFeedback${question}`);
+                    feedback.textContent = choice.dataset.correct === "true"
+                        ? `Betul. ${explanations[question]}`
+                        : `Belum tepat. ${explanations[question]}`;
+                });
+            });
+
+            quiz.addEventListener("submit", (event) => {
+                event.preventDefault();
+                let answered = 0;
+                let correct = 0;
+                for (let number = 1; number <= 5; number += 1) {
+                    const choice = quiz.querySelector(`input[name="bioQ${number}"]:checked`);
+                    if (choice) {
+                        answered += 1;
+                        if (choice.dataset.correct === "true") correct += 1;
+                    }
+                }
+                result.textContent = answered === 5
+                    ? `Anda menjawab ${correct} daripada 5 dengan betul.`
+                    : `Sila jawab semua soalan. ${answered} daripada 5 telah dijawab.`;
+            });
+
+            retry.addEventListener("click", () => {
+                quiz.reset();
+                quiz.querySelectorAll(".quiz-question .feedback").forEach((feedback) => {
+                    feedback.textContent = "";
+                });
+                result.textContent = "Keputusan dikosongkan. Cuba semula semua lima soalan.";
+            });
+        })();
+    </script>
+</body>
+</html>
+"""
+
+
 def _request_hostname(request):
     raw_host = request.headers.get("host", "").strip().lower()
     if raw_host.startswith("[") and "]" in raw_host:
@@ -1764,6 +2135,11 @@ def learning_hub() -> HTMLResponse:
 @app.get("/learn/packs/reban-brooder/", response_class=HTMLResponse)
 def learning_pack_reban_brooder() -> HTMLResponse:
     return HTMLResponse(content=REBAN_BROODER_PACK_PAGE)
+
+
+@app.get("/learn/packs/biosekuriti/", response_class=HTMLResponse)
+def learning_pack_biosecurity() -> HTMLResponse:
+    return HTMLResponse(content=BIOSECURITY_PACK_PAGE)
 
 
 @app.get("/learn/modules/", response_class=HTMLResponse)
