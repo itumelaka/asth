@@ -1,5 +1,14 @@
 # Changelog
 
+## 16 September 2026 — Current prototype scope and operations documentation
+
+- Reframed ASTH as a portable, offline-first Raspberry Pi 5 training-delivery hub and explicitly separated it from SPDK course and participant administration.
+- Documented the live 1024x600 kiosk Health Console, `ASTH-PORTABLE` participant hotspot, offline portal QR flow, Bluetooth input/audio peripherals and current microSD/USB-storage platform.
+- Recorded local media at `/mnt/rog` and read-only ITUNAS media at `/mnt/office-movies`, including the rule that dashboard controls mutate only the fixed mount/automount units and never WireGuard.
+- Documented the narrowly scoped `asthadmin` mutation path through `/usr/bin/sudo -n /usr/bin/systemctl`, fixed-unit allowlist and loopback/local endpoint restriction.
+- Marked the exact-CIFS ITUNAS status correction as prepared and tested locally but still pending Raspberry Pi deployment and production verification.
+- Added LIVE, VERIFIED, PENDING and FUTURE classifications, retained useful historical verification records, and clarified the Learning Hub roadmap. Documentation only; no deployment or system configuration change is claimed.
+
 ## 6 September 2026 — ROG SSD, Samba and auxiliary Jellyfin verification
 
 - Recorded `/dev/sda2` (label `ROG`) persistently mounted at `/mnt/rog` using Linux `ntfs3`, uid/gid 1000 and the supplied runtime mount options after a full reboot.

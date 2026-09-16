@@ -1,47 +1,147 @@
 # ASTH Project Status
 
-**Status date:** 13 August 2026
-**Deployed application version:** v0.4.0
-**Current phase:** Raspberry Pi integration and Learning Hub content preparation
-**Overall status:** Active — operational foundation, partial learning experience
-**Primary next action:** Install and validate compatible LCD/casing hardware when available, then test the NVMe after the controller/HAT arrives without disturbing the working microSD deployment.
+**Tarikh status:** 16 September 2026
+**Versi aplikasi live yang direkodkan:** v0.4.0
+**Fasa semasa:** Prototaip mudah alih berfungsi; penyediaan kandungan Learning Hub dan pemantapan operasi
+**Status keseluruhan:** Aktif — asas operasi dan penyampaian setempat tersedia, pengalaman pembelajaran masih separa
+**Tindakan utama seterusnya:** Deploy dan sahkan pembetulan pengesanan ITUNAS pada Raspberry Pi tanpa mengubah WireGuard, kemudian teruskan pengisian kandungan Learning Hub.
 
-## Completed
+## Sempadan Skop
 
-- Project principles, charter, executive summary, MVP scope, roadmap and README drafted.
-- Raspberry Pi 5 with 2 GB RAM operational from a 32 GB microSD card.
-- HDMI display, USB keyboard, local `asthadmin` login, boot-recovery password recovery and `sudo` (`SUDO_OK`) verified; the Pi rebooted normally afterward.
-- ASTH portable network operational on built-in `wlan0` at `10.42.0.1/24`; on 13 August it was migrated from the historical 2.4 GHz channel 6 configuration to 5 GHz channel 36 (5180 MHz), 20 MHz width. Two clients reconnected successfully and the setting persisted across reboot.
-- Current internet routing uses `eth0` via `192.168.100.1`; the link negotiated at 1000 Mbps full-duplex and was not the identified local bottleneck. Alfa USB `wlan1` was disconnected and not involved in the 13 August performance test.
-- One post-migration speedtest through `ASTH-PORTABLE` observed 25 ms ping, 48.9 Mbps download and 35.8 Mbps upload. This is a single observation, not a guaranteed maximum; the 20 MHz Raspberry Pi hotspot remains the likely local throughput constraint relative to Ethernet.
-- The previous 2.4 GHz NetworkManager profile is retained as `ASTH-PORTABLE-2G-BACKUP` (UUID `5a0b842f-34cf-4892-96e3-c56c1c98e247`) with autoconnect disabled for rollback.
-- Main landing page at `/`, Learning Hub shell at `/learn/`, `/health` and live `/api/hub-status` endpoint operational.
-- v0.4.0 syntax validation, service restart and visual landing-page check completed on the Pi.
-- Zero failed systemd units, healthy/running local ASTH health, persistent `/mnt/rog`, active `smbd`, Uptime Kuma HTTP 200 after redirect and Cockpit listening on port 9090 with HTTP 200 verified.
-- Physical recovery access complete.
-- Manual application rollback from the active ASTH v0.4.0 file to the retained v0.3.0 file, followed by restoration to the original v0.4.0 file, was verified on 13 August 2026. Both service restarts succeeded; rollback and final health checks returned HTTP 200 and `healthy` at the expected versions.
-- The Raspberry Pi display stack was recovered by enabling `dtoverlay=vc4-kms-v3d`; after reboot the expected `/dev/dri` devices and `vc4`/`v3d` modules were present. After creating the missing `/etc/X11/xorg.conf.d` directory with root ownership and mode `755`, `rp1-test.service` became active. Final checks showed zero failed units, active `asth.service`, and healthy ASTH v0.4.0 over HTTP 200.
+- **SPDK:** pendaftaran kursus, pentadbiran peserta, jadual/pentadbiran kursus, kehadiran, CPD, sijil dan fungsi penyumbang/pentadbir.
+- **ASTH:** penyampaian latihan, akses setempat/offline, pembelajaran interaktif dan kemajuan pelajar.
+- ASTH tidak akan menduplikasi sistem pengurusan kursus penuh SPDK.
+- Integrasi masa depan hanya menggunakan pengenal atau data minimum yang diperlukan untuk enrolmen dan kemajuan.
 
-## Partial
+## LIVE — Sistem Semasa
 
-- Learning Hub contains placeholder sections for modules, training videos and interactive exercises.
-- Uptime Kuma and Cockpit are available as linked supporting services; advanced monitoring, alerting and security completion is not claimed.
-- Retained application-file copies, including the pre-test v0.4.0 safety copy, are present on the microSD filesystem.
-- Database backup/restore is deferred, not passed or failed: `/var/lib/asth/db` exists but is empty, the current application has no database file or reference, and `/etc/asth/asth.env` has no `KEY=value` configuration.
+### Platform dan Perkakasan
 
-## Pending
+- Raspberry Pi 5, 2 GB RAM, Debian 13 Trixie `arm64`.
+- Sistem operasi masih berjalan daripada microSD.
+- Samsung 980 PRO telah diuji sihat melalui enclosure USB dan storan ROG dipasang pada `/mnt/rog`.
+- N04 PCIe/NVMe HAT diparkir kerana pautan PCIe luaran gagal.
+- Skrin sentuh HDMI 1024x600 digunakan untuk kiosk.
+- Wi-Fi terbina dalam `wlan0` menyediakan hotspot `ASTH-PORTABLE` pada `10.42.0.1/24`.
+- Casing keras mudah alih belum dimuktamadkan.
 
-- Project team names and roles.
-- Final system custodian and maintenance window.
-- Competition submission requirements.
-- Confirmed source modules and SOP.
-- GitHub repository owner and name.
-- Install compatible casing/LCD hardware; the MHS35 LCD is not installed, and the previously cloned LCD-show repository was not used to run `MHS35-show` during display recovery.
-- Install the NVMe controller/HAT after it arrives; the system still boots from the 32 GB microSD, while the external 512 GB ROG SSD remains `/dev/sda` and mounted at `/mnt/rog`.
-- Test NVMe, decide the migration method and retain the microSD as recovery media if full OS migration succeeds.
-- Configure LCD kiosk mode for `/`.
-- Populate and validate Learning Hub content.
-- Perform database backup/restore testing only after a database-backed module exists.
-- Perform final post-assembly validation after the casing, NVMe and LCD are installed.
-- Revalidate Alfa `wlan1` as the wireless uplink with Ethernet removed after the 5 GHz hotspot migration. The 25 July portable-mode evidence remains historical; `wlan1` was disconnected and not tested on 13 August.
-- Commit the deployed v0.4.0 source into this repository later.
+### Periferal Bluetooth
+
+- Tetikus Bluetooth AULA SC580 disambungkan dan berfungsi.
+- Papan kekunci Bluetooth menyediakan akses pentadbiran tempatan; `Alt+F4` keluar daripada Chromium kiosk ke desktop Raspberry Pi.
+- Pembesar suara Bluetooth tersedia untuk video latihan, audio dan media.
+- Periferal ini membolehkan ASTH beroperasi sebagai stesen latihan mudah alih kendiri.
+
+### Aliran Kiosk
+
+```text
+Boot → Raspberry Pi GUI → Chromium kiosk → ASTH Health Console
+```
+
+URL dashboard kiosk: `http://127.0.0.1/`
+
+### ASTH Health Console
+
+Dashboard fizikal 1024x600 menggunakan gaya kontras tinggi untuk LCD dan memaparkan tanpa skrol:
+
+- keseluruhan `SIHAT`, `AMARAN` atau `GANGGUAN`;
+- CPU dan suhu, RAM serta storan sistem;
+- Local Media Storage;
+- LAN IP, hotspot IP, status `ASTH-PORTABLE` dan peranti tersambung;
+- RX/TX dan graf rangkaian;
+- ASTH, Nginx, Jellyfin, Samba, Cockpit dan Uptime Kuma;
+- WireGuard dan ITUNAS Media sebagai status berasingan.
+
+Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
+
+### Akses Peserta
+
+- Dashboard menyediakan butang **AKSES PELAJAR / QR**.
+- SSID: `ASTH-PORTABLE`.
+- Portal: `http://10.42.0.1/`.
+- Aliran offline: sambung ke hotspot, imbas QR Portal, kemudian akses perkhidmatan ASTH.
+- QR portal berfungsi tanpa perkhidmatan internet luar.
+
+### Media
+
+- **Local Media Storage:** `/mnt/rog`, untuk penggunaan setempat/offline.
+- **ITUNAS Media:** `/mnt/office-movies`, sumber CIFS baca sahaja `//192.168.1.254/Movies` melalui Office WireGuard.
+- Jellyfin boleh menggunakan media tempatan dan ITUNAS; main balik daripada ITUNAS menggunakan lebar jalur internet lokasi ASTH.
+- WireGuard hanya dipantau secara informasi dan tidak dimutasi oleh dashboard.
+- Kawalan ITUNAS hanya mengawal mount/automount media, bukan tunnel WireGuard.
+
+## VERIFIED — Pengesahan Operasi dan Keselamatan
+
+### Kawalan ITUNAS
+
+- Servis ASTH berjalan sebagai `User=asthadmin` dan `Group=asthadmin`.
+- Mutasi terhad menggunakan `/usr/bin/sudo -n /usr/bin/systemctl`.
+- Hanya unit `mnt-office\x2dmovies.automount` dan `mnt-office\x2dmovies.mount` boleh dimutasi.
+- Hanya operasi `start` dan `stop` yang ditetapkan dibenarkan; tiada `NOPASSWD: ALL`.
+- Disconnect menghentikan automount sebelum mount supaya akses latar tidak mengaktifkannya semula.
+- Connect memeriksa WireGuard tetapi tidak memulakan atau memulakan semula tunnel.
+- Endpoint mutasi dihadkan kepada permintaan loopback/kawalan tempatan dan tidak menerima unit atau arahan daripada klien.
+- Timeout, kegagalan tersanitasi dan pengesahan status selepas tindakan diliputi ujian setempat.
+
+### Pengesahan Terdahulu yang Masih Relevan
+
+- Hotspot `ASTH-PORTABLE` telah disahkan pada 5 GHz channel 36, lebar 20 MHz; dua klien menyambung semula dan tetapan kekal selepas reboot.
+- Profil 2.4 GHz `ASTH-PORTABLE-2G-BACKUP` dikekalkan dengan autoconnect dimatikan untuk rollback.
+- Ethernet `eth0` pernah menyediakan laluan internet dan berunding pada 1000 Mbps full-duplex; Alfa USB `wlan1` tidak terlibat dalam ujian tersebut.
+- Satu ujian hotspot merekodkan ping 25 ms, muat turun 48.9 Mbps dan muat naik 35.8 Mbps. Ini ialah satu pemerhatian, bukan prestasi terjamin.
+- SSD ROG kekal pada `/mnt/rog`; Samba `ROG-Drive` telah disahkan menyokong tulis dan penamaan semula daripada Windows.
+- Jellyfin, Uptime Kuma dan Cockpit telah disahkan tersedia dalam pemeriksaan terdahulu.
+- Rollback manual aplikasi v0.4.0 ke v0.3.0 dan pemulihan semula ke v0.4.0 menghasilkan HTTP 200 dan keadaan sihat.
+- Stack paparan `vc4-kms-v3d`, peranti DRI serta modul `vc4`/`v3d` telah dipulihkan dan disahkan.
+- Akses pemulihan fizikal, login tempatan `asthadmin`, pemulihan kata laluan, sudo dan reboot normal telah disahkan.
+
+## PENDING — Belum Selesai atau Belum Disahkan di Produksi
+
+### Pengesanan ITUNAS Media
+
+Keadaan live yang disahkan:
+
+- WireGuard menunjukkan `CONNECTED`.
+- `/mnt/office-movies` mempunyai entri `autofs systemd-1` dan entri CIFS baca sahaja `//192.168.1.254/Movies` pada target yang sama.
+- Kod live boleh memilih entri `autofs` terlebih dahulu dan memaparkan ITUNAS Media sebagai `UNAVAILABLE`.
+
+Pembetulan telah disediakan dan diuji secara setempat untuk memilih entri yang sepadan tepat dengan:
+
+- mount point `/mnt/office-movies`;
+- filesystem `cifs`;
+- source `//192.168.1.254/Movies`;
+- pilihan baca sahaja sedia ada.
+
+Pembetulan ini **belum dideploy dan belum disahkan pada Raspberry Pi produksi**. Status ini kekal PENDING sehingga deployment serta pengesahan live selesai.
+
+### Operasi dan Kandungan
+
+- Populate dan sahkan kandungan sebenar Learning Hub.
+- Tentukan pasukan projek, peranan, penjaga sistem dan maintenance window.
+- Sahkan modul sumber, SOP dan keperluan pertandingan.
+- Jalankan ujian backup/restore apabila modul berpangkalan data benar-benar wujud; `/var/lib/asth/db` direkodkan kosong dalam pengesahan terdahulu.
+- Sahkan semula Alfa `wlan1` sebagai uplink tanpa wayar jika adapter itu digunakan pada masa depan.
+- Selesaikan pemasangan dalam casing keras mudah alih dan jalankan validasi pasca-pemasangan.
+
+## FUTURE — Hala Tuju
+
+- Kandungan video latihan, nota, PDF dan rujukan.
+- Latihan interaktif dan kuiz.
+- Penjejakan kemajuan pelajar dan penyelesaian modul.
+- Integrasi ringan SPDK menggunakan data minimum untuk enrolmen atau kemajuan.
+- Adapter Wi-Fi USB pilihan untuk memisahkan uplink/klien daripada hotspot `wlan0`.
+- Penilaian semula storan NVMe hanya jika laluan PCIe luaran yang serasi dan stabil tersedia.
+- Smart Tutor atau fungsi AI tempatan hanya selepas asas kandungan, prestasi dan tadbir urus disahkan.
+
+## Ringkasan Status Prototaip
+
+ASTH ialah prototaip mudah alih yang berfungsi dengan:
+
+- kiosk automatik dan konsol kesihatan skrin sentuh;
+- hotspot peserta dan akses QR offline;
+- storan media tempatan dan Jellyfin;
+- seni bina media ITUNAS melalui WireGuard;
+- periferal input dan audio Bluetooth;
+- asas Learning Hub.
+
+Fungsi pengurusan kursus penuh kekal dalam SPDK. ASTH menumpukan penyampaian latihan dan kemajuan pelajar.

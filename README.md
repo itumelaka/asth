@@ -4,20 +4,25 @@
 
 ## Ringkasan
 
-**Adaptive Smart Training Hub (ASTH)** ialah platform latihan digital TVET yang dibangunkan untuk Institut Teknologi Unggas, Jabatan Perkhidmatan Veterinar. Sistem ini direka sebagai **web app / Progressive Web App (PWA)** yang boleh dihoskan pada Raspberry Pi 5 dan digunakan melalui telefon, tablet atau komputer dalam rangkaian Wi-Fi tempatan.
+**Adaptive Smart Training Hub (ASTH)** ialah hab latihan digital mudah alih berasaskan Raspberry Pi 5. ASTH mengutamakan operasi **offline-first** untuk penyampaian kandungan latihan, akses setempat, Learning Hub, media, pembelajaran interaktif dan penjejakan kemajuan pelajar pada fasa akan datang.
 
-Perkakasan semasa yang disahkan ialah Raspberry Pi 5 dengan **2 GB RAM**. Raspberry Pi OS masih boot dan berjalan daripada **kad microSD 32 GB**. Pemasangan akhir casing/LCD dan NVMe masih belum lengkap. Arah pilihan selepas perkakasan dipasang dan lulus ujian ialah memindahkan keseluruhan sistem operasi ke NVMe serta mengekalkan microSD sebagai media pemulihan.
+ASTH direka supaya boleh beroperasi sebagai stesen latihan kendiri: skrin sentuh memaparkan konsol kesihatan, peserta menyambung ke hotspot tempatan, dan perkhidmatan latihan boleh dicapai tanpa bergantung pada internet.
 
-ASTH menggabungkan:
+## Sempadan Skop ASTH dan SPDK
 
-- modul pembelajaran interaktif;
-- SOP digital;
-- kuiz dan penilaian;
-- rekod kemajuan peserta;
-- dashboard trainer;
-- Smart Tutor berasaskan knowledge base tempatan;
-- operasi offline-first;
-- pengembangan masa depan kepada IoT, sensor dan hybrid AI.
+Pembahagian tanggungjawab projek dikunci seperti berikut:
+
+| Sistem | Tanggungjawab utama |
+|---|---|
+| **SPDK** | Pendaftaran kursus, pentadbiran peserta, jadual dan pentadbiran kursus, kehadiran, CPD, sijil, serta fungsi penyumbang/pentadbir |
+| **ASTH** | Penyampaian latihan, akses kandungan setempat/offline, pembelajaran interaktif dan kemajuan pelajar |
+
+ASTH **tidak sepatutnya menduplikasi sistem pengurusan kursus penuh SPDK**. Integrasi masa depan hendaklah ringan dan hanya menggunakan pengenal atau data yang diperlukan untuk enrolmen dan kemajuan pembelajaran.
+
+Prinsip seni bina:
+
+> **SPDK = pentadbiran kursus dan peserta**
+> **ASTH = penyampaian latihan dan kemajuan pelajar**
 
 ## Modul Rintis
 
@@ -25,61 +30,143 @@ Modul pertama ASTH ialah:
 
 **Sijil Kemahiran Malaysia — Operasi Ladang Poltri**
 
-## Masalah Yang Diselesaikan
+## LIVE — Platform dan Perkakasan Semasa
 
-Latihan TVET semasa masih banyak bergantung kepada PDF, slaid, nota bercetak dan sambungan internet. ASTH menyediakan satu platform latihan yang:
+- Raspberry Pi 5 dengan 2 GB RAM.
+- Debian 13 Trixie `arm64`.
+- Sistem operasi masih dihoskan pada kad microSD.
+- Storan luaran ROG dipasang pada `/mnt/rog` untuk media setempat.
+- Samsung 980 PRO telah diuji sihat melalui enclosure USB.
+- N04 PCIe/NVMe HAT diparkir buat masa ini kerana pautan PCIe luaran gagal.
+- Skrin sentuh HDMI 1024x600 digunakan sebagai paparan fizikal.
+- Wi-Fi terbina dalam digunakan untuk hotspot `ASTH-PORTABLE`.
+- Tetikus Bluetooth AULA SC580, papan kekunci Bluetooth dan pembesar suara Bluetooth disambungkan dan berfungsi.
+- Casing keras mudah alih masih dirancang.
 
-- mudah dibawa;
-- kos rendah;
-- boleh digunakan tanpa internet;
-- sesuai untuk ladang, makmal, bengkel dan bilik latihan;
-- membolehkan bahan latihan digunakan semula;
-- membantu trainer memantau kemajuan peserta.
+Papan kekunci Bluetooth menyediakan akses pentadbiran tempatan. `Alt+F4` keluar daripada Chromium kiosk ke desktop Raspberry Pi. Pembesar suara Bluetooth tersedia untuk video latihan, audio dan main balik media. Periferal ini membolehkan ASTH beroperasi sebagai stesen latihan mudah alih yang berdikari.
 
-## Konsep Operasi
+## LIVE — Aliran Kiosk
 
-1. Raspberry Pi 5 dihidupkan.
-2. Peserta menyambung kepada Wi-Fi ASTH.
-3. Peserta mengimbas QR atau membuka alamat tempatan.
-4. Web app ASTH dibuka.
-5. Peserta memilih modul, belajar, menjawab kuiz dan menerima maklum balas.
-6. Trainer melihat kemajuan melalui dashboard.
+```text
+Boot → Raspberry Pi GUI → Chromium kiosk → ASTH Health Console
+```
 
-## Teknologi Dicadangkan
+Dashboard kiosk dibuka pada:
+
+`http://127.0.0.1/`
+
+## LIVE — ASTH Health Console
+
+Dashboard 1024x600 ditala untuk skrin LCD fizikal dengan kontras tinggi, warna status yang jelas, teks lebih gelap dan sempadan kad yang mudah dilihat. Maklumat kritikal dipaparkan tanpa perlu menatal.
+
+Konsol memaparkan:
+
+- status keseluruhan `SIHAT`, `AMARAN` atau `GANGGUAN`;
+- penggunaan dan suhu CPU;
+- penggunaan RAM;
+- storan sistem dan storan media tempatan;
+- alamat IP LAN dan hotspot;
+- status `ASTH-PORTABLE` dan bilangan peranti tersambung;
+- RX/TX serta graf rangkaian;
+- status ASTH, Nginx, Jellyfin, Samba, Cockpit dan Uptime Kuma;
+- status WireGuard dan ITUNAS Media secara berasingan.
+
+Endpoint sedia ada termasuk `/health`, `/api/hub-status` dan `/learn/`.
+
+## LIVE — Akses Peserta melalui QR
+
+Butang besar **AKSES PELAJAR / QR** membuka paparan QR offline pada skrin sentuh.
+
+- **SSID:** `ASTH-PORTABLE`
+- **Portal:** `http://10.42.0.1/`
+
+Aliran peserta:
+
+1. Sambung ke Wi-Fi `ASTH-PORTABLE`.
+2. Imbas QR Portal.
+3. Akses perkhidmatan ASTH.
+
+QR portal dijana dan dipaparkan secara setempat; ia tidak bergantung pada perkhidmatan internet luaran.
+
+## LIVE — Seni Bina Media
+
+### Local Media Storage
+
+- Mount: `/mnt/rog`
+- Digunakan untuk media setempat dan operasi offline.
+- Jellyfin boleh menyampaikan kandungan daripada storan ini.
+
+### ITUNAS Media
+
+- Mount: `/mnt/office-movies`
+- Sumber NAS: `//192.168.1.254/Movies`
+- Dicapai melalui Office WireGuard.
+- CIFS dipasang secara baca sahaja.
+- Jellyfin boleh menggunakan sumber ini; main balik jarak jauh menggunakan lebar jalur internet di lokasi ASTH.
+
+WireGuard kekal **informasi/baca sahaja** pada dashboard. Kawalan `CONNECT ITUNAS` dan `DISCONNECT ITUNAS` hanya mengawal mount/automount media ITUNAS dan tidak memulakan, menghentikan atau memulakan semula WireGuard.
+
+## VERIFIED — Keselamatan Kawalan ITUNAS
+
+Servis ASTH berjalan sebagai pengguna dan kumpulan `asthadmin`. Mutasi media menggunakan laluan tetap:
+
+`/usr/bin/sudo -n /usr/bin/systemctl`
+
+Hanya unit tetap berikut dibenarkan:
+
+- `mnt-office\x2dmovies.automount`
+- `mnt-office\x2dmovies.mount`
+
+Hanya kombinasi `start` dan `stop` yang diperlukan dibenarkan melalui peraturan sudoers berskop sempit; `NOPASSWD: ALL` tidak digunakan. Endpoint kawalan skrin sentuh dihadkan kepada permintaan kawalan loopback/tempatan. Nama unit, arahan, laluan dan mount tidak diterima daripada klien.
+
+## PENDING — Pembetulan Pengesanan Status ITUNAS
+
+Pada sistem live, WireGuard menunjukkan `CONNECTED` dan `/mnt/office-movies` mempunyai kedua-dua entri berikut:
+
+- automount `autofs` daripada `systemd-1`;
+- CIFS `//192.168.1.254/Movies` dalam mod baca sahaja.
+
+Kod live masih boleh memilih entri `autofs` terlebih dahulu lalu memaparkan ITUNAS Media sebagai `UNAVAILABLE`. Pembetulan kecil telah disediakan dan diuji secara setempat untuk memilih padanan tepat mount point, filesystem CIFS dan sumber NAS sebelum menyemak mod baca sahaja. Pembetulan ini **belum dideploy ke Raspberry Pi dan masih menunggu pengesahan produksi**.
+
+## PARTIAL — Learning Hub
+
+`/learn/` tersedia sebagai pintu masuk Learning Hub. Kandungan sebenar dan fungsi pembelajaran akan dibangunkan secara berperingkat.
+
+## FUTURE — Hala Tuju Pembelajaran
+
+- video dan kandungan latihan;
+- nota, PDF dan bahan rujukan;
+- latihan interaktif dan kuiz;
+- kemajuan pelajar dan penyelesaian modul;
+- integrasi ringan dengan SPDK untuk enrolmen atau kemajuan;
+- pilihan adapter Wi-Fi USB sebagai uplink/klien berasingan daripada hotspot terbina dalam;
+- casing keras mudah alih.
+
+## Status Prototaip
+
+ASTH kini ialah prototaip mudah alih yang berfungsi dengan kiosk automatik, konsol kesihatan skrin sentuh, hotspot peserta, akses QR offline, media tempatan, Jellyfin, seni bina media ITUNAS jarak jauh, WireGuard, periferal input/audio Bluetooth dan asas Learning Hub.
+
+## Teknologi Utama
 
 | Komponen | Teknologi |
 |---|---|
 | Antara muka | HTML, CSS, JavaScript |
-| Jenis aplikasi | Progressive Web App |
 | Backend | Python FastAPI |
-| Database | SQLite |
-| Hosting tempatan | Raspberry Pi 5 |
 | Web server | Nginx sebagai reverse proxy kepada FastAPI/Uvicorn |
-| Smart Tutor | Local knowledge base |
-| Internet | Tidak wajib |
-| Cloud AI/API | Pilihan dan terkawal |
+| Hosting tempatan | Raspberry Pi 5, Debian 13 Trixie arm64 |
+| Media | Jellyfin, storan `/mnt/rog`, CIFS ITUNAS baca sahaja |
+| Rangkaian peserta | `ASTH-PORTABLE` pada Wi-Fi terbina dalam |
+| Internet | Tidak wajib untuk perkhidmatan setempat |
 
-Seni bina MVP menggunakan satu aplikasi modular, SQLite dan bilangan proses minimum. Pengembangan masa depan boleh dibuat melalui storan NVMe, servis luaran terkawal atau pengasingan workload tanpa mengubah arah asas projek.
+## Rekod Pengesahan Terdahulu
 
-## Infrastruktur disahkan pada 6 September 2026
+- `ASTH-PORTABLE` telah disahkan pada `wlan0`, `10.42.0.1/24`, 5 GHz channel 36 dengan dua klien tersambung semula selepas migrasi.
+- Ethernet `eth0` pernah disahkan sebagai uplink Gigabit; adapter USB Wi-Fi tidak digunakan dalam ujian tersebut.
+- SSD ROG, Samba `ROG-Drive`, Jellyfin, Uptime Kuma dan Cockpit telah disahkan beroperasi dalam pengesahan terdahulu.
+- Rollback manual aplikasi v0.4.0 ke v0.3.0 dan pemulihan semula telah berjaya diuji.
+- Stack paparan `vc4-kms-v3d` telah dipulihkan dan disahkan.
 
-SSD ROG kini dipasang secara kekal di `/mnt/rog` menggunakan `ntfs3` dengan uid/gid 1000 dan kembali selepas reboot. Share Samba `ROG-Drive` menyokong tulis serta penamaan semula fail dari Windows. Jellyfin tersedia melalui LAN di `http://192.168.100.187:8096` dan ASTH-PORTABLE di `http://10.42.0.1:8096`, dengan akses UFW terhad kepada rangkaian tempatan tersebut. Jellyfin ialah servis media tambahan, bukan keperluan teras MVP ASTH; elakkan transcoding berat atau banyak strim serentak pada Pi 2 GB RAM. Lihat [Deployment Status](docs/DEPLOYMENT_STATUS.md) dan [Operations Runbook](docs/OPERATIONS_RUNBOOK.md).
-
-## Rekod aplikasi dan perkakasan pada 13 Ogos 2026
-
-- **CONFIRMED:** Akses pemulihan fizikal melalui HDMI dan papan kekunci USB lengkap; login tempatan `asthadmin`, pemulihan kata laluan melalui boot recovery, `sudo` (`SUDO_OK`) dan reboot normal telah disahkan.
-- **CONFIRMED:** Rangkaian portable ASTH dan aplikasi web FastAPI v0.4.0 beroperasi pada Raspberry Pi.
-- **VERIFIED:** `ASTH-PORTABLE` kekal pada built-in Wi-Fi `wlan0` dengan `10.42.0.1/24` dan kini menggunakan 5 GHz, channel 36 (5180 MHz), lebar 20 MHz. Dua peranti berjaya menyambung semula dan konfigurasi ini kekal selepas reboot.
-- **CONFIRMED:** Uplink internet semasa ialah Gigabit Ethernet `eth0` (`1.1.1.1 via 192.168.100.1 dev eth0 src 192.168.100.187`); Alfa USB `wlan1` disconnected dan tidak terlibat dalam ujian 13 Ogos.
-- **OBSERVED:** Satu speedtest melalui hotspot selepas migrasi merekodkan ping 25 ms, download 48.9 Mbps dan upload 35.8 Mbps. Ini bukan prestasi terjamin atau gigabit Wi-Fi; hotspot 20 MHz pada Raspberry Pi kekal sebagai kemungkinan kekangan tempatan berbanding uplink Ethernet 1000 Mbps full-duplex.
-- **CONFIRMED:** Halaman utama `/` memaparkan status hub, statistik rangkaian masa nyata dan pautan ke Learning Hub, Uptime Kuma serta Cockpit.
-- **VERIFIED:** Rollback manual aplikasi daripada ASTH v0.4.0 kepada salinan v0.3.0 dan pemulihan semula kepada v0.4.0 berjaya; kedua-dua health check akhir mengembalikan HTTP 200 dan keadaan `healthy`.
-- **VERIFIED:** `vc4-kms-v3d` diaktifkan semula; selepas reboot, peranti DRI dan modul kernel `vc4`/`v3d` tersedia, `rp1-test.service` aktif, `asth.service` aktif dan tiada unit systemd gagal.
-- **PARTIAL:** `/learn/` tersedia sebagai Learning Hub berasingan, tetapi kandungan sebenar belum dimasukkan.
-- **DEFERRED:** Ujian backup/restore database ditangguhkan kerana `/var/lib/asth/db` kosong dan aplikasi semasa belum mempunyai fail atau rujukan database.
-- **PENDING:** MHS35 LCD belum dipasang dan `MHS35-show` tidak dijalankan semasa pemulihan; NVMe controller/HAT belum tiba; konfigurasi kiosk LCD, migrasi storan dan sinkronisasi source v0.4.0 dari Pi ke repository ini masih belum lengkap.
-
-Butiran semasa direkodkan dalam [Deployment Status](docs/DEPLOYMENT_STATUS.md).
+Butiran sejarah dan operasi lanjut dikekalkan dalam [Project Status](PROJECT_STATUS.md), [Changelog](CHANGELOG.md), [Deployment Status](docs/DEPLOYMENT_STATUS.md) dan [Operations Runbook](docs/OPERATIONS_RUNBOOK.md).
 
 ## Dokumen Utama
 
@@ -94,9 +181,9 @@ Butiran semasa direkodkan dalam [Deployment Status](docs/DEPLOYMENT_STATUS.md).
 
 ## Pemilikan Projek
 
-Projek ini dicadangkan untuk dibangunkan di bawah:
+Projek ini dibangunkan untuk:
 
 **Institut Teknologi Unggas**  
 **Jabatan Perkhidmatan Veterinar Malaysia**
 
-ASTH bukan dibangunkan untuk menggantikan trainer. ASTH dibangunkan untuk memperkukuh penyampaian latihan, pembelajaran kendiri dan pemantauan kompetensi peserta.
+ASTH tidak menggantikan trainer atau SPDK. ASTH memperkukuh penyampaian latihan, pembelajaran kendiri dan pemantauan kemajuan/kompetensi peserta.
