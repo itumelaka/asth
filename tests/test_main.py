@@ -569,39 +569,119 @@ class LearningHubTests(unittest.TestCase):
     def setUpClass(cls):
         cls.main = _load_main()
 
-    def test_learning_hub_activates_only_the_module_card(self):
+    def test_learning_hub_lists_three_packs_with_only_pack_one_available(self):
         page = _route_content(self.main, "/learn/")
-        module_card = _learning_card(page, "Modul Pembelajaran")
-        video_card = _learning_card(page, "Video Latihan")
-        interactive_card = _learning_card(page, "Latihan Interaktif")
+        pack_one = _learning_card(page, "Persediaan Reban &amp; Brooder")
+        pack_two = _learning_card(page, "Biosekuriti Asas Ladang")
+        pack_three = _learning_card(page, "Pengendalian Telur Bernas")
 
         self.assertIn("ASTH Learning Hub", page)
-        self.assertIn('href="/learn/modules/"', module_card)
-        self.assertIn("LIHAT MODUL", module_card)
-        self.assertNotIn("Akan Datang", module_card)
-        self.assertIn("Akan Datang", video_card)
-        self.assertIn("Akan Datang", interactive_card)
+        self.assertIn("Kandungan latihan ringkas, praktikal dan offline-first", page)
+        self.assertIn("TERSEDIA", pack_one)
+        self.assertIn("&plusmn;10 minit", pack_one)
+        self.assertIn("Praktikal", pack_one)
+        self.assertIn("Offline", pack_one)
+        self.assertIn('href="/learn/packs/reban-brooder/"', pack_one)
+        self.assertIn("MULA", pack_one)
+        self.assertNotIn("AKAN DATANG", pack_one)
+        self.assertIn("AKAN DATANG", pack_two)
+        self.assertIn("AKAN DATANG", pack_three)
+        self.assertNotIn('href="/learn/modules/', page)
+        self.assertNotIn("Asas Penternakan Ayam Kampung", page)
 
-    def test_module_listing_contains_the_single_demo_module(self):
-        page = _route_content(self.main, "/learn/modules/")
+    def test_reban_brooder_pack_contains_sections_and_practical_checklist(self):
+        page = _route_content(self.main, "/learn/packs/reban-brooder/")
 
-        self.assertIn("Asas Penternakan Ayam Kampung", page)
-        self.assertIn("MULA BELAJAR", page)
-        self.assertIn('href="/learn/modules/ayam-kampung/"', page)
-        for topic in ("Pengenalan", "Reban", "Pemakanan", "Kesihatan", "Biosekuriti"):
-            with self.subTest(topic=topic):
-                self.assertIn(topic, page)
+        for heading in (
+            "01 Pengenalan",
+            "02 Checklist Persediaan",
+            "03 Baca Tingkah Laku Anak Ayam",
+            "04 Video Demo",
+            "05 Aktiviti Interaktif",
+            "06 Quick Quiz",
+            "07 Tamat Learning Pack",
+        ):
+            with self.subTest(heading=heading):
+                self.assertIn(heading, page)
 
-    def test_demo_module_contains_all_topics_and_completion_action(self):
-        page = _route_content(self.main, "/learn/modules/ayam-kampung/")
+        checklist_items = (
+            "Pastikan reban telah dibersihkan dan kawasan brooder bebas daripada sisa lama.",
+            "Sediakan litter yang bersih, kering dan rata.",
+            "Pasang serta uji pemanas/brooder sebelum anak ayam tiba.",
+            "Pastikan kawasan brooder tidak terkena tiupan angin terus.",
+            "Sediakan bekas minuman dan makanan secukupnya serta mudah dicapai.",
+            "Pastikan air minuman telah tersedia sebelum anak ayam dimasukkan.",
+            "Periksa pencahayaan supaya kawasan makan dan minum mudah dilihat.",
+            "Pastikan pengudaraan baik tanpa menyebabkan anak ayam kesejukan.",
+            "Periksa keselamatan peralatan, kabel, pemanas dan kawasan sekeliling.",
+            "Selepas anak ayam dimasukkan, perhatikan taburan dan tingkah laku anak ayam untuk menilai keselesaan kawasan brooder.",
+        )
+        for item in checklist_items:
+            with self.subTest(item=item):
+                self.assertIn(item, page)
 
-        self.assertIn("Asas Penternakan Ayam Kampung", page)
-        self.assertIn("kandungan demo", page.lower())
-        for topic in ("Pengenalan", "Reban", "Pemakanan", "Kesihatan", "Biosekuriti"):
-            with self.subTest(topic=topic):
-                self.assertRegex(page, rf"<h2[^>]*>{topic}</h2>")
-        self.assertIn("TAMAT MODUL", page)
-        self.assertIn('href="/learn/modules/"', page)
+    def test_reban_brooder_pack_has_behaviour_guidance_and_video_placeholder(self):
+        page = _route_content(self.main, "/learn/packs/reban-brooder/")
+
+        for state in (
+            "Berkumpul rapat bawah pemanas",
+            "Menjauh daripada sumber haba",
+            "Berkumpul pada satu bahagian sahaja",
+            "Tersebar sekata dan aktif",
+            "kemungkinan terlalu sejuk",
+            "kemungkinan terlalu panas",
+            "semak tiupan angin atau keadaan persekitaran",
+            "petunjuk keadaan lebih selesa",
+        ):
+            with self.subTest(state=state):
+                self.assertIn(state, page)
+        self.assertIn("Cara Menyediakan Brooder Sebelum Anak Ayam Tiba", page)
+        self.assertIn("AKAN DITAMBAH", page)
+        self.assertNotIn("http://", page)
+        self.assertNotIn("https://", page)
+
+    def test_reban_brooder_pack_has_offline_activity_and_five_question_quiz(self):
+        page = _route_content(self.main, "/learn/packs/reban-brooder/")
+
+        for check_item in ("pemanas", "air", "makanan", "litter", "pengudaraan"):
+            with self.subTest(check_item=check_item):
+                self.assertRegex(page, rf'data-check="{check_item}"')
+        self.assertIn("Brooder Check", page)
+        self.assertIn(">SEMAK<", page)
+
+        questions = (
+            "Apakah tindakan yang paling sesuai dilakukan sebelum anak ayam tiba?",
+            "Anak ayam berkumpul sangat rapat di bawah sumber haba. Apakah perkara pertama yang patut diperiksa?",
+            "Mengapa air minuman perlu tersedia apabila anak ayam dimasukkan?",
+            "Apakah ciri litter yang sesuai semasa persediaan awal?",
+            "Selepas anak ayam dimasukkan ke dalam brooder, apakah pemerhatian yang penting dilakukan?",
+        )
+        for question in questions:
+            with self.subTest(question=question):
+                self.assertIn(question, page)
+        self.assertIn("daripada 5", page)
+        self.assertIn("CUBA SEMULA", page)
+        self.assertNotIn("fetch(", page)
+        self.assertNotIn("localStorage", page)
+        self.assertNotIn("sessionStorage", page)
+
+    def test_reban_brooder_pack_has_non_persistent_completion_panel(self):
+        page = _route_content(self.main, "/learn/packs/reban-brooder/")
+
+        self.assertIn(
+            "Anda telah selesai Learning Pack: Persediaan Reban &amp; Brooder.",
+            page,
+        )
+        self.assertIn("Kemajuan tidak direkodkan", page)
+        self.assertIn("KEMBALI KE LEARNING HUB", page)
+        self.assertIn('href="/learn/"', page)
+
+    def test_legacy_demo_route_remains_available_but_is_not_primary_navigation(self):
+        landing = _route_content(self.main, "/learn/")
+        legacy = _route_content(self.main, "/learn/modules/ayam-kampung/")
+
+        self.assertNotIn("Asas Penternakan Ayam Kampung", landing)
+        self.assertIn("Asas Penternakan Ayam Kampung", legacy)
 
     def test_learning_pages_do_not_expose_administrative_content(self):
         test_password = "TEST-ONLY-WIFI-VALUE"
@@ -612,7 +692,7 @@ class LearningHubTests(unittest.TestCase):
         ):
             pages = (
                 _route_content(self.main, "/learn/"),
-                _route_content(self.main, "/learn/modules/"),
+                _route_content(self.main, "/learn/packs/reban-brooder/"),
                 _route_content(self.main, "/learn/modules/ayam-kampung/"),
             )
 

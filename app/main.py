@@ -1082,6 +1082,34 @@ LEARNING_PAGE = """
             font-weight: 900;
         }
 
+        .available {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            color: #075b34;
+            background: #baf4d2;
+            font-size: 0.69rem;
+            font-weight: 900;
+        }
+
+        .module-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 12px;
+        }
+
+        .module-meta span {
+            padding: 6px 9px;
+            border: 2px solid #aec3e4;
+            border-radius: 999px;
+            color: var(--dark);
+            background: #edf4ff;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
         .module-action {
             display: inline-block;
             margin-top: 16px;
@@ -1150,9 +1178,7 @@ LEARNING_PAGE = """
                 <div>
                     <p class="eyebrow">Adaptive Smart Training Hub</p>
                     <h1>ASTH Learning Hub</h1>
-                    <p class="subtitle">
-                        Pusat bahan latihan dan pembelajaran digital ITU.
-                    </p>
+                    <p class="subtitle">Latihan praktikal di mana sahaja.</p>
                 </div>
             </div>
 
@@ -1160,43 +1186,37 @@ LEARNING_PAGE = """
         </header>
 
         <section class="intro">
-            <h2>Selamat datang ke Learning Hub &#127891;</h2>
+            <h2>Learning Pack ASTH</h2>
             <p>
-                Ruang ini disediakan untuk modul pembelajaran, nota,
-                video, bahan kursus dan latihan interaktif yang boleh
-                diakses melalui rangkaian ASTH.
+                Kandungan latihan ringkas, praktikal dan offline-first
+                untuk digunakan terus di lokasi latihan.
             </p>
         </section>
 
         <section class="modules">
             <article class="module">
-                <div class="icon">&#128218;</div>
-                <h3>Modul Pembelajaran</h3>
-                <p>
-                    Koleksi modul kursus dan bahan rujukan untuk peserta
-                    latihan.
-                </p>
-                <a class="module-action" href="/learn/modules/">LIHAT MODUL</a>
+                <div class="icon">&#128736;</div>
+                <span class="available">TERSEDIA</span>
+                <h3>Persediaan Reban &amp; Brooder</h3>
+                <p>Persediaan asas sebelum anak ayam tiba dan pemerhatian awal selepas kemasukan.</p>
+                <div class="module-meta">
+                    <span>&plusmn;10 minit</span><span>Praktikal</span><span>Offline</span>
+                </div>
+                <a class="module-action" href="/learn/packs/reban-brooder/">MULA</a>
             </article>
 
             <article class="module">
-                <div class="icon">&#127916;</div>
-                <h3>Video Latihan</h3>
-                <p>
-                    Video demonstrasi, tutorial dan kandungan latihan
-                    yang boleh ditonton dalam rangkaian tempatan.
-                </p>
-                <span class="coming">Akan Datang</span>
+                <div class="icon">&#128737;</div>
+                <h3>Biosekuriti Asas Ladang</h3>
+                <p>Amalan kebersihan dan kawalan asas untuk persekitaran latihan ladang.</p>
+                <span class="coming">AKAN DATANG</span>
             </article>
 
             <article class="module">
-                <div class="icon">&#129514;</div>
-                <h3>Latihan Interaktif</h3>
-                <p>
-                    Aktiviti praktikal, kuiz dan bahan pembelajaran
-                    interaktif untuk peserta.
-                </p>
-                <span class="coming">Akan Datang</span>
+                <div class="icon">&#129370;</div>
+                <h3>Pengendalian Telur Bernas</h3>
+                <p>Pengenalan praktikal kepada pemerhatian dan pengendalian asas telur bernas.</p>
+                <span class="coming">AKAN DATANG</span>
             </article>
         </section>
 
@@ -1412,6 +1432,297 @@ DEMO_MODULE_PAGE = """
 """
 
 
+REBAN_BROODER_PACK_PAGE = """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persediaan Reban &amp; Brooder | ASTH Learning Hub</title>
+    <style>
+""" + LEARNING_SUBPAGE_STYLE + """
+    .pack-meta, .section-labels {
+        display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+    }
+    .pack-meta span, .section-labels span {
+        padding: 7px 10px; border: 2px solid var(--line); border-radius: 999px;
+        color: var(--dark); background: #edf4ff; font-size: .76rem; font-weight: 850;
+    }
+    .pack-intro { background: linear-gradient(145deg, #fff2b7, #ffd275); }
+    .pack-intro p { color: #51421f; }
+    .pack-section {
+        margin-top: 18px; padding: clamp(19px, 4vw, 28px); border: 3px solid #9fb6d8;
+        border-radius: 23px; background: #ffffff; box-shadow: var(--shadow);
+    }
+    .section-kicker {
+        margin: 0 0 6px; color: #245bc5; font-size: .72rem; font-weight: 900;
+        letter-spacing: .08em; text-transform: uppercase;
+    }
+    .pack-section h2 { margin: 0 0 10px; font-size: clamp(1.3rem, 3vw, 1.75rem); }
+    .pack-section > p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .practical-list {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+        margin: 18px 0 0; padding: 0; list-style: none;
+    }
+    .practical-list li {
+        display: flex; gap: 11px; align-items: flex-start; padding: 14px;
+        border: 2px solid #aac0df; border-radius: 15px; background: #f6f9ff;
+        color: #243b5b; font-size: .9rem; line-height: 1.45;
+    }
+    .practical-list li::before {
+        content: "\2713"; display: grid; flex: 0 0 26px; width: 26px; height: 26px;
+        place-items: center; border-radius: 50%; color: white; background: #147647;
+        font-weight: 900;
+    }
+    .behaviour-grid {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 17px;
+    }
+    .behaviour-card {
+        padding: 17px; border: 3px solid #a9bddb; border-radius: 18px; background: #f7faff;
+    }
+    .behaviour-card strong { display: block; margin-bottom: 7px; color: #17335b; }
+    .behaviour-card p { margin: 0; color: #415979; line-height: 1.45; }
+    .behaviour-card.good { border-color: #278b58; background: #e5f8ed; }
+    .video-placeholder {
+        margin-top: 16px; padding: 25px; border: 3px dashed #738cac; border-radius: 18px;
+        background: #edf3fb; text-align: center;
+    }
+    .video-placeholder strong { display: block; margin-bottom: 8px; font-size: 1.05rem; }
+    .video-status {
+        display: inline-block; padding: 7px 10px; border-radius: 999px;
+        color: #6f4d00; background: #ffd86a; font-size: .72rem; font-weight: 900;
+    }
+    .check-grid {
+        display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px;
+        margin: 17px 0;
+    }
+    .check-card {
+        display: flex; min-height: 76px; align-items: center; justify-content: center;
+        padding: 10px; border: 3px solid #a5b9d7; border-radius: 15px;
+        background: #f7faff; font-weight: 850; text-align: center; cursor: pointer;
+    }
+    .check-card:has(input:checked) { border-color: #147647; background: #dff7e9; }
+    .check-card input { width: 20px; height: 20px; margin: 0 8px 0 0; accent-color: #147647; }
+    .pack-button {
+        min-height: 46px; padding: 11px 17px; border: 0; border-radius: 13px;
+        color: white; background: #225fcf; box-shadow: 0 4px 0 #123c8e;
+        font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer;
+    }
+    .pack-button.secondary { color: #17335b; background: #d8e6fb; box-shadow: 0 4px 0 #9ab3d8; }
+    .feedback {
+        min-height: 24px; margin: 14px 0 0; color: #17335b; font-weight: 850;
+    }
+    .quiz-question {
+        margin: 15px 0 0; padding: 16px; border: 2px solid #afc1dc;
+        border-radius: 17px; background: #f8faff;
+    }
+    .quiz-question legend { padding: 0 4px; color: #17335b; font-weight: 850; line-height: 1.4; }
+    .quiz-question label { display: block; margin-top: 9px; color: #334d70; line-height: 1.4; }
+    .quiz-question input { width: 19px; height: 19px; margin-right: 8px; vertical-align: middle; accent-color: #225fcf; }
+    .quiz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
+    .completion { border-color: #33865d; background: linear-gradient(145deg, #e1f7e9, #c5efd5); }
+    .completion p { color: #274f39; }
+    @media (max-width: 720px) {
+        .practical-list, .behaviour-grid { grid-template-columns: 1fr; }
+        .check-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 420px) {
+        .learning-page { width: min(100% - 20px, 980px); padding-top: 10px; }
+        .pack-section { padding: 17px; }
+        .check-grid { grid-template-columns: 1fr; }
+        .check-card { min-height: 58px; justify-content: flex-start; text-align: left; }
+    }
+    </style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">ASTH Learning Pack</p>
+                    <h1>Persediaan Reban &amp; Brooder</h1>
+                    <div class="pack-meta"><span>&plusmn;10 minit</span><span>Praktikal</span><span>Offline</span></div>
+                </div>
+            </div>
+            <a class="learning-back" href="/learn/">&#8592; Learning Hub</a>
+        </header>
+
+        <section class="learning-panel pack-intro">
+            <p class="section-kicker">01 Pengenalan</p>
+            <h2>Persediaan sebelum anak ayam tiba</h2>
+            <p>
+                Persediaan reban dan brooder yang baik sebelum anak ayam tiba membantu menyediakan
+                persekitaran permulaan yang bersih, selesa dan terkawal. Learning Pack ini memberi
+                panduan pemeriksaan asas untuk latihan praktikal, bukan diagnosis veterinar.
+            </p>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">02 Checklist Persediaan</p>
+            <h2>Semak sebelum kemasukan</h2>
+            <ul class="practical-list">
+                <li>Pastikan reban telah dibersihkan dan kawasan brooder bebas daripada sisa lama.</li>
+                <li>Sediakan litter yang bersih, kering dan rata.</li>
+                <li>Pasang serta uji pemanas/brooder sebelum anak ayam tiba.</li>
+                <li>Pastikan kawasan brooder tidak terkena tiupan angin terus.</li>
+                <li>Sediakan bekas minuman dan makanan secukupnya serta mudah dicapai.</li>
+                <li>Pastikan air minuman telah tersedia sebelum anak ayam dimasukkan.</li>
+                <li>Periksa pencahayaan supaya kawasan makan dan minum mudah dilihat.</li>
+                <li>Pastikan pengudaraan baik tanpa menyebabkan anak ayam kesejukan.</li>
+                <li>Periksa keselamatan peralatan, kabel, pemanas dan kawasan sekeliling.</li>
+                <li>Selepas anak ayam dimasukkan, perhatikan taburan dan tingkah laku anak ayam untuk menilai keselesaan kawasan brooder.</li>
+            </ul>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">03 Baca Tingkah Laku Anak Ayam</p>
+            <h2>Gunakan pemerhatian sebagai petunjuk awal</h2>
+            <p>Corak ini ialah petunjuk praktikal untuk pemeriksaan persekitaran, bukan diagnosis kesihatan.</p>
+            <div class="behaviour-grid">
+                <article class="behaviour-card"><strong>Berkumpul rapat bawah pemanas</strong><p>kemungkinan terlalu sejuk</p></article>
+                <article class="behaviour-card"><strong>Menjauh daripada sumber haba</strong><p>kemungkinan terlalu panas</p></article>
+                <article class="behaviour-card"><strong>Berkumpul pada satu bahagian sahaja</strong><p>semak tiupan angin atau keadaan persekitaran</p></article>
+                <article class="behaviour-card good"><strong>Tersebar sekata dan aktif</strong><p>petunjuk keadaan lebih selesa</p></article>
+            </div>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">04 Video Demo</p>
+            <h2>Demonstrasi tempatan</h2>
+            <div class="video-placeholder">
+                <strong>Cara Menyediakan Brooder Sebelum Anak Ayam Tiba</strong>
+                <span class="video-status">AKAN DITAMBAH</span>
+            </div>
+        </section>
+
+        <section class="pack-section" id="brooder-check">
+            <p class="section-kicker">05 Aktiviti Interaktif</p>
+            <h2>Brooder Check</h2>
+            <p>Pilih lima perkara utama yang perlu diperiksa sebelum anak ayam ditempatkan di dalam brooder.</p>
+            <div class="check-grid">
+                <label class="check-card"><input type="checkbox" data-check="pemanas">Pemanas</label>
+                <label class="check-card"><input type="checkbox" data-check="air">Air</label>
+                <label class="check-card"><input type="checkbox" data-check="makanan">Makanan</label>
+                <label class="check-card"><input type="checkbox" data-check="litter">Litter</label>
+                <label class="check-card"><input type="checkbox" data-check="pengudaraan">Pengudaraan</label>
+            </div>
+            <button class="pack-button" id="checkBrooder" type="button">SEMAK</button>
+            <p class="feedback" id="brooderFeedback" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="pack-section" id="quick-quiz">
+            <p class="section-kicker">06 Quick Quiz</p>
+            <h2>Semak kefahaman anda</h2>
+            <p>Kuiz ringkas ini tidak disimpan dan bukan penilaian atau pensijilan rasmi.</p>
+            <form id="packQuiz">
+                <fieldset class="quiz-question">
+                    <legend>1. Apakah tindakan yang paling sesuai dilakukan sebelum anak ayam tiba?</legend>
+                    <label><input type="radio" name="q1" value="A">A. Pasang pemanas selepas anak ayam dimasukkan</label>
+                    <label><input type="radio" name="q1" value="B">B. Sediakan dan uji brooder terlebih dahulu</label>
+                    <label><input type="radio" name="q1" value="C">C. Biarkan kawasan reban kosong tanpa pemeriksaan</label>
+                    <label><input type="radio" name="q1" value="D">D. Sediakan makanan sahaja</label>
+                </fieldset>
+                <fieldset class="quiz-question">
+                    <legend>2. Anak ayam berkumpul sangat rapat di bawah sumber haba. Apakah perkara pertama yang patut diperiksa?</legend>
+                    <label><input type="radio" name="q2" value="A">A. Warna litter</label>
+                    <label><input type="radio" name="q2" value="B">B. Keadaan suhu/haba kawasan brooder</label>
+                    <label><input type="radio" name="q2" value="C">C. Saiz pintu reban</label>
+                    <label><input type="radio" name="q2" value="D">D. Bilangan lampu luar</label>
+                </fieldset>
+                <fieldset class="quiz-question">
+                    <legend>3. Mengapa air minuman perlu tersedia apabila anak ayam dimasukkan?</legend>
+                    <label><input type="radio" name="q3" value="A">A. Supaya kawasan litter menjadi basah</label>
+                    <label><input type="radio" name="q3" value="B">B. Supaya anak ayam mudah mendapatkan air selepas tiba</label>
+                    <label><input type="radio" name="q3" value="C">C. Untuk menyejukkan seluruh reban</label>
+                    <label><input type="radio" name="q3" value="D">D. Untuk membersihkan bekas makanan</label>
+                </fieldset>
+                <fieldset class="quiz-question">
+                    <legend>4. Apakah ciri litter yang sesuai semasa persediaan awal?</legend>
+                    <label><input type="radio" name="q4" value="A">A. Basah dan padat</label>
+                    <label><input type="radio" name="q4" value="B">B. Bersih, kering dan rata</label>
+                    <label><input type="radio" name="q4" value="C">C. Dicampurkan dengan sisa lama</label>
+                    <label><input type="radio" name="q4" value="D">D. Tidak perlu diperiksa</label>
+                </fieldset>
+                <fieldset class="quiz-question">
+                    <legend>5. Selepas anak ayam dimasukkan ke dalam brooder, apakah pemerhatian yang penting dilakukan?</legend>
+                    <label><input type="radio" name="q5" value="A">A. Warna dinding reban</label>
+                    <label><input type="radio" name="q5" value="B">B. Taburan dan tingkah laku anak ayam</label>
+                    <label><input type="radio" name="q5" value="C">C. Jenama peralatan</label>
+                    <label><input type="radio" name="q5" value="D">D. Kedudukan kenderaan di luar reban</label>
+                </fieldset>
+                <div class="quiz-actions">
+                    <button class="pack-button" type="submit">SEMAK JAWAPAN</button>
+                    <button class="pack-button secondary" id="retryQuiz" type="button">CUBA SEMULA</button>
+                </div>
+                <p class="feedback" id="quizResult" role="status" aria-live="polite">Keputusan akan memaparkan jumlah betul daripada 5.</p>
+            </form>
+        </section>
+
+        <section class="pack-section completion">
+            <p class="section-kicker">07 Tamat Learning Pack</p>
+            <h2>Anda telah selesai Learning Pack: Persediaan Reban &amp; Brooder.</h2>
+            <p>
+                Anda telah melihat asas persediaan kawasan brooder, checklist sebelum kemasukan anak ayam,
+                cara membaca tingkah laku awal anak ayam serta pemeriksaan asas selepas kemasukan.
+                Kemajuan tidak direkodkan.
+            </p>
+            <a class="learning-action" href="/learn/">KEMBALI KE LEARNING HUB</a>
+        </section>
+
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
+    </main>
+
+    <script>
+        (() => {
+            const requiredChecks = ["pemanas", "air", "makanan", "litter", "pengudaraan"];
+            const brooderButton = document.getElementById("checkBrooder");
+            const brooderFeedback = document.getElementById("brooderFeedback");
+            const quiz = document.getElementById("packQuiz");
+            const quizResult = document.getElementById("quizResult");
+            const retryButton = document.getElementById("retryQuiz");
+
+            brooderButton.addEventListener("click", () => {
+                const selected = new Set(
+                    Array.from(document.querySelectorAll("[data-check]:checked"))
+                        .map((item) => item.dataset.check)
+                );
+                const complete = requiredChecks.every((item) => selected.has(item));
+                brooderFeedback.textContent = complete
+                    ? "Lengkap. Kelima-lima pemeriksaan utama telah dipilih."
+                    : `Pilih semua lima pemeriksaan. ${selected.size} daripada 5 telah dipilih.`;
+            });
+
+            quiz.addEventListener("submit", (event) => {
+                event.preventDefault();
+                let correct = 0;
+                let answered = 0;
+                for (let number = 1; number <= 5; number += 1) {
+                    const choice = quiz.querySelector(`input[name="q${number}"]:checked`);
+                    if (choice) {
+                        answered += 1;
+                        if (choice.value === "B") correct += 1;
+                    }
+                }
+                quizResult.textContent = answered === 5
+                    ? `Anda menjawab ${correct} daripada 5 dengan betul.`
+                    : `Sila jawab semua soalan. ${answered} daripada 5 telah dijawab.`;
+            });
+
+            retryButton.addEventListener("click", () => {
+                quiz.reset();
+                quizResult.textContent = "Keputusan dikosongkan. Cuba semula semua lima soalan.";
+            });
+        })();
+    </script>
+</body>
+</html>
+"""
+
+
 def _request_hostname(request):
     raw_host = request.headers.get("host", "").strip().lower()
     if raw_host.startswith("[") and "]" in raw_host:
@@ -1448,6 +1759,11 @@ def root(request: Request) -> HTMLResponse:
 @app.get("/learn/", response_class=HTMLResponse)
 def learning_hub() -> HTMLResponse:
     return HTMLResponse(content=LEARNING_PAGE)
+
+
+@app.get("/learn/packs/reban-brooder/", response_class=HTMLResponse)
+def learning_pack_reban_brooder() -> HTMLResponse:
+    return HTMLResponse(content=REBAN_BROODER_PACK_PAGE)
 
 
 @app.get("/learn/modules/", response_class=HTMLResponse)
