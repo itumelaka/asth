@@ -172,6 +172,39 @@ ASTH kini ialah prototaip mudah alih yang berfungsi dengan kiosk automatik, kons
 
 Butiran sejarah dan operasi lanjut dikekalkan dalam [Project Status](PROJECT_STATUS.md), [Changelog](CHANGELOG.md), [Deployment Status](docs/DEPLOYMENT_STATUS.md) dan [Operations Runbook](docs/OPERATIONS_RUNBOOK.md).
 
+
+## Office Connectivity / Always-On Office Tunnel
+
+Seni bina yang disahkan melalui validasi rangkaian yang dibekalkan:
+
+```text
+ASTH-PORTABLE (10.42.0.0/24)
+    -> Pi ASTH
+    -> WireGuard asth-office
+    -> UDM Pro
+    -> Office LAN (192.168.1.0/24)
+```
+
+- Interface `asth-office` menggunakan subnet WireGuard `192.168.3.0/24`; servis `wg-quick@asth-office.service` bermula secara automatik melalui systemd.
+- Split tunnel menghantar trafik `192.168.1.0/24` melalui `asth-office`. Trafik Internet biasa kekal melalui Internet rumah.
+- Polisi routed UFW diperlukan untuk membenarkan `10.42.0.0/24` dari `wlan0` ke `192.168.1.0/24` melalui `asth-office`.
+- Router upstream mempunyai port forward UDP 51820 ke WAN UDM Pro.
+- Semasa validasi yang dibekalkan, servis dan interface aktif selepas reboot serta laluan pejabat tersedia. Pi mencapai `192.168.1.254`, dan klien ASTH-PORTABLE mencapai TCP 80 serta 445 pada pelayan tersebut. Alamat ini ialah sasaran ujian, bukan kebergantungan tetap tunnel.
+
+HUD **Office Tunnel** menggunakan cache metrik 30 saat dan hanya memaparkan Connected, Disconnected atau Unavailable. Connected memerlukan servis aktif, interface `asth-office` wujud dan laluan tepat `192.168.1.0/24` menggunakan interface tersebut. Ini ialah petunjuk keadaan servis, interface dan laluan setempat, bukan jaminan capaian aplikasi pejabat; tiada ping atau probe pelayan dilakukan.
+
+Validasi langsung menunjukkan pengguna aplikasi `asthadmin` tidak boleh menjalankan `wg show` tanpa keistimewaan tambahan. ASTH sengaja tidak menaikkan keistimewaan hanya untuk pemantauan HUD. Pemeriksaan menggunakan keadaan systemd, kewujudan interface dan output laluan setempat yang tidak memerlukan sudo; kegagalan pemeriksaan menghasilkan Unavailable.
+
+Private key, pre-shared key, kelayakan, QR code dan konfigurasi penuh WireGuard tidak boleh dikomit. API hanya menambah `office_tunnel`; ia tidak mendedahkan identiti peer, endpoint atau output mentah sistem.
+
+Integrasi media pejabat turut disahkan pada 6 September 2026. Share SMB3 `Movies` pada pelayan Windows `ITUNAS` dipasang secara read-only di `/mnt/office-movies` melalui tunnel `asth-office`, kekal tersedia selepas reboot, dan digunakan oleh library Jellyfin `Movies ITUNAS`. Jellyfin Media Player 1.12.0 pada `BurnRogZ13` memainkan *Thor: Love and Thunder* melalui Direct Play tanpa proses transcoding `ffmpeg` aktif. Library tempatan `/mnt/rog/Movies` kekal berasingan. Lihat [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md) untuk seni bina, kawalan akses dan batas operasi yang disahkan.
+
+## Remote Access / Tailscale
+
+Pada 6 September 2026, akses peribadi jarak jauh ke ASTH dan Jellyfin disahkan dari telefon Android menggunakan data selular melalui Tailscale. Pi `asth-pi` menjalankan Tailscale 1.102.3 pada alamat overlay `100.87.140.5`; Service Hub, HUD dan Jellyfin `asth-media` 10.11.11 boleh dicapai tanpa pendedahan langsung servis ASTH ke Internet awam. Tailscale menyediakan akses klien dipercayai ke Pi, manakala tunnel WireGuard `asth-office` yang berasingan menghubungkan Pi ke media pejabat.
+
+Keadaan keselamatan Tailscale masih **PARTIAL / PENDING HARDENING**. Peraturan khusus pemilik kepada port 22, 80, 3001, 8096 dan 9090 pada Pi telah dibuat, tetapi peraturan broad allow-all sedia ada masih aktif dan belum diuji selepas dinyahaktifkan. Lihat [Tailscale Remote Access](docs/REMOTE_ACCESS_TAILSCALE.md) untuk bukti, sempadan keselamatan dan kerja pengukuhan yang masih diperlukan.
+
 ## Dokumen Utama
 
 - [Project Principles](docs/ASTH_PROJECT_PRINCIPLES.md)
@@ -182,6 +215,8 @@ Butiran sejarah dan operasi lanjut dikekalkan dalam [Project Status](PROJECT_STA
 - [Hardware Baseline](docs/HARDWARE_BASELINE.md)
 - [Deployment Status](docs/DEPLOYMENT_STATUS.md)
 - [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
+- [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md)
+- [Tailscale Remote Access](docs/REMOTE_ACCESS_TAILSCALE.md)
 
 ## Pemilikan Projek
 

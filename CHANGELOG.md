@@ -18,6 +18,24 @@
 - Marked the exact-CIFS ITUNAS status correction as prepared and tested locally but still pending Raspberry Pi deployment and production verification.
 - Added LIVE, VERIFIED, PENDING and FUTURE classifications, retained useful historical verification records, and clarified the Learning Hub roadmap. Documentation only; no deployment or system configuration change is claimed.
 
+## 6 September 2026 — Tailscale remote access for ASTH and Jellyfin
+
+- **VERIFIED:** Installed Tailscale 1.102.3 from the official Debian Trixie repository; `tailscaled.service` is active and the Pi appears as `asth-pi` at overlay IPv4 `100.87.140.5`.
+- **VERIFIED:** An Android phone on cellular data loaded the ASTH Service Hub through Tailscale. The HUD remained operational and displayed Office Tunnel as Connected; no ASTH service was intentionally exposed directly to the public Internet.
+- **VERIFIED:** Enabled Jellyfin Remote Access through its UI after the disabled setting blocked the initial remote API request. After restart, `asth-media` 10.11.11, its web interface and `Movies ITUNAS` were accessible through Tailscale.
+- **OBSERVED:** UFW remained active, the existing LAN/portable rules remained in place, and services listened on ports 80, 3001, 8096 and 9090. No `tailscale0` UFW rule was added in this phase.
+- **PARTIAL / PENDING HARDENING:** Added an owner-specific Tailscale rule for the Pi on ports 22, 80, 3001, 8096 and 9090, but the broad pre-existing all-users/devices allow-all rule remains active. It has not been removed, and the restricted rule has not been validated as the sole access path.
+- Kept Tailscale client access separate from the `asth-office` Pi-to-office WireGuard tunnel and recorded no authentication URLs, account email, credentials, keys, tokens or public WAN address.
+
+## 6 September 2026 — Office WireGuard media integration and Jellyfin Direct Play
+
+- Documented the reboot-persistent `asth-office` split tunnel between `ASTH-PORTABLE` (`10.42.0.0/24`) and the office LAN (`192.168.1.0/24`).
+- Recorded authenticated SMB3 access to the `Movies` share on `ITUNAS` (`192.168.1.254`), mounted read-only at `/mnt/office-movies` with protected root-only credentials and Jellyfin-compatible ownership/modes.
+- Recorded the persistent `_netdev,nofail,x-systemd.automount` setup ordered and required after `wg-quick@asth-office.service`, including successful reboot validation of `mnt-office\x2dmovies.automount`.
+- Added the Jellyfin library `Movies ITUNAS` while preserving `/mnt/rog/Movies` as a separate library. Jellyfin on the Windows server was not configured or changed.
+- Verified Jellyfin Media Player 1.12.0 on `BurnRogZ13` playing *Thor: Love and Thunder* by Direct Play, with no active `ffmpeg` transcoding process; observed `ffprobe` processes were library scanning.
+- Documented the 30-minute media scan schedule, possible temporary buffering during an initial full scan, the 2 GB Pi preference for Direct Play, and the decision to retain authenticated, signed SMB3 rather than weaken SMB security.
+
 ## 6 September 2026 — ROG SSD, Samba and auxiliary Jellyfin verification
 
 - Recorded `/dev/sda2` (label `ROG`) persistently mounted at `/mnt/rog` using Linux `ntfs3`, uid/gid 1000 and the supplied runtime mount options after a full reboot.

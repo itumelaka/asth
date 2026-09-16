@@ -94,6 +94,23 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - WireGuard kekal `CONNECTED` sepanjang ujian disconnect dan connect.
 - Keputusan ini mengesahkan dashboard hanya mengawal unit mount/automount ITUNAS dan tidak memutasi WireGuard.
 
+### Office WireGuard Media dan Jellyfin
+
+- Split tunnel `asth-office` antara `ASTH-PORTABLE` (`10.42.0.0/24`) dan LAN pejabat (`192.168.1.0/24`) telah disahkan kekal selepas reboot.
+- Kandungan SMB3 berautentikasi daripada pelayan Windows `ITUNAS` dipasang baca sahaja pada `/mnt/office-movies` menggunakan kelayakan root-only yang dilindungi serta ownership/mode yang serasi dengan Jellyfin.
+- Systemd automount disusun dan diperlukan selepas `wg-quick@asth-office.service`; mount kembali tersedia selepas reboot.
+- Jellyfin mengekalkan `Movies ITUNAS` sebagai library berasingan daripada `/mnt/rog/Movies`.
+- Jellyfin Media Player 1.12.0 pada `BurnRogZ13` telah memainkan *Thor: Love and Thunder* melalui Direct Play tanpa proses transcoding `ffmpeg` aktif.
+- Rujuk [Office Media and Jellyfin Integration](docs/OFFICE_MEDIA_JELLYFIN.md).
+
+### Tailscale Remote Access
+
+- Tailscale 1.102.3 dipasang daripada repositori rasmi Debian Trixie dan `tailscaled.service` aktif pada peranti Pi `asth-pi`.
+- Telefon Android melalui data selular berjaya membuka ASTH Service Hub melalui alamat overlay peribadi; HUD kekal berfungsi dan memaparkan Office Tunnel sebagai connected.
+- Selepas Jellyfin Remote Access diaktifkan, `asth-media` 10.11.11, web interface dan library `Movies ITUNAS` boleh dicapai melalui Tailscale.
+- Akses ini menggunakan overlay peribadi dan bukan pendedahan terus ASTH kepada Internet awam.
+- Rujuk [Tailscale Remote Access](docs/REMOTE_ACCESS_TAILSCALE.md).
+
 ### Pengesahan Terdahulu yang Masih Relevan
 
 - Hotspot `ASTH-PORTABLE` telah disahkan pada 5 GHz channel 36, lebar 20 MHz; dua klien menyambung semula dan tetapan kekal selepas reboot.
@@ -107,6 +124,12 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - Akses pemulihan fizikal, login tempatan `asthadmin`, pemulihan kata laluan, sudo dan reboot normal telah disahkan.
 
 ## PENDING — Belum Selesai atau Belum Disahkan di Produksi
+
+### Tailscale Hardening
+
+- Least-privilege hardening masih **PARTIAL / PENDING**.
+- Peraturan khusus pemilik telah mengehadkan akses kepada Pi pada port 22, 80, 3001, 8096 dan 9090, tetapi peraturan broad allow-all sedia ada untuk semua pengguna/peranti masih aktif.
+- Peraturan broad tersebut belum dibuang dan peraturan terhad belum disahkan sebagai satu-satunya laluan akses.
 
 ### Operasi dan Kandungan
 
