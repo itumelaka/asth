@@ -4,7 +4,7 @@
 **Versi aplikasi live yang direkodkan:** v0.4.0
 **Fasa semasa:** Prototaip mudah alih berfungsi; penyediaan kandungan Learning Hub dan pemantapan operasi
 **Status keseluruhan:** Aktif — asas operasi dan penyampaian setempat tersedia, pengalaman pembelajaran masih separa
-**Tindakan utama seterusnya:** Deploy dan sahkan pembetulan pengesanan ITUNAS pada Raspberry Pi tanpa mengubah WireGuard, kemudian teruskan pengisian kandungan Learning Hub.
+**Tindakan utama seterusnya:** Teruskan pengisian dan pengesahan kandungan Learning Hub sambil mengekalkan pemantauan operasi prototaip.
 
 ## Sempadan Skop
 
@@ -83,6 +83,17 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - Endpoint mutasi dihadkan kepada permintaan loopback/kawalan tempatan dan tidak menerima unit atau arahan daripada klien.
 - Timeout, kegagalan tersanitasi dan pengesahan status selepas tindakan diliputi ujian setempat.
 
+### Pengesanan dan Kawalan ITUNAS di Produksi
+
+- Pembetulan parser exact-match telah dideploy pada Raspberry Pi dan mengesan entri CIFS baca sahaja `//192.168.1.254/Movies` pada `/mnt/office-movies` walaupun entri `autofs systemd-1` turut wujud pada target yang sama.
+- `asth.service` berjaya dimulakan semula dan kekal `active/running`.
+- Dashboard berjaya dimuatkan dan `/api/hub-status` mengembalikan HTTP 200.
+- WireGuard dan ITUNAS Media pada mulanya menunjukkan `CONNECTED`.
+- **DISCONNECT ITUNAS** berjaya dari dashboard skrin sentuh tempatan; ITUNAS Media bertukar kepada `DISCONNECTED` dan butang bertukar kepada **CONNECT ITUNAS**.
+- **CONNECT ITUNAS** kemudian berjaya dan ITUNAS Media kembali kepada `CONNECTED`.
+- WireGuard kekal `CONNECTED` sepanjang ujian disconnect dan connect.
+- Keputusan ini mengesahkan dashboard hanya mengawal unit mount/automount ITUNAS dan tidak memutasi WireGuard.
+
 ### Pengesahan Terdahulu yang Masih Relevan
 
 - Hotspot `ASTH-PORTABLE` telah disahkan pada 5 GHz channel 36, lebar 20 MHz; dua klien menyambung semula dan tetapan kekal selepas reboot.
@@ -96,23 +107,6 @@ Route utama yang dikekalkan: `/`, `/health`, `/api/hub-status` dan `/learn/`.
 - Akses pemulihan fizikal, login tempatan `asthadmin`, pemulihan kata laluan, sudo dan reboot normal telah disahkan.
 
 ## PENDING — Belum Selesai atau Belum Disahkan di Produksi
-
-### Pengesanan ITUNAS Media
-
-Keadaan live yang disahkan:
-
-- WireGuard menunjukkan `CONNECTED`.
-- `/mnt/office-movies` mempunyai entri `autofs systemd-1` dan entri CIFS baca sahaja `//192.168.1.254/Movies` pada target yang sama.
-- Kod live boleh memilih entri `autofs` terlebih dahulu dan memaparkan ITUNAS Media sebagai `UNAVAILABLE`.
-
-Pembetulan telah disediakan dan diuji secara setempat untuk memilih entri yang sepadan tepat dengan:
-
-- mount point `/mnt/office-movies`;
-- filesystem `cifs`;
-- source `//192.168.1.254/Movies`;
-- pilihan baca sahaja sedia ada.
-
-Pembetulan ini **belum dideploy dan belum disahkan pada Raspberry Pi produksi**. Status ini kekal PENDING sehingga deployment serta pengesahan live selesai.
 
 ### Operasi dan Kandungan
 

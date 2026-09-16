@@ -119,14 +119,18 @@ Hanya unit tetap berikut dibenarkan:
 
 Hanya kombinasi `start` dan `stop` yang diperlukan dibenarkan melalui peraturan sudoers berskop sempit; `NOPASSWD: ALL` tidak digunakan. Endpoint kawalan skrin sentuh dihadkan kepada permintaan kawalan loopback/tempatan. Nama unit, arahan, laluan dan mount tidak diterima daripada klien.
 
-## PENDING — Pembetulan Pengesanan Status ITUNAS
+## VERIFIED — Pengesanan dan Kawalan ITUNAS di Produksi
 
-Pada sistem live, WireGuard menunjukkan `CONNECTED` dan `/mnt/office-movies` mempunyai kedua-dua entri berikut:
+Pembetulan pengesanan telah dideploy dan disahkan pada Raspberry Pi. Parser kini memilih padanan tepat berikut walaupun target yang sama turut mempunyai entri `autofs`:
 
-- automount `autofs` daripada `systemd-1`;
-- CIFS `//192.168.1.254/Movies` dalam mod baca sahaja.
+- mount point `/mnt/office-movies`;
+- filesystem `cifs`;
+- source `//192.168.1.254/Movies`;
+- pilihan baca sahaja.
 
-Kod live masih boleh memilih entri `autofs` terlebih dahulu lalu memaparkan ITUNAS Media sebagai `UNAVAILABLE`. Pembetulan kecil telah disediakan dan diuji secara setempat untuk memilih padanan tepat mount point, filesystem CIFS dan sumber NAS sebelum menyemak mod baca sahaja. Pembetulan ini **belum dideploy ke Raspberry Pi dan masih menunggu pengesahan produksi**.
+Pengesahan produksi menunjukkan `asth.service` aktif, dashboard berjaya dimuatkan dan `/api/hub-status` mengembalikan HTTP 200. ITUNAS Media pada mulanya dipaparkan sebagai `CONNECTED`. Tindakan **DISCONNECT ITUNAS** daripada skrin sentuh tempatan berjaya menukar status media kepada `DISCONNECTED` dan butang kepada **CONNECT ITUNAS**. Tindakan connect seterusnya berjaya mengembalikan ITUNAS Media kepada `CONNECTED`.
+
+WireGuard kekal `CONNECTED` sepanjang kedua-dua tindakan. Ini mengesahkan kawalan dashboard hanya memutasi mount/automount ITUNAS dan tidak memutasi WireGuard.
 
 ## PARTIAL — Learning Hub
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 16 September 2026 — ITUNAS live deployment and production verification
+
+- Deployed the exact-match CIFS/autofs parser correction to the Raspberry Pi; `asth.service` restarted successfully and remained active/running.
+- Verified the dashboard loaded and `/api/hub-status` returned HTTP 200, with WireGuard and ITUNAS Media initially `CONNECTED`.
+- Verified **DISCONNECT ITUNAS** from the local touchscreen changed ITUNAS Media to `DISCONNECTED` and changed the control to **CONNECT ITUNAS**.
+- Verified **CONNECT ITUNAS** restored ITUNAS Media to `CONNECTED`.
+- Confirmed WireGuard remained `CONNECTED` throughout both actions, proving the dashboard mutates only the fixed ITUNAS mount/automount units and does not mutate WireGuard.
+- Preserved the earlier pending-deployment entry below as historical context for the state before production verification.
+
 ## 16 September 2026 — Current prototype scope and operations documentation
 
 - Reframed ASTH as a portable, offline-first Raspberry Pi 5 training-delivery hub and explicitly separated it from SPDK course and participant administration.
