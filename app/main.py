@@ -1177,11 +1177,21 @@ def _itunas_media_status(tunnel_status, mounts):
         return result
     if tunnel_status != "connected" or mounts is None:
         return result
-    mount = _find_mount(mounts, _ITUNAS_MOUNT)
-    if mount is None:
+    target_mounts = [
+        mount for mount in mounts
+        if mount["mount_point"] == _ITUNAS_MOUNT
+    ]
+    if not target_mounts:
         result["status"] = "disconnected"
         return result
-    if mount["filesystem"] != "cifs" or mount["source"] != _ITUNAS_SOURCE:
+    mount = next(
+        (
+            mount for mount in target_mounts
+            if mount["filesystem"] == "cifs" and mount["source"] == _ITUNAS_SOURCE
+        ),
+        None,
+    )
+    if mount is None:
         return result
     read_only = "ro" in mount["options"] or "ro" in mount["super_options"]
     if not read_only:

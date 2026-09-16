@@ -119,6 +119,18 @@ class DashboardHealthTests(unittest.TestCase):
             "unavailable",
         )
 
+    def test_itunas_selects_cifs_when_autofs_shares_the_mount_target(self):
+        mounts = self.main._parse_mountinfo(
+            "22 1 0:54 / /mnt/office-movies rw,relatime - autofs systemd-1 rw\n"
+            "23 22 0:55 / /mnt/office-movies ro,relatime - cifs "
+            "//192.168.1.254/Movies ro,vers=3.1.1,username=hidden\n"
+        )
+
+        self.assertEqual(
+            self.main._itunas_media_status("connected", mounts),
+            {"label": "ITUNAS via WireGuard", "status": "connected", "read_only": True},
+        )
+
     def test_overall_health_ignores_disconnected_optional_itunas(self):
         data = {
             "service_asth": "active",
