@@ -824,6 +824,64 @@ LANDING_PAGE = """
 """
 
 
+PARTICIPANT_PAGE = """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTH Learning Portal</title>
+    <style>
+        :root { --navy: #08213f; --blue: #0755b8; --ink: #071a31; --bg: #dce7f2; }
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; margin: 0; }
+        body {
+            display: grid; min-height: 100dvh; place-items: center; padding: 24px;
+            color: var(--ink); background: var(--bg); font-family: "Segoe UI", Arial, sans-serif;
+        }
+        main {
+            width: min(680px, 100%); padding: clamp(24px, 5vw, 48px);
+            border: 3px solid #52708e; border-radius: 22px; background: white;
+            box-shadow: 0 8px 24px rgba(8, 33, 63, .22); text-align: center;
+        }
+        .logos { display: flex; justify-content: center; gap: 14px; margin-bottom: 20px; }
+        .logo {
+            display: grid; width: 82px; height: 82px; padding: 8px; place-items: center;
+            border: 2px solid #7893ae; border-radius: 16px; background: white;
+        }
+        .logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        h1 { margin: 0; color: var(--navy); font-size: clamp(1.8rem, 6vw, 2.7rem); line-height: 1.08; }
+        .welcome { margin: 16px auto 24px; max-width: 520px; color: #304b67; font-size: 1.08rem; line-height: 1.5; }
+        nav { display: grid; gap: 14px; }
+        .primary-action {
+            display: grid; min-height: 62px; padding: 14px 18px; place-items: center;
+            border: 3px solid #073f91; border-radius: 13px; color: white;
+            background: var(--blue); font-size: 1.05rem; font-weight: 900;
+            letter-spacing: .02em; text-decoration: none;
+        }
+        .primary-action:focus-visible { outline: 4px solid #f3ad29; outline-offset: 3px; }
+        .note { margin: 20px 0 0; color: #49627b; font-size: .9rem; }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="logos" aria-label="ASTH">
+            <div class="logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+            <div class="logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+        </div>
+        <h1>ASTH Learning Portal</h1>
+        <p class="welcome">Selamat datang. Peranti anda telah disambungkan ke rangkaian tempatan ASTH.</p>
+        <nav aria-label="Akses pembelajaran">
+            <a class="primary-action" href="/learn/">MASUK LEARNING HUB</a>
+            <a class="primary-action" href="__ASTH_JELLYFIN_URL__">BUKA JELLYFIN</a>
+        </nav>
+        <p class="note">Akses tempatan melalui ASTH-PORTABLE atau rangkaian LAN.</p>
+    </main>
+</body>
+</html>
+"""
+
+
 LEARNING_PAGE = """
 <!DOCTYPE html>
 <html lang="ms">
@@ -1137,8 +1195,34 @@ LEARNING_PAGE = """
 """
 
 
+def _request_hostname(request):
+    raw_host = request.headers.get("host", "").strip().lower()
+    if raw_host.startswith("[") and "]" in raw_host:
+        return raw_host[1:raw_host.index("]")]
+    if raw_host.count(":") == 1:
+        return raw_host.split(":", 1)[0]
+    return raw_host
+
+
+def _loopback_request(request):
+    client = getattr(getattr(request, "client", None), "host", "")
+    return (
+        _request_hostname(request) in ("127.0.0.1", "localhost", "::1")
+        and client in ("127.0.0.1", "::1")
+    )
+
+
+def _participant_page(request):
+    hostname = _request_hostname(request)
+    url_hostname = f"[{hostname}]" if ":" in hostname else hostname
+    jellyfin_url = html.escape(f"http://{url_hostname}:8096", quote=True)
+    return PARTICIPANT_PAGE.replace("__ASTH_JELLYFIN_URL__", jellyfin_url)
+
+
 @app.get("/", response_class=HTMLResponse)
-def root() -> HTMLResponse:
+def root(request: Request) -> HTMLResponse:
+    if not _loopback_request(request):
+        return HTMLResponse(content=_participant_page(request))
     return HTMLResponse(
         content=LANDING_PAGE.replace("<!-- ASTH_WIFI_ACCESS -->", _wifi_access_markup())
     )
@@ -1682,15 +1766,8 @@ def _run_itunas_action(action):
 
 
 def _loopback_control_request(request):
-    raw_host = request.headers.get("host", "").strip().lower()
-    if raw_host.startswith("[") and "]" in raw_host:
-        host = raw_host[1:raw_host.index("]")]
-    else:
-        host = raw_host.split(":", 1)[0]
-    client = getattr(getattr(request, "client", None), "host", "")
     return (
-        host in ("127.0.0.1", "localhost", "::1")
-        and client in ("127.0.0.1", "::1")
+        _loopback_request(request)
         and request.headers.get("x-asth-control") == "touchscreen"
     )
 

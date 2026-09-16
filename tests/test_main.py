@@ -73,6 +73,10 @@ class _Request:
         self.client = types.SimpleNamespace(host=client)
 
 
+def _root_content(module, request):
+    return module.root(request).content
+
+
 class DashboardHealthTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -416,7 +420,7 @@ class StudentQrAccessTests(unittest.TestCase):
             {"ASTH_WIFI_PASSWORD": test_password},
             clear=False,
         ):
-            page = self.main.root().content
+            page = _root_content(self.main, _Request())
 
         self.assertIn('id="studentAccessButton"', page)
         self.assertIn('id="studentQrDialog"', page)
@@ -437,7 +441,7 @@ class StudentQrAccessTests(unittest.TestCase):
 
     def test_portal_qr_is_inline_black_on_white_and_has_exact_target(self):
         with mock.patch.dict(self.main.os.environ, {}, clear=True):
-            page = self.main.root().content
+            page = _root_content(self.main, _Request())
         match = re.search(r'(<svg[^>]+id="portalQr"[\s\S]*?</svg>)', page)
 
         self.assertIsNotNone(match)
@@ -452,7 +456,7 @@ class StudentQrAccessTests(unittest.TestCase):
 
     def test_missing_password_shows_safe_fallback_and_keeps_portal_qr(self):
         with mock.patch.dict(self.main.os.environ, {}, clear=True):
-            page = self.main.root().content
+            page = _root_content(self.main, _Request())
 
         self.assertNotIn('id="wifiQr"', page)
         self.assertIn("PASSWORD WI-FI BELUM DIKONFIGURASI", page)
@@ -477,13 +481,82 @@ class StudentQrAccessTests(unittest.TestCase):
         self.assertNotIn(test_password, json.dumps(status))
 
 
+class ParticipantPortalTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.main = _load_main()
+
+    def test_hotspot_client_gets_only_participant_actions_without_admin_content(self):
+        test_password = "TEST-ONLY-WIFI-VALUE"
+        with mock.patch.dict(
+            self.main.os.environ,
+            {"ASTH_WIFI_PASSWORD": test_password},
+            clear=False,
+        ):
+            page = _root_content(
+                self.main,
+                _Request(host="10.42.0.1", client="10.42.0.20"),
+            )
+
+        self.assertIn("ASTH Learning Portal", page)
+        self.assertIn("MASUK LEARNING HUB", page)
+        self.assertIn('href="/learn/"', page)
+        self.assertIn("BUKA JELLYFIN", page)
+        self.assertIn('href="http://10.42.0.1:8096"', page)
+        for forbidden in (
+            test_password,
+            "Password:",
+            "AKSES PELAJAR / QR",
+            'id="studentQrDialog"',
+            "Cockpit",
+            "ROG / SSH",
+            "Perkhidmatan",
+            "CPU",
+            "Memori RAM",
+            "Storan Sistem",
+            "LAN IP",
+            "Graf aktiviti rangkaian",
+            "WireGuard",
+            "ITUNAS",
+            "Uptime Kuma",
+            "/api/hub-status",
+            "/api/itunas-control",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, page)
+
+    def test_lan_client_jellyfin_link_uses_current_hostname(self):
+        page = _root_content(
+            self.main,
+            _Request(host="192.168.100.187", client="192.168.100.42"),
+        )
+
+        self.assertIn('href="/learn/"', page)
+        self.assertIn('href="http://192.168.100.187:8096"', page)
+
+    def test_health_console_requires_loopback_host_and_loopback_client(self):
+        cases = (
+            ("127.0.0.1", "127.0.0.1", True),
+            ("localhost", "127.0.0.1", True),
+            ("[::1]:80", "::1", True),
+            ("127.0.0.1", "10.42.0.20", False),
+            ("10.42.0.1", "127.0.0.1", False),
+        )
+
+        for host, client, is_local in cases:
+            with self.subTest(host=host, client=client):
+                page = _root_content(self.main, _Request(host=host, client=client))
+                self.assertEqual("ASTH Health Console" in page, is_local)
+                self.assertEqual("ASTH Learning Portal" in page, not is_local)
+
+
 class DashboardVisualTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.main = _load_main()
 
     def test_dashboard_text_and_status_colours_meet_accessible_contrast(self):
-        page = self.main.root().content
+        page = _root_content(self.main, _Request())
         variables = dict(re.findall(r"--([a-z]+):\s*(#[0-9a-fA-F]{6})", page))
 
         def luminance(colour):
