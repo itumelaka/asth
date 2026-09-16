@@ -1218,9 +1218,13 @@ LEARNING_PAGE = """
 
             <article class="module">
                 <div class="icon">&#129370;</div>
-                <h3>Pengendalian Telur Bernas</h3>
-                <p>Pengenalan praktikal kepada pemerhatian dan pengendalian asas telur bernas.</p>
-                <span class="coming">AKAN DATANG</span>
+                <span class="available">LIVE</span>
+                <h3>Pengendalian Telur Sajian &amp; Telur Tetasan</h3>
+                <p>Kutip, asing, gred, label dan rekod telur berdasarkan kandungan C05 yang disahkan.</p>
+                <div class="module-meta">
+                    <span>8 bahagian</span><span>Interaktif</span><span>Offline</span>
+                </div>
+                <a class="module-action" href="/learn/packs/pengendalian-telur/">MULA</a>
             </article>
         </section>
 
@@ -2094,6 +2098,415 @@ BIOSECURITY_PACK_PAGE = """
 """
 
 
+EGG_HANDLING_PACK_PAGE = """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengendalian Telur Sajian &amp; Telur Tetasan | ASTH Learning Hub</title>
+    <style>
+""" + LEARNING_SUBPAGE_STYLE + """
+    .pack-meta, .method-grid, .category-list, .record-grid {
+        display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px;
+    }
+    .pack-meta span, .method-grid span, .category-list span {
+        padding: 8px 11px; border: 2px solid var(--line); border-radius: 999px;
+        color: var(--dark); background: #edf4ff; font-size: .78rem; font-weight: 850;
+    }
+    .pack-intro { background: linear-gradient(145deg, #fff2b7, #ffd275); }
+    .pack-intro p { color: #51421f; }
+    .source-note, .scope-note, .official-note {
+        margin-top: 14px; padding: 13px 15px; border: 2px solid #8f6e17;
+        border-radius: 14px; color: #43350e; background: #fff8d9;
+        font-size: .84rem; font-weight: 750; line-height: 1.5;
+    }
+    .scope-note { border-color: #4678bd; color: #173f75; background: #e8f2ff; }
+    .official-note { border-color: #49617f; color: #233a58; background: #eef3fa; }
+    .pack-section {
+        margin-top: 18px; padding: clamp(19px, 4vw, 28px); border: 3px solid #9fb6d8;
+        border-radius: 23px; background: #ffffff; box-shadow: var(--shadow);
+    }
+    .section-kicker {
+        margin: 0 0 6px; color: #245bc5; font-size: .72rem; font-weight: 900;
+        letter-spacing: .08em; text-transform: uppercase;
+    }
+    .pack-section h2 { margin: 0 0 10px; font-size: clamp(1.3rem, 3vw, 1.75rem); }
+    .pack-section > p { color: var(--muted); line-height: 1.6; }
+    .content-grid, .egg-sort-grid {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+        margin-top: 16px;
+    }
+    .content-card, .egg-sort-card {
+        padding: 17px; border: 2px solid #a9bddb; border-radius: 18px; background: #f7faff;
+    }
+    .content-card h3, .egg-sort-card h3 { margin: 0 0 8px; color: #17335b; font-size: 1rem; }
+    .content-card p, .egg-sort-card p { margin: 0; color: #415979; line-height: 1.5; }
+    .category-list { margin-bottom: 18px; }
+    .egg-sort-grid { grid-template-columns: 1fr; }
+    .egg-sort-options {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px;
+    }
+    .pack-button, .egg-sort-choice {
+        min-height: 48px; padding: 11px 13px; border: 0; border-radius: 13px;
+        color: white; background: #225fcf; box-shadow: 0 4px 0 #123c8e;
+        font: inherit; font-size: .78rem; font-weight: 900; cursor: pointer;
+    }
+    .pack-button.secondary { color: #17335b; background: #d8e6fb; box-shadow: 0 4px 0 #9ab3d8; }
+    .feedback { min-height: 24px; margin: 13px 0 0; color: #17335b; font-weight: 850; line-height: 1.45; }
+    .grade-wrap { overflow-x: auto; margin-top: 16px; }
+    .grade-table { width: 100%; border-collapse: collapse; min-width: 430px; }
+    .grade-table caption {
+        margin-bottom: 9px; color: #174c33; font-weight: 900; text-align: left;
+    }
+    .grade-table th, .grade-table td { padding: 11px; border: 2px solid #9fb6d8; text-align: left; }
+    .grade-table th { color: white; background: #245bc5; }
+    .grade-table td { color: #263f61; background: #f8faff; }
+    .record-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .record-grid span {
+        padding: 12px 8px; border: 2px solid #a9bddb; border-radius: 14px;
+        color: #263f61; background: #f7faff; font-size: .8rem; font-weight: 850; text-align: center;
+    }
+    .quiz-question {
+        margin: 15px 0 0; padding: 16px; border: 2px solid #afc1dc;
+        border-radius: 17px; background: #f8faff;
+    }
+    .quiz-question legend { padding: 0 4px; color: #17335b; font-weight: 850; line-height: 1.4; }
+    .quiz-question label { display: block; margin-top: 9px; color: #334d70; line-height: 1.4; }
+    .quiz-question input { width: 19px; height: 19px; margin-right: 8px; vertical-align: middle; accent-color: #225fcf; }
+    .quiz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
+    .completion { border-color: #33865d; background: linear-gradient(145deg, #e1f7e9, #c5efd5); }
+    .completion p { color: #274f39; }
+    @media (max-width: 760px) {
+        .content-grid { grid-template-columns: 1fr; }
+        .egg-sort-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 430px) {
+        .learning-page { width: min(100% - 20px, 980px); padding-top: 10px; }
+        .pack-section { padding: 17px; }
+        .egg-sort-options, .record-grid { grid-template-columns: 1fr; }
+        .egg-sort-choice { min-height: 52px; }
+    }
+    </style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">ASTH Learning Pack</p>
+                    <h1>Pengendalian Telur Sajian &amp; Telur Tetasan</h1>
+                    <div class="pack-meta"><span>8 bahagian</span><span>Interaktif</span><span>Offline</span></div>
+                </div>
+            </div>
+            <a class="learning-back" href="/learn/">&#8592; Learning Hub</a>
+        </header>
+
+        <section class="learning-panel pack-intro">
+            <p class="section-kicker">01 Kenali C05</p>
+            <h2>Laksana Pengendalian Telur Poltri</h2>
+            <p>Pack ini memperkenalkan kutipan telur sajian, penggredan telur sajian dan kutipan telur tetasan.</p>
+            <div class="source-note">Diadaptasi daripada WIM A014-006-3:2022-C05 — Laksana Pengendalian Telur Poltri.</div>
+            <div class="scope-note">Skop sumber merangkumi telur sajian dan telur tetasan. Modul ini tidak menentukan kesuburan telur.</div>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">02 Telur Sajian &amp; Telur Tetasan</p>
+            <h2>Kenali dua kegunaan telur dalam C05</h2>
+            <div class="content-grid">
+                <article class="content-card">
+                    <h3>Telur Sajian</h3>
+                    <p>Telur sajian ialah telur poltri yang dihasilkan untuk kegunaan manusia. Ia umumnya dihasilkan oleh poltri betina penelur tanpa pejantan dan tidak digunakan untuk penetasan.</p>
+                </article>
+                <article class="content-card">
+                    <h3>Telur Tetasan</h3>
+                    <p>Telur tetasan ialah telur poltri yang mempunyai embrio hidup sesuai untuk dieram bagi menghasilkan anak poltri.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="pack-section" id="egg-sorting-activity">
+            <p class="section-kicker">03 Kutip dan Asingkan</p>
+            <h2>Persediaan dan pengasingan telur</h2>
+            <p>Kutipan boleh dilakukan secara manual, semi-automatik atau automatik. Sediakan tray dan troli sebelum kutipan serta kendalikan telur dengan cermat.</p>
+            <div class="method-grid"><span>Manual</span><span>Semi-automatik</span><span>Automatik</span></div>
+            <div class="category-list" aria-label="Kategori pengasingan telur">
+                <span>MENEPATI PIAWAIAN</span><span>KOTOR</span><span>RETAK / PECAH</span>
+                <span>ABNORMAL</span><span>SAIZ TIDAK MENEPATI</span><span>WARNA TIDAK MENEPATI</span>
+            </div>
+            <h3>ASINGKAN TELUR</h3>
+            <p>Pilih kategori yang sepadan dengan setiap senario. Maklum balas diberikan serta-merta dan tidak disimpan.</p>
+            <div class="egg-sort-grid">
+                <article class="egg-sort-card" data-egg-scenario="1" data-answer="standard">
+                    <h3>Senario 1</h3>
+                    <p>Telur tidak menunjukkan ciri kotor, retak atau pecah, abnormal, saiz tidak menepati atau warna tidak menepati baka.</p>
+                    <div class="egg-sort-options">
+                        <button class="egg-sort-choice" type="button" data-value="standard">MENEPATI PIAWAIAN</button>
+                        <button class="egg-sort-choice" type="button" data-value="dirty">KOTOR</button>
+                        <button class="egg-sort-choice" type="button" data-value="cracked">RETAK / PECAH</button>
+                        <button class="egg-sort-choice" type="button" data-value="abnormal">ABNORMAL</button>
+                        <button class="egg-sort-choice" type="button" data-value="size">SAIZ TIDAK MENEPATI</button>
+                        <button class="egg-sort-choice" type="button" data-value="colour">WARNA TIDAK MENEPATI</button>
+                    </div>
+                    <p class="feedback" id="eggSortFeedback1" role="status" aria-live="polite"></p>
+                </article>
+                <article class="egg-sort-card" data-egg-scenario="2" data-answer="dirty">
+                    <h3>Senario 2</h3>
+                    <p>Cangkerang mempunyai kekotoran seperti najis atau darah.</p>
+                    <div class="egg-sort-options">
+                        <button class="egg-sort-choice" type="button" data-value="standard">MENEPATI PIAWAIAN</button>
+                        <button class="egg-sort-choice" type="button" data-value="dirty">KOTOR</button>
+                        <button class="egg-sort-choice" type="button" data-value="cracked">RETAK / PECAH</button>
+                        <button class="egg-sort-choice" type="button" data-value="abnormal">ABNORMAL</button>
+                        <button class="egg-sort-choice" type="button" data-value="size">SAIZ TIDAK MENEPATI</button>
+                        <button class="egg-sort-choice" type="button" data-value="colour">WARNA TIDAK MENEPATI</button>
+                    </div>
+                    <p class="feedback" id="eggSortFeedback2" role="status" aria-live="polite"></p>
+                </article>
+                <article class="egg-sort-card" data-egg-scenario="3" data-answer="cracked">
+                    <h3>Senario 3</h3>
+                    <p>Cangkerang telur pecah atau mempunyai keretakan.</p>
+                    <div class="egg-sort-options">
+                        <button class="egg-sort-choice" type="button" data-value="standard">MENEPATI PIAWAIAN</button>
+                        <button class="egg-sort-choice" type="button" data-value="dirty">KOTOR</button>
+                        <button class="egg-sort-choice" type="button" data-value="cracked">RETAK / PECAH</button>
+                        <button class="egg-sort-choice" type="button" data-value="abnormal">ABNORMAL</button>
+                        <button class="egg-sort-choice" type="button" data-value="size">SAIZ TIDAK MENEPATI</button>
+                        <button class="egg-sort-choice" type="button" data-value="colour">WARNA TIDAK MENEPATI</button>
+                    </div>
+                    <p class="feedback" id="eggSortFeedback3" role="status" aria-live="polite"></p>
+                </article>
+                <article class="egg-sort-card" data-egg-scenario="4" data-answer="abnormal">
+                    <h3>Senario 4</h3>
+                    <p>Telur berbentuk herot atau lonjong, bercangkerang menggerutu atau bercangkerang lembut.</p>
+                    <div class="egg-sort-options">
+                        <button class="egg-sort-choice" type="button" data-value="standard">MENEPATI PIAWAIAN</button>
+                        <button class="egg-sort-choice" type="button" data-value="dirty">KOTOR</button>
+                        <button class="egg-sort-choice" type="button" data-value="cracked">RETAK / PECAH</button>
+                        <button class="egg-sort-choice" type="button" data-value="abnormal">ABNORMAL</button>
+                        <button class="egg-sort-choice" type="button" data-value="size">SAIZ TIDAK MENEPATI</button>
+                        <button class="egg-sort-choice" type="button" data-value="colour">WARNA TIDAK MENEPATI</button>
+                    </div>
+                    <p class="feedback" id="eggSortFeedback4" role="status" aria-live="polite"></p>
+                </article>
+                <article class="egg-sort-card" data-egg-scenario="5" data-answer="size">
+                    <h3>Senario 5</h3>
+                    <p>Saiz telur terlalu besar atau terlalu kecil berbanding saiz yang ditetapkan.</p>
+                    <div class="egg-sort-options">
+                        <button class="egg-sort-choice" type="button" data-value="standard">MENEPATI PIAWAIAN</button>
+                        <button class="egg-sort-choice" type="button" data-value="dirty">KOTOR</button>
+                        <button class="egg-sort-choice" type="button" data-value="cracked">RETAK / PECAH</button>
+                        <button class="egg-sort-choice" type="button" data-value="abnormal">ABNORMAL</button>
+                        <button class="egg-sort-choice" type="button" data-value="size">SAIZ TIDAK MENEPATI</button>
+                        <button class="egg-sort-choice" type="button" data-value="colour">WARNA TIDAK MENEPATI</button>
+                    </div>
+                    <p class="feedback" id="eggSortFeedback5" role="status" aria-live="polite"></p>
+                </article>
+                <article class="egg-sort-card" data-egg-scenario="6" data-answer="colour">
+                    <h3>Senario 6</h3>
+                    <p>Warna cangkerang tidak menepati warna telur bagi baka berkenaan.</p>
+                    <div class="egg-sort-options">
+                        <button class="egg-sort-choice" type="button" data-value="standard">MENEPATI PIAWAIAN</button>
+                        <button class="egg-sort-choice" type="button" data-value="dirty">KOTOR</button>
+                        <button class="egg-sort-choice" type="button" data-value="cracked">RETAK / PECAH</button>
+                        <button class="egg-sort-choice" type="button" data-value="abnormal">ABNORMAL</button>
+                        <button class="egg-sort-choice" type="button" data-value="size">SAIZ TIDAK MENEPATI</button>
+                        <button class="egg-sort-choice" type="button" data-value="colour">WARNA TIDAK MENEPATI</button>
+                    </div>
+                    <p class="feedback" id="eggSortFeedback6" role="status" aria-live="polite"></p>
+                </article>
+            </div>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">04 Susun, Gred dan Label</p>
+            <h2>Kendalikan telur secara teratur</h2>
+            <p>Susun telur dengan bahagian runcing atau kecil di bawah dan bahagian besar di atas. Semak jumlah diterima terhadap rekod penghantaran sebelum penerimaan disahkan.</p>
+            <div class="grade-wrap">
+                <table class="grade-table">
+                    <caption>Menurut C05 — penggredan telur sajian berdasarkan berat</caption>
+                    <thead><tr><th>Gred</th><th>Berat menurut C05</th></tr></thead>
+                    <tbody>
+                        <tr><td>AA</td><td>AA: 70 g dan ke atas</td></tr>
+                        <tr><td>A</td><td>A: 64–69 g</td></tr>
+                        <tr><td>B</td><td>B: 59–63 g</td></tr>
+                        <tr><td>C</td><td>C: 54–58 g</td></tr>
+                        <tr><td>D</td><td>D: 49–53 g</td></tr>
+                        <tr><td>E</td><td>E: 48 g dan ke bawah</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="content-grid">
+                <article class="content-card"><h3>Pendianan</h3><p>Pendianan digunakan untuk mengesan retak halus dan kulit nipis.</p></article>
+                <article class="content-card"><h3>Label</h3><p>Label telur sajian mengikut gred. Maklumat minimum telur tetasan ialah tarikh, baka dan nombor reban.</p></article>
+            </div>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">05 Simpan, Hantar dan Rekod</p>
+            <h2>Lindungi telur dan lengkapkan rekod</h2>
+            <p>Tray membantu mengurangkan kerosakan semasa pengendalian, pengangkutan dan penyimpanan. Pindahkan serta hantar telur dengan cermat.</p>
+            <div class="record-grid" aria-label="Jenis rekod C05">
+                <span>Pengeluaran</span><span>Penerimaan</span><span>Penggredan</span><span>Penyimpanan</span><span>Penghantaran</span>
+            </div>
+            <p>Catat rekod pengeluaran, penerimaan, penggredan, penyimpanan dan penghantaran. Patuhi kebersihan ladang, keselamatan tempat kerja dan prinsip 5S.</p>
+        </section>
+
+        <section class="pack-section">
+            <p class="section-kicker">06 Telur Tetasan</p>
+            <h2>Kutip, asing, label dan hantar</h2>
+            <p>Kutip telur tetasan dengan berhati-hati. Asingkan telur kotor, retak atau pecah, abnormal, terlalu besar atau kecil serta warna yang tidak menepati baka.</p>
+            <div class="content-grid">
+                <article class="content-card"><h3>Susunan</h3><p>Letakkan bahagian runcing atau kecil di bawah dan bahagian besar di atas.</p></article>
+                <article class="content-card"><h3>Label minimum</h3><p>Catat tarikh, baka dan nombor reban.</p></article>
+                <article class="content-card"><h3>Penghantaran</h3><p>Hantar telur ke pusat penetasan menggunakan pengangkutan yang bersih dan dikendalikan dengan cermat.</p></article>
+                <article class="content-card"><h3>Amalan kerja</h3><p>Patuhi kebersihan ladang, keselamatan tempat kerja dan prinsip 5S.</p></article>
+            </div>
+        </section>
+
+        <section class="pack-section" id="egg-quiz">
+            <p class="section-kicker">07 Semak Kefahaman</p>
+            <h2>Quick Quiz C05</h2>
+            <p>Jawab lima soalan. Maklum balas dan skor hanya dipaparkan pada peranti ini dan tidak disimpan.</p>
+            <form id="eggQuiz">
+                <fieldset class="quiz-question" data-quiz-question="1">
+                    <legend>1. Apakah tujuan kutipan telur penelur dilakukan?</legend>
+                    <label><input type="radio" name="eggQ1" value="A">A. Dimasak untuk disajikan</label>
+                    <label><input type="radio" name="eggQ1" value="B" data-correct="true">B. Dijual sebagai telur sajian</label>
+                    <label><input type="radio" name="eggQ1" value="C">C. Ditetaskan untuk dijadikan anak</label>
+                    <label><input type="radio" name="eggQ1" value="D">D. Dicampurkan dalam makanan ayam</label>
+                    <p class="feedback" id="eggQuizFeedback1" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="2">
+                    <legend>2. Apakah fungsi utama tray telur?</legend>
+                    <label><input type="radio" name="eggQ2" value="A">A. Memudahkan telur diangkat untuk simpan dan jualan</label>
+                    <label><input type="radio" name="eggQ2" value="B">B. Mencepatkan pengiraan jumlah telur</label>
+                    <label><input type="radio" name="eggQ2" value="C">C. Memudahkan telur diikat mengikut kehendak pelanggan</label>
+                    <label><input type="radio" name="eggQ2" value="D" data-correct="true">D. Menghalang telur rosak semasa pengendalian, pengangkutan dan penyimpanan</label>
+                    <p class="feedback" id="eggQuizFeedback2" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="3">
+                    <legend>3. Bagaimanakah telur bercangkerang retak halus dan bercangkerang nipis dikenal pasti?</legend>
+                    <label><input type="radio" name="eggQ3" value="A">A. Pemilihan</label>
+                    <label><input type="radio" name="eggQ3" value="B" data-correct="true">B. Pendianan</label>
+                    <label><input type="radio" name="eggQ3" value="C">C. Penggredan</label>
+                    <label><input type="radio" name="eggQ3" value="D">D. Pembersihan</label>
+                    <p class="feedback" id="eggQuizFeedback3" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="4">
+                    <legend>4. Menurut C05, berapakah berat telur Gred AA?</legend>
+                    <label><input type="radio" name="eggQ4" value="A">A. 66 g atau lebih</label>
+                    <label><input type="radio" name="eggQ4" value="B">B. 68 g atau lebih</label>
+                    <label><input type="radio" name="eggQ4" value="C" data-correct="true">C. 70 g atau lebih</label>
+                    <label><input type="radio" name="eggQ4" value="D">D. 72 g atau lebih</label>
+                    <p class="feedback" id="eggQuizFeedback4" role="status" aria-live="polite"></p>
+                </fieldset>
+                <fieldset class="quiz-question" data-quiz-question="5">
+                    <legend>5. Apakah maklumat minimum yang perlu dilabel menggunakan pensel pada telur tetasan?</legend>
+                    <label><input type="radio" name="eggQ5" value="A">A. Baka, warna dan tarikh</label>
+                    <label><input type="radio" name="eggQ5" value="B">B. Baka, warna dan nombor reban</label>
+                    <label><input type="radio" name="eggQ5" value="C" data-correct="true">C. Baka, tarikh dan nombor reban</label>
+                    <label><input type="radio" name="eggQ5" value="D">D. Warna, tarikh dan nombor reban</label>
+                    <p class="feedback" id="eggQuizFeedback5" role="status" aria-live="polite"></p>
+                </fieldset>
+                <div class="quiz-actions">
+                    <button class="pack-button" type="submit">SEMAK SKOR</button>
+                    <button class="pack-button secondary" id="retryEggQuiz" type="button">CUBA SEMULA</button>
+                </div>
+                <p class="feedback" id="eggQuizResult" role="status" aria-live="polite">Keputusan akan memaparkan jumlah betul daripada 5.</p>
+            </form>
+        </section>
+
+        <section class="pack-section completion">
+            <p class="section-kicker">08 Tamat Pack</p>
+            <h2>Anda telah selesai Learning Pack: Pengendalian Telur Sajian &amp; Telur Tetasan.</h2>
+            <p>Anda telah melihat kutipan, pengasingan, penggredan, pelabelan dan rekod telur berdasarkan kandungan C05 yang disahkan.</p>
+            <div class="source-note">Sumber: WIM A014-006-3:2022-C05</div>
+            <div class="official-note">Bahan ASTH ini ialah adaptasi microlearning untuk pengukuhan pengetahuan. Ia bukan bahan WIM rasmi dan tidak menggantikan latihan amali, SOP tempat kerja atau penilaian kompetensi rasmi.</div>
+            <a class="learning-action" href="/learn/">KEMBALI KE LEARNING HUB</a>
+        </section>
+
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
+    </main>
+
+    <script>
+        (() => {
+            const sortExplanations = {
+                standard: "C05 tidak menyenaraikan ciri tidak menepati piawaian pada telur ini.",
+                dirty: "C05 mengasingkan telur yang mempunyai kekotoran seperti najis atau darah.",
+                cracked: "C05 mengasingkan telur yang pecah atau mempunyai keretakan.",
+                abnormal: "C05 menyenaraikan bentuk herot, lonjong, menggerutu atau cangkerang lembut sebagai abnormal.",
+                size: "C05 mengasingkan telur yang terlalu besar atau terlalu kecil.",
+                colour: "C05 mengasingkan warna cangkerang yang tidak menepati warna telur bagi baka berkenaan."
+            };
+
+            document.querySelectorAll(".egg-sort-choice").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const card = button.closest(".egg-sort-card");
+                    const feedback = document.getElementById(`eggSortFeedback${card.dataset.eggScenario}`);
+                    const answer = card.dataset.answer;
+                    feedback.textContent = button.dataset.value === answer
+                        ? `Betul. ${sortExplanations[answer]}`
+                        : `Belum tepat. ${sortExplanations[answer]}`;
+                });
+            });
+
+            const quiz = document.getElementById("eggQuiz");
+            const result = document.getElementById("eggQuizResult");
+            const retry = document.getElementById("retryEggQuiz");
+            const quizExplanations = {
+                1: "Jawapan C05 ialah dijual sebagai telur sajian.",
+                2: "Tray menghalang kerosakan semasa pengendalian, pengangkutan dan penyimpanan.",
+                3: "Pendianan mengesan retak halus dan kulit nipis.",
+                4: "Menurut C05, Gred AA ialah 70 g dan ke atas.",
+                5: "Label minimum ialah baka, tarikh dan nombor reban."
+            };
+
+            quiz.querySelectorAll('input[type="radio"]').forEach((choice) => {
+                choice.addEventListener("change", () => {
+                    const question = choice.closest("[data-quiz-question]").dataset.quizQuestion;
+                    const feedback = document.getElementById(`eggQuizFeedback${question}`);
+                    feedback.textContent = choice.dataset.correct === "true"
+                        ? `Betul. ${quizExplanations[question]}`
+                        : `Belum tepat. ${quizExplanations[question]}`;
+                });
+            });
+
+            quiz.addEventListener("submit", (event) => {
+                event.preventDefault();
+                let answered = 0;
+                let correct = 0;
+                for (let number = 1; number <= 5; number += 1) {
+                    const choice = quiz.querySelector(`input[name="eggQ${number}"]:checked`);
+                    if (choice) {
+                        answered += 1;
+                        if (choice.dataset.correct === "true") correct += 1;
+                    }
+                }
+                result.textContent = answered === 5
+                    ? `Anda menjawab ${correct} daripada 5 dengan betul.`
+                    : `Sila jawab semua soalan. ${answered} daripada 5 telah dijawab.`;
+            });
+
+            retry.addEventListener("click", () => {
+                quiz.reset();
+                quiz.querySelectorAll(".quiz-question .feedback").forEach((feedback) => {
+                    feedback.textContent = "";
+                });
+                result.textContent = "Keputusan dikosongkan. Cuba semula semua lima soalan.";
+            });
+        })();
+    </script>
+</body>
+</html>
+"""
+
+
 def _request_hostname(request):
     raw_host = request.headers.get("host", "").strip().lower()
     if raw_host.startswith("[") and "]" in raw_host:
@@ -2140,6 +2553,11 @@ def learning_pack_reban_brooder() -> HTMLResponse:
 @app.get("/learn/packs/biosekuriti/", response_class=HTMLResponse)
 def learning_pack_biosecurity() -> HTMLResponse:
     return HTMLResponse(content=BIOSECURITY_PACK_PAGE)
+
+
+@app.get("/learn/packs/pengendalian-telur/", response_class=HTMLResponse)
+def learning_pack_egg_handling() -> HTMLResponse:
+    return HTMLResponse(content=EGG_HANDLING_PACK_PAGE)
 
 
 @app.get("/learn/modules/", response_class=HTMLResponse)

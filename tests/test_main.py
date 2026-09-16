@@ -569,11 +569,14 @@ class LearningHubTests(unittest.TestCase):
     def setUpClass(cls):
         cls.main = _load_main()
 
-    def test_learning_hub_lists_three_packs_with_first_two_available(self):
+    def test_learning_hub_lists_all_three_packs_as_available(self):
         page = _route_content(self.main, "/learn/")
         pack_one = _learning_card(page, "Persediaan Reban &amp; Brooder")
         pack_two = _learning_card(page, "Biosekuriti Asas Ladang")
-        pack_three = _learning_card(page, "Pengendalian Telur Bernas")
+        pack_three = _learning_card(
+            page,
+            "Pengendalian Telur Sajian &amp; Telur Tetasan",
+        )
 
         self.assertIn("ASTH Learning Hub", page)
         self.assertIn("Kandungan latihan ringkas, praktikal dan offline-first", page)
@@ -589,9 +592,144 @@ class LearningHubTests(unittest.TestCase):
         self.assertIn('href="/learn/packs/biosekuriti/"', pack_two)
         self.assertIn("MULA", pack_two)
         self.assertNotIn("AKAN DATANG", pack_two)
-        self.assertIn("AKAN DATANG", pack_three)
+        self.assertIn("LIVE", pack_three)
+        self.assertIn("Offline", pack_three)
+        self.assertIn('href="/learn/packs/pengendalian-telur/"', pack_three)
+        self.assertIn("MULA", pack_three)
+        self.assertNotIn("AKAN DATANG", pack_three)
+        self.assertNotIn("Pengendalian Telur Bernas", page)
         self.assertNotIn('href="/learn/modules/', page)
         self.assertNotIn("Asas Penternakan Ayam Kampung", page)
+
+    def test_egg_handling_pack_returns_200_with_validated_eight_section_structure(self):
+        handler = next(
+            (
+                function
+                for method, route, function in self.main.app.routes
+                if method == "GET" and route == "/learn/packs/pengendalian-telur/"
+            ),
+            None,
+        )
+
+        self.assertIsNotNone(handler)
+        response = handler()
+        self.assertEqual(response.status_code, 200)
+        page = response.content
+
+        for heading in (
+            "01 Kenali C05",
+            "02 Telur Sajian &amp; Telur Tetasan",
+            "03 Kutip dan Asingkan",
+            "04 Susun, Gred dan Label",
+            "05 Simpan, Hantar dan Rekod",
+            "06 Telur Tetasan",
+            "07 Semak Kefahaman",
+            "08 Tamat Pack",
+        ):
+            with self.subTest(heading=heading):
+                self.assertIn(heading, page)
+
+        for content in (
+            "Telur sajian ialah telur poltri yang dihasilkan untuk kegunaan manusia.",
+            "Telur tetasan ialah telur poltri yang mempunyai embrio hidup sesuai untuk dieram bagi menghasilkan anak poltri.",
+            "manual, semi-automatik atau automatik",
+            "bahagian runcing atau kecil di bawah dan bahagian besar di atas",
+            "Pendianan digunakan untuk mengesan retak halus dan kulit nipis.",
+            "Menurut C05",
+            "AA: 70 g dan ke atas",
+            "E: 48 g dan ke bawah",
+            "tarikh, baka dan nombor reban",
+        ):
+            with self.subTest(content=content):
+                self.assertIn(content, page)
+
+    def test_egg_handling_pack_has_six_scenario_offline_sorting_activity(self):
+        page = _route_content(self.main, "/learn/packs/pengendalian-telur/")
+
+        self.assertIn("ASINGKAN TELUR", page)
+        self.assertEqual(page.count('class="egg-sort-card"'), 6)
+        for number, category in enumerate(
+            (
+                "MENEPATI PIAWAIAN",
+                "KOTOR",
+                "RETAK / PECAH",
+                "ABNORMAL",
+                "SAIZ TIDAK MENEPATI",
+                "WARNA TIDAK MENEPATI",
+            ),
+            start=1,
+        ):
+            with self.subTest(number=number):
+                self.assertIn(f'data-egg-scenario="{number}"', page)
+                self.assertIn(category, page)
+                self.assertIn(f'id="eggSortFeedback{number}"', page)
+
+        self.assertNotIn("fetch(", page)
+        self.assertNotIn("localStorage", page)
+        self.assertNotIn("sessionStorage", page)
+
+    def test_egg_handling_pack_has_five_question_quiz_feedback_score_and_retry(self):
+        page = _route_content(self.main, "/learn/packs/pengendalian-telur/")
+        questions = (
+            "Apakah tujuan kutipan telur penelur dilakukan?",
+            "Apakah fungsi utama tray telur?",
+            "Bagaimanakah telur bercangkerang retak halus dan bercangkerang nipis dikenal pasti?",
+            "Menurut C05, berapakah berat telur Gred AA?",
+            "Apakah maklumat minimum yang perlu dilabel menggunakan pensel pada telur tetasan?",
+        )
+
+        for number, question in enumerate(questions, start=1):
+            with self.subTest(number=number):
+                self.assertIn(question, page)
+                self.assertEqual(page.count(f'name="eggQ{number}"'), 4)
+                self.assertIn(f'id="eggQuizFeedback{number}"', page)
+
+        self.assertIn("SEMAK SKOR", page)
+        self.assertIn("CUBA SEMULA", page)
+        self.assertIn("daripada 5", page)
+        self.assertIn('id="retryEggQuiz"', page)
+
+    def test_egg_handling_pack_has_required_attribution_scope_and_disclaimer(self):
+        page = _route_content(self.main, "/learn/packs/pengendalian-telur/")
+
+        self.assertIn(
+            "Diadaptasi daripada WIM A014-006-3:2022-C05 — Laksana Pengendalian Telur Poltri.",
+            page,
+        )
+        self.assertIn(
+            "Skop sumber merangkumi telur sajian dan telur tetasan. Modul ini tidak menentukan kesuburan telur.",
+            page,
+        )
+        self.assertIn(
+            "Bahan ASTH ini ialah adaptasi microlearning untuk pengukuhan pengetahuan. Ia bukan bahan WIM rasmi dan tidak menggantikan latihan amali, SOP tempat kerja atau penilaian kompetensi rasmi.",
+            page,
+        )
+        self.assertIn("Sumber: WIM A014-006-3:2022-C05", page)
+
+    def test_egg_handling_pack_excludes_unapproved_and_administrative_content(self):
+        page = _route_content(self.main, "/learn/packs/pengendalian-telur/")
+
+        for forbidden in (
+            "Pengendalian Telur Bernas",
+            "fumigasi",
+            "formalin",
+            "potassium permanganate",
+            "floor egg",
+            "FIFO",
+            "LIFO",
+            "kelembapan",
+            "standard semasa",
+            "piawaian antarabangsa",
+            "Cockpit",
+            "ROG / SSH",
+            "WireGuard",
+            "ITUNAS",
+            "Uptime Kuma",
+            "/api/hub-status",
+            "/api/itunas-control",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, page)
 
     def test_biosecurity_pack_contains_validated_structure_and_source_identity(self):
         page = _route_content(self.main, "/learn/packs/biosekuriti/")
