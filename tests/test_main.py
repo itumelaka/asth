@@ -77,6 +77,20 @@ def _root_content(module, request):
     return module.root(request).content
 
 
+def _route_content(module, path):
+    handler = next(
+        (function for method, route, function in module.app.routes
+         if method == "GET" and route == path),
+        None,
+    )
+    return handler().content if handler else ""
+
+
+def _learning_card(page, title):
+    cards = re.findall(r'<article class="module"[^>]*>[\s\S]*?</article>', page)
+    return next((card for card in cards if f"<h3>{title}</h3>" in card), "")
+
+
 class DashboardHealthTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -548,6 +562,75 @@ class ParticipantPortalTests(unittest.TestCase):
                 page = _root_content(self.main, _Request(host=host, client=client))
                 self.assertEqual("ASTH Health Console" in page, is_local)
                 self.assertEqual("ASTH Learning Portal" in page, not is_local)
+
+
+class LearningHubTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.main = _load_main()
+
+    def test_learning_hub_activates_only_the_module_card(self):
+        page = _route_content(self.main, "/learn/")
+        module_card = _learning_card(page, "Modul Pembelajaran")
+        video_card = _learning_card(page, "Video Latihan")
+        interactive_card = _learning_card(page, "Latihan Interaktif")
+
+        self.assertIn("ASTH Learning Hub", page)
+        self.assertIn('href="/learn/modules/"', module_card)
+        self.assertIn("LIHAT MODUL", module_card)
+        self.assertNotIn("Akan Datang", module_card)
+        self.assertIn("Akan Datang", video_card)
+        self.assertIn("Akan Datang", interactive_card)
+
+    def test_module_listing_contains_the_single_demo_module(self):
+        page = _route_content(self.main, "/learn/modules/")
+
+        self.assertIn("Asas Penternakan Ayam Kampung", page)
+        self.assertIn("MULA BELAJAR", page)
+        self.assertIn('href="/learn/modules/ayam-kampung/"', page)
+        for topic in ("Pengenalan", "Reban", "Pemakanan", "Kesihatan", "Biosekuriti"):
+            with self.subTest(topic=topic):
+                self.assertIn(topic, page)
+
+    def test_demo_module_contains_all_topics_and_completion_action(self):
+        page = _route_content(self.main, "/learn/modules/ayam-kampung/")
+
+        self.assertIn("Asas Penternakan Ayam Kampung", page)
+        self.assertIn("kandungan demo", page.lower())
+        for topic in ("Pengenalan", "Reban", "Pemakanan", "Kesihatan", "Biosekuriti"):
+            with self.subTest(topic=topic):
+                self.assertRegex(page, rf"<h2[^>]*>{topic}</h2>")
+        self.assertIn("TAMAT MODUL", page)
+        self.assertIn('href="/learn/modules/"', page)
+
+    def test_learning_pages_do_not_expose_administrative_content(self):
+        test_password = "TEST-ONLY-WIFI-VALUE"
+        with mock.patch.dict(
+            self.main.os.environ,
+            {"ASTH_WIFI_PASSWORD": test_password},
+            clear=False,
+        ):
+            pages = (
+                _route_content(self.main, "/learn/"),
+                _route_content(self.main, "/learn/modules/"),
+                _route_content(self.main, "/learn/modules/ayam-kampung/"),
+            )
+
+        for page in pages:
+            for forbidden in (
+                test_password,
+                "Password:",
+                "Cockpit",
+                "ROG / SSH",
+                "WireGuard",
+                "ITUNAS",
+                "Uptime Kuma",
+                "/api/hub-status",
+                "/api/itunas-control",
+                'id="studentQrDialog"',
+            ):
+                with self.subTest(forbidden=forbidden):
+                    self.assertNotIn(forbidden, page)
 
 
 class DashboardVisualTests(unittest.TestCase):

@@ -1082,6 +1082,20 @@ LEARNING_PAGE = """
             font-weight: 900;
         }
 
+        .module-action {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 14px;
+            border: 3px solid white;
+            border-radius: 13px;
+            color: white;
+            background: linear-gradient(145deg, #4e88fa, #2862dd);
+            box-shadow: 3px 4px 0 #1749b5;
+            font-size: 0.76rem;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
         footer {
             margin-top: 24px;
             color: var(--muted);
@@ -1162,7 +1176,7 @@ LEARNING_PAGE = """
                     Koleksi modul kursus dan bahan rujukan untuk peserta
                     latihan.
                 </p>
-                <span class="coming">Akan Datang</span>
+                <a class="module-action" href="/learn/modules/">LIHAT MODUL</a>
             </article>
 
             <article class="module">
@@ -1189,6 +1203,209 @@ LEARNING_PAGE = """
         <footer>
             ASTH Learning Hub &#183; Institut Teknologi Unggas
         </footer>
+    </main>
+</body>
+</html>
+"""
+
+
+LEARNING_SUBPAGE_STYLE = """
+    :root {
+        --blue: #3977f6; --dark: #17335b; --muted: #657792;
+        --yellow: #ffd45c; --line: #aec3e4;
+        --shadow: 6px 8px 0 rgba(41, 83, 151, .12), 10px 14px 24px rgba(47, 74, 119, .14);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+        min-height: 100vh; margin: 0; color: var(--dark);
+        background: radial-gradient(circle at 10% 8%, #fff0a7, transparent 24%),
+                    radial-gradient(circle at 90% 10%, #b9eaff, transparent 25%),
+                    linear-gradient(145deg, #dfeaff, #f9fbff 50%, #dcecff);
+        font-family: Inter, ui-rounded, "Segoe UI", Arial, sans-serif;
+    }
+    .learning-page { width: min(980px, calc(100% - 28px)); margin: auto; padding: 22px 0 32px; }
+    .learning-header {
+        display: flex; align-items: center; justify-content: space-between; gap: 18px;
+        padding: 18px 20px; border: 3px solid white; border-radius: 25px;
+        background: rgba(250, 252, 255, .94); box-shadow: var(--shadow);
+    }
+    .learning-brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .learning-logos { display: flex; gap: 7px; flex: 0 0 auto; }
+    .learning-logo {
+        display: grid; width: 58px; height: 58px; padding: 6px; place-items: center;
+        border: 3px solid white; border-radius: 17px; background: white;
+        box-shadow: 4px 5px 0 rgba(38, 88, 170, .16);
+    }
+    .learning-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .learning-eyebrow {
+        margin: 0 0 4px; color: var(--blue); font-size: .7rem; font-weight: 900;
+        letter-spacing: .1em; text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.2rem); }
+    .learning-subtitle { margin: 5px 0 0; color: var(--muted); font-size: .84rem; }
+    .learning-back, .learning-action {
+        display: inline-block; padding: 11px 15px; border: 3px solid white;
+        border-radius: 14px; color: white; background: linear-gradient(145deg, #4e88fa, #2862dd);
+        box-shadow: 4px 5px 0 #1749b5; font-size: .8rem; font-weight: 900;
+        text-align: center; text-decoration: none;
+    }
+    .learning-panel {
+        margin-top: 18px; padding: clamp(20px, 4vw, 30px); border: 3px solid white;
+        border-radius: 25px; background: rgba(249, 252, 255, .96); box-shadow: var(--shadow);
+    }
+    .demo-label {
+        display: inline-block; margin-bottom: 10px; padding: 7px 10px; border-radius: 999px;
+        color: #795b12; background: #fff1bd; font-size: .7rem; font-weight: 900;
+    }
+    .learning-panel p { color: var(--muted); line-height: 1.6; }
+    .topic-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 20px; padding: 0; list-style: none; }
+    .topic-list li, .topic-list a {
+        padding: 8px 10px; border: 2px solid var(--line); border-radius: 999px;
+        color: var(--dark); background: #edf4ff; font-size: .78rem; font-weight: 800;
+        text-decoration: none;
+    }
+    .lesson-section {
+        margin-top: 14px; padding: 20px; border: 2px solid var(--line);
+        border-radius: 18px; background: white;
+    }
+    .lesson-section h2 { margin: 0 0 8px; font-size: 1.25rem; }
+    .lesson-section p { margin: 0; }
+    .end-panel { text-align: center; background: linear-gradient(145deg, #ffe591, #ffc870); }
+    .end-panel p { color: #665842; }
+    footer { margin-top: 22px; color: var(--muted); font-size: .74rem; text-align: center; }
+    @media (max-width: 650px) {
+        .learning-header { align-items: stretch; flex-direction: column; }
+        .learning-brand { align-items: flex-start; flex-direction: column; }
+        .learning-back, .learning-action { width: 100%; }
+        .learning-logo { width: 54px; height: 54px; }
+    }
+"""
+
+
+MODULE_LIST_PAGE = """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul Pembelajaran ASTH</title>
+    <style>
+""" + LEARNING_SUBPAGE_STYLE + """
+    .module-card h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 3vw, 1.8rem); }
+</style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">ASTH Learning Hub</p>
+                    <h1>Modul Pembelajaran</h1>
+                    <p class="learning-subtitle">Koleksi modul latihan yang tersedia secara tempatan.</p>
+                </div>
+            </div>
+            <a class="learning-back" href="/learn/">&#8592; Kembali</a>
+        </header>
+
+        <article class="learning-panel module-card">
+            <span class="demo-label">MODUL DEMO</span>
+            <h2>Asas Penternakan Ayam Kampung</h2>
+            <p>
+                Pengenalan ringkas kepada perkara asas yang akan diperhatikan dalam pembelajaran
+                ayam kampung. Kandungan ini ialah demonstrasi struktur modul ASTH.
+            </p>
+            <ul class="topic-list" aria-label="Topik modul">
+                <li>Pengenalan</li><li>Reban</li><li>Pemakanan</li>
+                <li>Kesihatan</li><li>Biosekuriti</li>
+            </ul>
+            <a class="learning-action" href="/learn/modules/ayam-kampung/">MULA BELAJAR</a>
+        </article>
+
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
+    </main>
+</body>
+</html>
+"""
+
+
+DEMO_MODULE_PAGE = """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asas Penternakan Ayam Kampung</title>
+    <style>
+""" + LEARNING_SUBPAGE_STYLE + """
+</style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">Modul Demo ASTH</p>
+                    <h1>Asas Penternakan Ayam Kampung</h1>
+                    <p class="learning-subtitle">Bahan pengenalan ringkas untuk demonstrasi Learning Hub.</p>
+                </div>
+            </div>
+            <a class="learning-back" href="/learn/modules/">&#8592; Senarai Modul</a>
+        </header>
+
+        <section class="learning-panel">
+            <span class="demo-label">KANDUNGAN DEMO</span>
+            <p>
+                Modul ini menunjukkan susunan pembelajaran Phase Learning 1. Kandungannya bersifat
+                umum dan bukan pengganti latihan rasmi atau nasihat veterinar yang berkelayakan.
+            </p>
+            <nav aria-label="Topik modul">
+                <ul class="topic-list">
+                    <li><a href="#pengenalan">Pengenalan</a></li>
+                    <li><a href="#reban">Reban</a></li>
+                    <li><a href="#pemakanan">Pemakanan</a></li>
+                    <li><a href="#kesihatan">Kesihatan</a></li>
+                    <li><a href="#biosekuriti">Biosekuriti</a></li>
+                </ul>
+            </nav>
+
+            <section id="pengenalan" class="lesson-section">
+                <h2>Pengenalan</h2>
+                <p>Kenali tujuan modul, istilah asas dan perkara umum yang akan diperhatikan sepanjang pembelajaran.</p>
+            </section>
+            <section id="reban" class="lesson-section">
+                <h2>Reban</h2>
+                <p>Perhatikan secara umum ruang, pengudaraan, kebersihan dan keselamatan persekitaran ternakan.</p>
+            </section>
+            <section id="pemakanan" class="lesson-section">
+                <h2>Pemakanan</h2>
+                <p>Pelajari kepentingan air bersih, rutin pemakanan dan pemerhatian penggunaan makanan secara umum.</p>
+            </section>
+            <section id="kesihatan" class="lesson-section">
+                <h2>Kesihatan</h2>
+                <p>Amalkan pemerhatian harian, catat perubahan dan dapatkan bantuan berkelayakan apabila diperlukan.</p>
+            </section>
+            <section id="biosekuriti" class="lesson-section">
+                <h2>Biosekuriti</h2>
+                <p>Fahami konsep asas kebersihan, kawalan pergerakan dan penggunaan peralatan mengikut prosedur rasmi.</p>
+            </section>
+
+            <section class="lesson-section end-panel">
+                <h2>Tamat Pembelajaran Demo</h2>
+                <p>Anda telah sampai ke penghujung modul demonstrasi ini. Kemajuan belum disimpan dalam Phase Learning 1.</p>
+                <a class="learning-action" href="/learn/modules/">TAMAT MODUL</a>
+            </section>
+        </section>
+
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
     </main>
 </body>
 </html>
@@ -1231,6 +1448,16 @@ def root(request: Request) -> HTMLResponse:
 @app.get("/learn/", response_class=HTMLResponse)
 def learning_hub() -> HTMLResponse:
     return HTMLResponse(content=LEARNING_PAGE)
+
+
+@app.get("/learn/modules/", response_class=HTMLResponse)
+def learning_modules() -> HTMLResponse:
+    return HTMLResponse(content=MODULE_LIST_PAGE)
+
+
+@app.get("/learn/modules/ayam-kampung/", response_class=HTMLResponse)
+def learning_module_ayam_kampung() -> HTMLResponse:
+    return HTMLResponse(content=DEMO_MODULE_PAGE)
 
 
 @app.get("/health")
