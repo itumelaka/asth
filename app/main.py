@@ -1196,7 +1196,7 @@ LEARNING_PAGE = """
         <section class="modules">
             <article class="module">
                 <div class="icon">&#128736;</div>
-                <span class="available">TERSEDIA</span>
+                <span class="available">LIVE</span>
                 <h3>Persediaan Reban &amp; Brooder</h3>
                 <p>Persediaan asas sebelum anak ayam tiba dan pemerhatian awal selepas kemasukan.</p>
                 <div class="module-meta">
@@ -1731,6 +1731,575 @@ REBAN_BROODER_PACK_PAGE = """
 """
 
 
+BIOSECURITY_SCENARIOS = (
+    {
+        "id": 1,
+        "title": "Pelawat ke kawasan produksi",
+        "situation": (
+            "Seorang pelawat yang mempunyai urusan kerja meminta masuk terus ke "
+            "kawasan produksi. Apakah tindakan paling sesuai?"
+        ),
+        "preferred_choice": "A",
+        "choices": (
+            {
+                "id": "A",
+                "text": (
+                    "Sahkan kebenaran pengurusan, gunakan laluan terkawal dan pastikan "
+                    "pelawat melalui proses nyah kuman sebelum memasuki kawasan produksi."
+                ),
+                "feedback": (
+                    "Kemasukan pelawat perlu dikawal, dan semua personel mesti melalui "
+                    "proses nyah kuman sebelum memasuki kawasan produksi."
+                ),
+            },
+            {
+                "id": "B",
+                "text": "Benarkan masuk kerana lawatan itu hanya mengambil masa yang singkat.",
+                "feedback": (
+                    "Tempoh lawatan tidak menghapuskan keperluan kawalan kemasukan dan "
+                    "nyah kuman."
+                ),
+            },
+            {
+                "id": "C",
+                "text": (
+                    "Minta pelawat memakai pakaian ladang sahaja tanpa melalui proses "
+                    "nyah kuman."
+                ),
+                "feedback": (
+                    "Pakaian ladang tidak menggantikan proses nyah kuman yang diwajibkan "
+                    "sebelum memasuki kawasan produksi."
+                ),
+            },
+            {
+                "id": "D",
+                "text": "Benarkan pelawat menggunakan mana-mana pintu yang paling dekat.",
+                "feedback": (
+                    "Pergerakan pelawat perlu menggunakan laluan keluar-masuk yang dikawal."
+                ),
+            },
+        ),
+        "preferred_action": (
+            "Sahkan kebenaran, gunakan laluan terkawal dan lengkapkan proses nyah kuman."
+        ),
+        "source_short": "C08/KP(1/3), Muka Surat 2, 3 dan 7/23.",
+    },
+    {
+        "id": 2,
+        "title": "Kenderaan berlumpur",
+        "situation": (
+            "Sebuah kenderaan tiba dengan lumpur yang jelas pada tayar dan badan bawah. "
+            "Apakah tindakan paling sesuai sebelum kenderaan memasuki kawasan produksi?"
+        ),
+        "preferred_choice": "C",
+        "choices": (
+            {
+                "id": "A",
+                "text": "Teruskan perjalanan kerana kenderaan akan melalui semburan nyah kuman.",
+                "feedback": (
+                    "Kotoran yang kelihatan perlu dibersihkan sebelum proses nyah kuman."
+                ),
+            },
+            {
+                "id": "B",
+                "text": "Sembur bahan nyah kuman terus ke atas lumpur tanpa pembersihan.",
+                "feedback": (
+                    "C08 menerangkan bahawa pembersihan permukaan daripada lumpur penting "
+                    "sebelum nyah kuman."
+                ),
+            },
+            {
+                "id": "C",
+                "text": (
+                    "Bersihkan lumpur terlebih dahulu, kemudian jalankan proses nyah kuman "
+                    "kenderaan mengikut SOP ladang dengan perhatian pada bahagian luar dan tayar."
+                ),
+                "feedback": (
+                    "Pembersihan awal membantu proses nyah kuman, dan C08 memberi perhatian "
+                    "kepada bahagian luar serta tayar kenderaan."
+                ),
+            },
+            {
+                "id": "D",
+                "text": "Bersihkan cermin hadapan sahaja dan teruskan perjalanan.",
+                "feedback": (
+                    "Bahagian luar dan tayar, bukan cermin sahaja, merupakan fokus proses "
+                    "nyah kuman kenderaan."
+                ),
+            },
+        ),
+        "preferred_action": (
+            "Bersihkan lumpur dahulu, kemudian lengkapkan nyah kuman kenderaan mengikut SOP."
+        ),
+        "source_short": "C08/KP(1/3), Muka Surat 5 dan 17-18/23.",
+    },
+    {
+        "id": 3,
+        "title": "Tanda aktiviti makhluk perosak",
+        "situation": (
+            "Tanda aktiviti makhluk perosak ditemui berhampiran reban, tetapi jenis dan "
+            "lokasinya belum dikenal pasti dengan jelas. Apakah tindakan paling sesuai?"
+        ),
+        "preferred_choice": "A",
+        "choices": (
+            {
+                "id": "A",
+                "text": (
+                    "Kenal pasti jenis dan lokasi, laksanakan kaedah kawalan yang diluluskan "
+                    "mengikut SOP, gunakan PPE apabila diperlukan, kemudian rekod dan pantau tindakan."
+                ),
+                "feedback": (
+                    "Kawalan perlu disesuaikan dengan jenis dan lokasi makhluk perosak, dan "
+                    "rekod diperlukan untuk menilai keberkesanan program."
+                ),
+            },
+            {
+                "id": "B",
+                "text": "Abaikan dahulu sehingga bilangan makhluk perosak bertambah.",
+                "feedback": (
+                    "Matlamat C08 ialah mencegah kemasukan, pembiakan dan pertambahan "
+                    "makhluk perosak."
+                ),
+            },
+            {
+                "id": "C",
+                "text": (
+                    "Gunakan bahan kawalan dengan segera tanpa mengenal pasti jenis atau lokasi."
+                ),
+                "feedback": (
+                    "Kaedah kawalan perlu disesuaikan dengan makhluk perosak dan lokasinya "
+                    "serta dilaksanakan mengikut prosedur kerja."
+                ),
+            },
+            {
+                "id": "D",
+                "text": "Alihkan tanda yang ditemui tanpa membuat rekod atau tindakan susulan.",
+                "feedback": (
+                    "Mengalihkan tanda sahaja tidak melaksanakan kawalan atau menyediakan "
+                    "rekod untuk pemantauan keberkesanan."
+                ),
+            },
+        ),
+        "preferred_action": (
+            "Kenal pasti jenis dan lokasi, ikut SOP kawalan, gunakan PPE apabila diperlukan "
+            "serta rekod tindakan."
+        ),
+        "source_short": "C08/KP(2/3), Muka Surat 2-4 dan 31/34.",
+    },
+    {
+        "id": 4,
+        "title": "Parit tersumbat",
+        "situation": (
+            "Semasa pemeriksaan, parit didapati dipenuhi rumput, sampah dan tanah sehingga "
+            "aliran air terhalang. Apakah tindakan paling sesuai?"
+        ),
+        "preferred_choice": "C",
+        "choices": (
+            {
+                "id": "A",
+                "text": "Tunggu sehingga berlaku banjir sebelum mengambil tindakan.",
+                "feedback": (
+                    "Penyelenggaraan berkala bertujuan memastikan air sentiasa dapat mengalir "
+                    "tanpa halangan."
+                ),
+            },
+            {
+                "id": "B",
+                "text": (
+                    "Buang sampah yang kelihatan sahaja tetapi biarkan perangkap sampah tersumbat."
+                ),
+                "feedback": (
+                    "Perangkap sampah juga perlu dibersihkan supaya air dapat mengalir dengan sempurna."
+                ),
+            },
+            {
+                "id": "C",
+                "text": (
+                    "Kenal pasti kawasan, gunakan PPE yang sesuai, buang rumput, sampah dan "
+                    "tanah yang menghalang aliran, bersihkan perangkap sampah dan rekod kerja."
+                ),
+                "feedback": (
+                    "Langkah ini sepadan dengan prosedur penyelenggaraan parit C08 dan "
+                    "memulihkan pengaliran air."
+                ),
+            },
+            {
+                "id": "D",
+                "text": "Tolak semua sampah lebih jauh ke dalam parit.",
+                "feedback": (
+                    "Sampah perlu dikeluarkan, bukan dipindahkan ke bahagian lain dalam "
+                    "sistem perparitan."
+                ),
+            },
+        ),
+        "preferred_action": (
+            "Buang semua halangan, bersihkan perangkap sampah dan rekod kerja penyelenggaraan."
+        ),
+        "source_short": "C08/KP(3/3), Muka Surat 2-3, 8 dan 20-21/23.",
+    },
+    {
+        "id": 5,
+        "title": "Pagar rosak",
+        "situation": (
+            "Sebahagian pagar sempadan berlubang dan condong. Tumbuhan menjalar menutup "
+            "kawasan pemeriksaan, dan terdapat lubang tanah di bawah pagar. Apakah tindakan "
+            "paling sesuai?"
+        ),
+        "preferred_choice": "A",
+        "choices": (
+            {
+                "id": "A",
+                "text": (
+                    "Periksa kawasan, bersihkan tumbuhan, tampal pagar berlubang, tegakkan "
+                    "bahagian yang roboh atau condong, timbus lubang tanah dan rekod kerja."
+                ),
+                "feedback": (
+                    "C08 menetapkan pemulihan pagar dan kawasan sekeliling supaya pagar "
+                    "kembali berfungsi dengan sempurna."
+                ),
+            },
+            {
+                "id": "B",
+                "text": "Gunakan lubang itu sebagai laluan sementara untuk pekerja.",
+                "feedback": (
+                    "Pagar membantu memastikan pergerakan menggunakan laluan yang dikhaskan "
+                    "dan terkawal."
+                ),
+            },
+            {
+                "id": "C",
+                "text": "Bersihkan tumbuhan sahaja tanpa membaiki pagar atau lubang tanah.",
+                "feedback": (
+                    "Pembersihan memudahkan pemeriksaan tetapi kerosakan pagar dan lubang "
+                    "masih perlu dibaiki."
+                ),
+            },
+            {
+                "id": "D",
+                "text": "Catat kerosakan tetapi tangguhkan semua tindakan pembaikan.",
+                "feedback": (
+                    "Pagar berlubang atau roboh perlu ditampal atau ditegakkan semula; rekod "
+                    "sahaja tidak memulihkan kawalan."
+                ),
+            },
+        ),
+        "preferred_action": (
+            "Pulihkan pagar dan kawasan sekeliling, kemudian rekod kerja penyelenggaraan."
+        ),
+        "source_short": "C08/KP(3/3), Muka Surat 4-5, 9 dan 21/23.",
+    },
+)
+
+
+def render_scenario_learning_page(config, scenarios):
+    def escaped(value):
+        return html.escape(str(value), quote=True)
+
+    total = len(scenarios)
+    progress_steps = "".join(
+        (
+            f'<li data-progress-step="{number}"'
+            + (' class="current" aria-current="step"' if number == 1 else "")
+            + f'><span>{number}</span></li>'
+        )
+        for number in range(1, total + 1)
+    )
+    cards = []
+    for index, scenario in enumerate(scenarios):
+        number = index + 1
+        scenario_id = escaped(scenario["id"])
+        choices = []
+        for choice in scenario["choices"]:
+            preferred = choice["id"] == scenario["preferred_choice"]
+            choices.append(
+                '<label class="scenario-choice">'
+                f'<input type="radio" name="scenario-{scenario_id}" '
+                f'value="{escaped(choice["id"])}" '
+                f'data-preferred="{str(preferred).lower()}" '
+                f'data-feedback="{escaped(choice["feedback"])}">'
+                f'<span><strong>{escaped(choice["id"])}.</strong> '
+                f'{escaped(choice["text"])}</span>'
+                "</label>"
+            )
+
+        if number < total:
+            navigation = (
+                '<button class="scenario-next" type="button" disabled>'
+                "SETERUSNYA</button>"
+            )
+        else:
+            navigation = (
+                '<button class="scenario-finish" type="button" disabled>'
+                "SELESAI</button>"
+            )
+
+        hidden = "" if number == 1 else " hidden"
+        cards.append(
+            f'<article class="scenario-card" data-scenario-id="{scenario_id}"{hidden}>'
+            f'<p class="section-kicker">Situasi {number}</p>'
+            f'<h2 id="scenarioTitle-{scenario_id}" tabindex="-1">{escaped(scenario["title"])}</h2>'
+            f'<fieldset aria-describedby="scenarioFeedback-{scenario_id}">'
+            f'<legend>{escaped(scenario["situation"])}</legend>'
+            + "".join(choices)
+            + "</fieldset>"
+            f'<p class="scenario-feedback" id="scenarioFeedback-{scenario_id}" '
+            'role="status" aria-live="polite"></p>'
+            f'<div class="preferred-action" id="preferredAction-{scenario_id}" hidden>'
+            f'<strong>Tindakan pilihan:</strong> {escaped(scenario["preferred_action"])}</div>'
+            f'<p class="scenario-source">Sumber: {escaped(scenario["source_short"])}</p>'
+            f'<div class="scenario-actions">{navigation}</div>'
+            "</article>"
+        )
+
+    return (
+        """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"""
+        + escaped(config["title"])
+        + """ | ASTH Learning Hub</title>
+    <style>
+"""
+        + LEARNING_SUBPAGE_STYLE
+        + """
+    [hidden] { display: none !important; }
+    .scenario-intro { background: linear-gradient(145deg, #fff2b7, #ffd275); }
+    .scenario-intro p { color: #51421f; }
+    .scenario-progress-shell {
+        margin-top: 18px; padding: 16px 18px; border: 3px solid white;
+        border-radius: 20px; background: rgba(249, 252, 255, .96); box-shadow: var(--shadow);
+    }
+    .scenario-progress-text { margin: 0 0 12px; color: #17335b; font-weight: 900; }
+    .scenario-steps {
+        display: grid; grid-template-columns: repeat(var(--scenario-count), minmax(0, 1fr)); gap: 8px;
+        margin: 0; padding: 0; list-style: none;
+    }
+    .scenario-steps li { height: 9px; border-radius: 999px; background: #c7d6ec; }
+    .scenario-steps li.current, .scenario-steps li.complete { background: #225fcf; }
+    .scenario-steps span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .scenario-card {
+        margin-top: 18px; padding: clamp(20px, 4vw, 30px); border: 3px solid #9fb6d8;
+        border-radius: 23px; background: white; box-shadow: var(--shadow);
+    }
+    .scenario-card h2 { margin: 0 0 13px; font-size: clamp(1.35rem, 3vw, 1.85rem); }
+    .scenario-card fieldset { margin: 0; padding: 0; border: 0; }
+    .scenario-card legend {
+        width: 100%; margin-bottom: 15px; padding: 0; color: #334d70;
+        font-size: 1rem; font-weight: 750; line-height: 1.55;
+    }
+    .scenario-choice {
+        display: flex; gap: 11px; align-items: flex-start; margin-top: 10px; padding: 14px;
+        border: 2px solid #aac0df; border-radius: 15px; color: #243b5b;
+        background: #f6f9ff; line-height: 1.45; cursor: pointer;
+    }
+    .scenario-choice:hover { border-color: #3977f6; background: #edf4ff; }
+    .scenario-choice:focus-within { outline: 4px solid #ffd45c; outline-offset: 2px; }
+    .scenario-choice input {
+        flex: 0 0 auto; width: 21px; height: 21px; margin: 1px 0 0;
+        accent-color: #225fcf;
+    }
+    .scenario-feedback {
+        min-height: 27px; margin: 15px 0 0; padding: 12px 14px; border-radius: 13px;
+        color: #17335b; background: #edf4ff; font-weight: 850; line-height: 1.5;
+    }
+    .scenario-feedback:empty { padding: 0; background: transparent; }
+    .scenario-feedback[data-state="correct"] { color: #17472f; background: #e5f8ed; }
+    .scenario-feedback[data-state="incorrect"] { color: #744514; background: #fff0cc; }
+    .preferred-action {
+        margin-top: 11px; padding: 12px 14px; border-left: 5px solid #278b58;
+        color: #17472f; background: #e5f8ed; line-height: 1.5;
+    }
+    .scenario-source { margin: 13px 0 0; color: #657792; font-size: .78rem; line-height: 1.45; }
+    .scenario-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+    .scenario-next, .scenario-finish, .scenario-retry {
+        min-height: 46px; padding: 11px 18px; border: 0; border-radius: 13px;
+        color: white; background: #225fcf; box-shadow: 0 4px 0 #123c8e;
+        font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer;
+    }
+    .scenario-next:disabled, .scenario-finish:disabled { opacity: .48; cursor: not-allowed; }
+    .scenario-next:focus-visible, .scenario-finish:focus-visible, .scenario-retry:focus-visible,
+    .learning-back:focus-visible, .learning-action:focus-visible {
+        outline: 4px solid #ffd45c; outline-offset: 3px;
+    }
+    .scenario-completion {
+        border-color: #33865d; background: linear-gradient(145deg, #e1f7e9, #c5efd5);
+    }
+    .scenario-completion p { color: #274f39; }
+    .completion-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    .source-note {
+        margin-top: 16px; padding: 13px 15px; border: 2px solid #9a7619;
+        border-radius: 14px; color: #43350e; background: #fff8d9;
+        font-size: .82rem; font-weight: 750; line-height: 1.5;
+    }
+    @media (max-width: 420px) {
+        .learning-page { width: min(100% - 20px, 980px); padding-top: 10px; }
+        .scenario-card { padding: 17px; }
+        .scenario-actions, .completion-actions { display: grid; }
+        .scenario-next, .scenario-finish, .scenario-retry, .completion-actions .learning-action { width: 100%; }
+    }
+    </style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">ASTH Scenario Learning</p>
+                    <h1>"""
+        + escaped(config["title"])
+        + """</h1>
+                    <p class="learning-subtitle">Scenario Learning &mdash; """
+        + escaped(config["pack_title"])
+        + """</p>
+                </div>
+            </div>
+            <a class="learning-back" href=""" + '"' + escaped(config["back_url"]) + '"' + """>&#8592; """ + escaped(config["back_label"]) + """</a>
+        </header>
+
+        <section class="learning-panel scenario-intro">
+            <p class="section-kicker">Latihan berpandu</p>
+            <h2>Pilih tindakan paling sesuai</h2>
+            <p>Teliti setiap situasi, pilih satu tindakan dan baca maklum balas serta-merta. Aktiviti ini tidak memaparkan skor dan kemajuan tidak disimpan.</p>
+        </section>
+
+        <div id="scenarioActivity">
+            <div class="scenario-progress-shell" aria-label="Kemajuan aktiviti">
+                <p class="scenario-progress-text" id="scenarioProgress">Senario 1 daripada """
+        + str(total)
+        + """</p>
+                <ol class="scenario-steps" style="--scenario-count: """
+        + str(total)
+        + """;">"""
+        + progress_steps
+        + """</ol>
+            </div>
+"""
+        + "".join(cards)
+        + """
+        </div>
+
+        <section class="learning-panel scenario-completion" id="scenarioCompletion" hidden>
+            <p class="section-kicker">Aktiviti selesai</p>
+            <h2 id="scenarioCompletionTitle" tabindex="-1">""" + escaped(config["completion_title"]) + """</h2>
+            <p>""" + escaped(config["completion_message"]) + """</p>
+            <div class="source-note">""" + escaped(config["source_attribution"]).replace("—", "&mdash;") + """</div>
+            <div class="completion-actions">
+                <button class="scenario-retry" id="retryScenarios" type="button">ULANG AKTIVITI</button>
+                <a class="learning-action" href=""" + '"' + escaped(config["back_url"]) + '"' + """>""" + escaped(config["completion_back_label"]) + """</a>
+            </div>
+        </section>
+
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
+    </main>
+
+    <script>
+        (() => {
+            const activity = document.getElementById("scenarioActivity");
+            const cards = Array.from(document.querySelectorAll(".scenario-card"));
+            const progress = document.getElementById("scenarioProgress");
+            const steps = Array.from(document.querySelectorAll("[data-progress-step]"));
+            const completion = document.getElementById("scenarioCompletion");
+            const completionTitle = document.getElementById("scenarioCompletionTitle");
+            const retry = document.getElementById("retryScenarios");
+
+            function showScenario(index, moveFocus = true) {
+                cards.forEach((card, cardIndex) => {
+                    card.hidden = cardIndex !== index;
+                });
+                progress.textContent = `Senario ${index + 1} daripada ${cards.length}`;
+                steps.forEach((step, stepIndex) => {
+                    step.classList.toggle("complete", stepIndex < index);
+                    step.classList.toggle("current", stepIndex === index);
+                    if (stepIndex === index) {
+                        step.setAttribute("aria-current", "step");
+                    } else {
+                        step.removeAttribute("aria-current");
+                    }
+                });
+                if (moveFocus) {
+                    cards[index].querySelector("h2").focus();
+                }
+            }
+
+            cards.forEach((card, index) => {
+                const feedback = card.querySelector(".scenario-feedback");
+                const preferredAction = card.querySelector(".preferred-action");
+                const actionButton = card.querySelector(".scenario-next, .scenario-finish");
+
+                card.querySelectorAll('input[type="radio"]').forEach((choice) => {
+                    choice.addEventListener("change", () => {
+                        const preferred = choice.dataset.preferred === "true";
+                        feedback.textContent = preferred
+                            ? `✓ Betul. ${choice.dataset.feedback}`
+                            : `! Belum tepat. ${choice.dataset.feedback}`;
+                        feedback.dataset.state = preferred ? "correct" : "incorrect";
+                        preferredAction.hidden = false;
+                        actionButton.disabled = false;
+                    });
+                });
+
+                if (actionButton.classList.contains("scenario-next")) {
+                    actionButton.addEventListener("click", () => showScenario(index + 1));
+                } else {
+                    actionButton.addEventListener("click", () => {
+                        activity.hidden = true;
+                        completion.hidden = false;
+                        completionTitle.focus();
+                    });
+                }
+            });
+
+            retry.addEventListener("click", () => {
+                cards.forEach((card) => {
+                    card.querySelectorAll('input[type="radio"]').forEach((choice) => {
+                        choice.checked = false;
+                    });
+                    const feedback = card.querySelector(".scenario-feedback");
+                    feedback.textContent = "";
+                    delete feedback.dataset.state;
+                    card.querySelector(".preferred-action").hidden = true;
+                    card.querySelector(".scenario-next, .scenario-finish").disabled = true;
+                });
+                completion.hidden = true;
+                activity.hidden = false;
+                showScenario(0);
+            });
+        })();
+    </script>
+</body>
+</html>
+"""
+    )
+
+
+BIOSECURITY_SCENARIO_PAGE = render_scenario_learning_page(
+    {
+        "title": "Audit Biosekuriti Ladang",
+        "pack_title": "Biosekuriti Asas Ladang",
+        "back_url": "/learn/packs/biosekuriti/",
+        "back_label": "Kembali ke Pack 2",
+        "completion_title": "Audit Biosekuriti Ladang selesai",
+        "completion_message": (
+            "Anda telah meneliti 5 situasi Audit Biosekuriti Ladang. Gunakan pemerhatian, "
+            "SOP ladang dan rekod kerja untuk menyokong tindakan biosekuriti yang konsisten."
+        ),
+        "source_attribution": (
+            "Diadaptasi daripada WIM A014-006-3:2022-C08 — "
+            "Laksana Sistem Biosekuriti Ladang Poltri."
+        ),
+        "completion_back_label": "KEMBALI KE PACK 2",
+    },
+    BIOSECURITY_SCENARIOS,
+)
+
+
 BIOSECURITY_PACK_PAGE = """
 <!DOCTYPE html>
 <html lang="ms">
@@ -1783,17 +2352,6 @@ BIOSECURITY_PACK_PAGE = """
         content: "\\2713"; display: grid; flex: 0 0 26px; width: 26px; height: 26px;
         place-items: center; border-radius: 50%; color: white; background: #147647;
         font-weight: 900;
-    }
-    .audit-grid { display: grid; gap: 13px; margin-top: 18px; }
-    .audit-card {
-        padding: 17px; border: 3px solid #8ba7cd; border-radius: 18px; background: #f7faff;
-    }
-    .audit-card h3 { margin: 0 0 7px; color: #17335b; font-size: 1rem; }
-    .audit-card p { color: #3b5375; line-height: 1.5; }
-    .audit-action[hidden] { display: none; }
-    .audit-action {
-        margin-top: 12px; padding: 13px; border: 2px solid #278b58; border-radius: 13px;
-        color: #17472f; background: #e5f8ed; font-weight: 800;
     }
     .pack-button {
         min-height: 46px; padding: 11px 17px; border: 0; border-radius: 13px;
@@ -1922,45 +2480,9 @@ BIOSECURITY_PACK_PAGE = """
 
         <section class="pack-section" id="audit-biosekuriti">
             <p class="section-kicker">06 Audit Biosekuriti Ladang</p>
-            <h2>Semak tindakan bagi setiap situasi</h2>
-            <p>Tekan butang pada setiap kad untuk melihat tindakan yang disokong oleh C08.</p>
-            <div class="audit-grid">
-                <article class="audit-card" data-audit-scenario="1">
-                    <h3>Situasi 1</h3>
-                    <p>Pelawat mahu memasuki kawasan produksi.</p>
-                    <button class="pack-button audit-reveal" type="button" data-target="auditAction1" data-feedback="auditFeedback1">LIHAT TINDAKAN</button>
-                    <div class="audit-action" id="auditAction1" hidden>Dapatkan kebenaran, gunakan laluan terkawal dan lalui proses nyah kuman.</div>
-                    <p class="feedback" id="auditFeedback1" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
-                </article>
-                <article class="audit-card" data-audit-scenario="2">
-                    <h3>Situasi 2</h3>
-                    <p>Tayar dan gerbang roda kenderaan mempunyai lumpur atau jerami.</p>
-                    <button class="pack-button audit-reveal" type="button" data-target="auditAction2" data-feedback="auditFeedback2">LIHAT TINDAKAN</button>
-                    <div class="audit-action" id="auditAction2" hidden>Bersihkan kotoran sebelum nyah kuman dan beri perhatian kepada roda serta bahagian bawah kenderaan.</div>
-                    <p class="feedback" id="auditFeedback2" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
-                </article>
-                <article class="audit-card" data-audit-scenario="3">
-                    <h3>Situasi 3</h3>
-                    <p>Tanda makhluk perosak ditemui dalam reban.</p>
-                    <button class="pack-button audit-reveal" type="button" data-target="auditAction3" data-feedback="auditFeedback3">LIHAT TINDAKAN</button>
-                    <div class="audit-action" id="auditAction3" hidden>Kenal pasti jenis dan lokasi, ikut proses kerja, gunakan PPE dan rekod tindakan.</div>
-                    <p class="feedback" id="auditFeedback3" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
-                </article>
-                <article class="audit-card" data-audit-scenario="4">
-                    <h3>Situasi 4</h3>
-                    <p>Parit dipenuhi rumput, sampah dan tanah.</p>
-                    <button class="pack-button audit-reveal" type="button" data-target="auditAction4" data-feedback="auditFeedback4">LIHAT TINDAKAN</button>
-                    <div class="audit-action" id="auditAction4" hidden>Pakai PPE, buang halangan, bersihkan perangkap sampah dan rekod kerja.</div>
-                    <p class="feedback" id="auditFeedback4" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
-                </article>
-                <article class="audit-card" data-audit-scenario="5">
-                    <h3>Situasi 5</h3>
-                    <p>Pagar berlubang, roboh dan terdapat lubang tanah.</p>
-                    <button class="pack-button audit-reveal" type="button" data-target="auditAction5" data-feedback="auditFeedback5">LIHAT TINDAKAN</button>
-                    <div class="audit-action" id="auditAction5" hidden>Tampal lubang, tegakkan pagar, timbus lubang tanah, bersihkan kawasan dan rekod kerja.</div>
-                    <p class="feedback" id="auditFeedback5" role="status" aria-live="polite">Maklum balas akan dipaparkan di sini.</p>
-                </article>
-            </div>
+            <h2>Latih keputusan melalui situasi ladang</h2>
+            <p>Teliti lima situasi biosekuriti, pilih tindakan paling sesuai dan terima maklum balas serta-merta.</p>
+            <a class="learning-action" href="/learn/packs/biosekuriti/scenario/">MULA AUDIT SENARIO</a>
         </section>
 
         <section class="pack-section" id="biosecurity-quiz">
@@ -2037,16 +2559,6 @@ BIOSECURITY_PACK_PAGE = """
 
     <script>
         (() => {
-            document.querySelectorAll(".audit-reveal").forEach((button) => {
-                button.addEventListener("click", () => {
-                    const action = document.getElementById(button.dataset.target);
-                    const feedback = document.getElementById(button.dataset.feedback);
-                    action.hidden = false;
-                    feedback.textContent = "Tindakan dipaparkan berdasarkan aliran kerja C08.";
-                    button.textContent = "TINDAKAN DIPAPARKAN";
-                });
-            });
-
             const quiz = document.getElementById("biosecurityQuiz");
             const result = document.getElementById("biosecurityQuizResult");
             const retry = document.getElementById("retryBiosecurityQuiz");
@@ -2553,6 +3065,11 @@ def learning_pack_reban_brooder() -> HTMLResponse:
 @app.get("/learn/packs/biosekuriti/", response_class=HTMLResponse)
 def learning_pack_biosecurity() -> HTMLResponse:
     return HTMLResponse(content=BIOSECURITY_PACK_PAGE)
+
+
+@app.get("/learn/packs/biosekuriti/scenario/", response_class=HTMLResponse)
+def learning_pack_biosecurity_scenario() -> HTMLResponse:
+    return HTMLResponse(content=BIOSECURITY_SCENARIO_PAGE)
 
 
 @app.get("/learn/packs/pengendalian-telur/", response_class=HTMLResponse)

@@ -580,7 +580,7 @@ class LearningHubTests(unittest.TestCase):
 
         self.assertIn("ASTH Learning Hub", page)
         self.assertIn("Kandungan latihan ringkas, praktikal dan offline-first", page)
-        self.assertIn("TERSEDIA", pack_one)
+        self.assertIn("LIVE", pack_one)
         self.assertIn("&plusmn;10 minit", pack_one)
         self.assertIn("Praktikal", pack_one)
         self.assertIn("Offline", pack_one)
@@ -769,27 +769,178 @@ class LearningHubTests(unittest.TestCase):
         self.assertIn("Diadaptasi untuk mikro-pembelajaran ASTH", page)
         self.assertIn('content: "\\2713"', page)
 
-    def test_biosecurity_pack_has_five_offline_audit_scenarios(self):
+    def test_biosecurity_pack_launches_dedicated_scenario_activity(self):
         page = _route_content(self.main, "/learn/packs/biosekuriti/")
 
-        self.assertEqual(page.count('class="audit-card"'), 5)
-        for number, scenario, expected_action in (
-            (1, "Pelawat mahu memasuki kawasan produksi.", "Dapatkan kebenaran, gunakan laluan terkawal dan lalui proses nyah kuman."),
-            (2, "Tayar dan gerbang roda kenderaan mempunyai lumpur atau jerami.", "Bersihkan kotoran sebelum nyah kuman dan beri perhatian kepada roda serta bahagian bawah kenderaan."),
-            (3, "Tanda makhluk perosak ditemui dalam reban.", "Kenal pasti jenis dan lokasi, ikut proses kerja, gunakan PPE dan rekod tindakan."),
-            (4, "Parit dipenuhi rumput, sampah dan tanah.", "Pakai PPE, buang halangan, bersihkan perangkap sampah dan rekod kerja."),
-            (5, "Pagar berlubang, roboh dan terdapat lubang tanah.", "Tampal lubang, tegakkan pagar, timbus lubang tanah, bersihkan kawasan dan rekod kerja."),
-        ):
-            with self.subTest(number=number):
-                self.assertIn(f'data-audit-scenario="{number}"', page)
-                self.assertIn(scenario, page)
-                self.assertIn(expected_action, page)
-                self.assertIn(f'id="auditFeedback{number}"', page)
+        self.assertIn("06 Audit Biosekuriti Ladang", page)
+        self.assertIn("MULA AUDIT SENARIO", page)
+        self.assertIn('href="/learn/packs/biosekuriti/scenario/"', page)
+        self.assertNotIn('class="audit-card"', page)
+        self.assertNotIn("LIHAT TINDAKAN", page)
 
-        self.assertIn("Maklum balas", page)
+    def test_biosecurity_scenario_route_has_ordered_five_step_flow(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/scenario/")
+
+        self.assertIn("Audit Biosekuriti Ladang", page)
+        self.assertIn("Scenario Learning &mdash; Biosekuriti Asas Ladang", page)
+        self.assertIn("Senario 1 daripada 5", page)
+        self.assertEqual(page.count('data-progress-step="'), 5)
+        self.assertEqual(page.count('class="scenario-card"'), 5)
+
+        positions = [
+            page.index(title)
+            for title in (
+                "Pelawat ke kawasan produksi",
+                "Kenderaan berlumpur",
+                "Tanda aktiviti makhluk perosak",
+                "Parit tersumbat",
+                "Pagar rosak",
+            )
+        ]
+        self.assertEqual(positions, sorted(positions))
+
+        self.assertEqual(page.count('class="scenario-next"'), 4)
+        self.assertEqual(page.count('class="scenario-finish"'), 1)
+        self.assertIn("SETERUSNYA", page)
+        self.assertIn("SELESAI", page)
+        self.assertIn("ULANG AKTIVITI", page)
+        self.assertIn("KEMBALI KE PACK 2", page)
+        self.assertGreaterEqual(
+            page.count('href="/learn/packs/biosekuriti/"'),
+            2,
+        )
+
+    def test_biosecurity_scenarios_have_accessible_choices_and_feedback(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/scenario/")
+        cards = re.findall(
+            r'<article class="scenario-card"[\s\S]*?</article>',
+            page,
+        )
+
+        self.assertEqual(len(cards), 5)
+        for number, card in enumerate(cards, start=1):
+            with self.subTest(number=number):
+                choices = re.findall(
+                    rf'<input type="radio" name="scenario-{number}"[^>]*>',
+                    card,
+                )
+                self.assertIn(len(choices), (3, 4))
+                self.assertEqual(
+                    sum('data-preferred="true"' in choice for choice in choices),
+                    1,
+                )
+                self.assertTrue(
+                    all(re.search(r'data-feedback="[^"]+"', choice) for choice in choices)
+                )
+                self.assertIn("<fieldset", card)
+                self.assertIn("<legend", card)
+                self.assertIn('role="status"', card)
+                self.assertIn('aria-live="polite"', card)
+
+    def test_biosecurity_scenario_page_is_offline_non_persistent_and_source_safe(self):
+        page = _route_content(self.main, "/learn/packs/biosekuriti/scenario/")
+
+        self.assertIn(
+            "Anda telah meneliti 5 situasi Audit Biosekuriti Ladang. "
+            "Gunakan pemerhatian, SOP ladang dan rekod kerja untuk menyokong "
+            "tindakan biosekuriti yang konsisten.",
+            page,
+        )
+        self.assertIn(
+            "Diadaptasi daripada WIM A014-006-3:2022-C08 &mdash; "
+            "Laksana Sistem Biosekuriti Ladang Poltri.",
+            page,
+        )
         self.assertNotIn("fetch(", page)
         self.assertNotIn("localStorage", page)
         self.assertNotIn("sessionStorage", page)
+        self.assertNotIn("<script src=", page)
+        self.assertNotRegex(page, r'(?:src|href)="https?://')
+
+        for forbidden in (
+            "Warfarin",
+            "Brodifacoum",
+            "dosage",
+            "chemical ratio",
+            "A014-003",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, page)
+
+    def test_scenario_renderer_reuses_custom_pack_copy_and_three_step_progress(self):
+        scenarios = (
+            {
+                "id": "alpha",
+                "title": "Situasi Alfa",
+                "situation": "Apakah tindakan untuk situasi alfa?",
+                "preferred_choice": "A",
+                "choices": (
+                    {"id": "A", "text": "Tindakan alfa.", "feedback": "Maklum balas alfa."},
+                ),
+                "preferred_action": "Pilih tindakan alfa.",
+                "source_short": "Sumber Alfa.",
+            },
+            {
+                "id": "beta",
+                "title": "Situasi Beta",
+                "situation": "Apakah tindakan untuk situasi beta?",
+                "preferred_choice": "A",
+                "choices": (
+                    {"id": "A", "text": "Tindakan beta.", "feedback": "Maklum balas beta."},
+                ),
+                "preferred_action": "Pilih tindakan beta.",
+                "source_short": "Sumber Beta.",
+            },
+            {
+                "id": "gamma",
+                "title": "Situasi Gamma",
+                "situation": "Apakah tindakan untuk situasi gamma?",
+                "preferred_choice": "A",
+                "choices": (
+                    {"id": "A", "text": "Tindakan gamma.", "feedback": "Maklum balas gamma."},
+                ),
+                "preferred_action": "Pilih tindakan gamma.",
+                "source_short": "Sumber Gamma.",
+            },
+        )
+        page = self.main.render_scenario_learning_page(
+            {
+                "title": "Latihan Reban",
+                "pack_title": "Pack Percubaan Reban",
+                "back_url": "/learn/packs/percubaan/",
+                "back_label": "Kembali ke Pack Percubaan",
+                "completion_title": "Latihan Reban selesai",
+                "completion_message": "Anda telah meneliti tiga situasi reban.",
+                "source_attribution": "Diadaptasi daripada sumber percubaan reban.",
+                "completion_back_label": "KEMBALI KE PACK PERCUBAAN",
+            },
+            scenarios,
+        )
+
+        self.assertIn("Scenario Learning &mdash; Pack Percubaan Reban", page)
+        self.assertIn("Kembali ke Pack Percubaan", page)
+        self.assertIn("Latihan Reban selesai", page)
+        self.assertIn("Anda telah meneliti tiga situasi reban.", page)
+        self.assertIn("Diadaptasi daripada sumber percubaan reban.", page)
+        self.assertIn("KEMBALI KE PACK PERCUBAAN", page)
+        self.assertIn("Senario 1 daripada 3", page)
+        self.assertIn("--scenario-count: 3", page)
+        self.assertEqual(page.count('data-progress-step="'), 3)
+        self.assertEqual(page.count('class="scenario-card"'), 3)
+        for scenario_id in ("alpha", "beta", "gamma"):
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(f'data-scenario-id="{scenario_id}"', page)
+                self.assertIn(f'name="scenario-{scenario_id}"', page)
+
+        for leaked_copy in (
+            "Pack 2",
+            "Biosekuriti Asas Ladang",
+            "Audit Biosekuriti Ladang selesai",
+            "WIM A014-006-3:2022-C08",
+            "5 situasi",
+        ):
+            with self.subTest(leaked_copy=leaked_copy):
+                self.assertNotIn(leaked_copy, page)
 
     def test_biosecurity_pack_has_five_question_quiz_with_feedback_and_retry(self):
         page = _route_content(self.main, "/learn/packs/biosekuriti/")
