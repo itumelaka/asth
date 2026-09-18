@@ -601,6 +601,179 @@ class LearningHubTests(unittest.TestCase):
         self.assertNotIn('href="/learn/modules/', page)
         self.assertNotIn("Asas Penternakan Ayam Kampung", page)
 
+    def test_quick_reference_renderer_reuses_custom_pack_copy_and_escapes_html(self):
+        page = self.main.render_quick_reference_page(
+            {
+                "title": "Semak <Cepat>",
+                "pack_title": "Pack & Percubaan",
+                "return_url": "/learn/custom/?a=1&b=2",
+                "return_label": "Kembali < Pack",
+                "intro": "Semak perkara <utama> & selamat.",
+                "reference_text": "Rujukan: Sumber <uji> & sah.",
+                "remember_text": "Ingat <semua> & rekod.",
+            },
+            (
+                {
+                    "id": "before",
+                    "title": "Sebelum <mula>",
+                    "tone": "standard",
+                    "items": ("Item <satu>", "Item & dua"),
+                },
+                {
+                    "id": "attention",
+                    "title": "Tanda perhatian",
+                    "tone": "attention",
+                    "items": ("Periksa > tanda",),
+                },
+            ),
+        )
+
+        for expected in (
+            "Semak &lt;Cepat&gt;",
+            "Pack &amp; Percubaan",
+            "Kembali &lt; Pack",
+            "Semak perkara &lt;utama&gt; &amp; selamat.",
+            "Rujukan: Sumber &lt;uji&gt; &amp; sah.",
+            "Ingat &lt;semua&gt; &amp; rekod.",
+            "Sebelum &lt;mula&gt;",
+            "Item &lt;satu&gt;",
+            "Item &amp; dua",
+            "Periksa &gt; tanda",
+            'href="/learn/custom/?a=1&amp;b=2"',
+        ):
+            with self.subTest(expected=expected):
+                self.assertIn(expected, page)
+
+        self.assertEqual(page.count('class="quick-card'), 2)
+        self.assertEqual(page.count('<section class="quick-card'), 2)
+        self.assertNotIn("<script", page)
+        self.assertNotIn("<form", page)
+        self.assertNotIn("Semak <Cepat>", page)
+
+    def test_all_quick_reference_routes_render_approved_pack_content(self):
+        cases = (
+            (
+                "/learn/packs/reban-brooder/quick-reference/",
+                "Semak Cepat: Persediaan Reban &amp; Brooder",
+                "/learn/packs/reban-brooder/",
+                "Rujukan: Learning Pack ASTH &mdash; Persediaan Reban &amp; Brooder.",
+                "Sediakan litter yang bersih, kering dan rata.",
+            ),
+            (
+                "/learn/packs/biosekuriti/quick-reference/",
+                "Semak Cepat: Biosekuriti Asas Ladang",
+                "/learn/packs/biosekuriti/",
+                "Rujukan: WIM A014-006-3:2022-C08 &mdash; Laksana Sistem Biosekuriti Ladang Poltri.",
+                "Kenal pasti jenis dan lokasi makhluk perosak sebelum tindakan kawalan.",
+            ),
+            (
+                "/learn/packs/pengendalian-telur/quick-reference/",
+                "Semak Cepat: Pengendalian Telur Sajian &amp; Telur Tetasan",
+                "/learn/packs/pengendalian-telur/",
+                "Rujukan: WIM A014-006-3:2022-C05 &mdash; Laksana Pengendalian Telur Poltri.",
+                "AA ≥70 g; A 64–69 g; B 59–63 g; C 54–58 g; D 49–53 g; E ≤48 g",
+            ),
+        )
+
+        for route, title, return_url, reference, content in cases:
+            with self.subTest(route=route):
+                page = _route_content(self.main, route)
+                self.assertIn(title, page)
+                self.assertEqual(page.count(f'href="{return_url}"'), 2)
+                self.assertIn(reference, page)
+                self.assertIn(content, page)
+                self.assertEqual(page.count('class="quick-card'), 3)
+                self.assertIn("SEBELUM MULA", page)
+                self.assertIn("PERKARA UTAMA UNTUK DIPERIKSA", page)
+                self.assertIn("TANDA YANG PERLU DIBERI PERHATIAN", page)
+                self.assertIn("INGAT", page)
+
+    def test_parent_packs_link_once_to_quick_reference_after_intro(self):
+        cases = (
+            ("/learn/packs/reban-brooder/", "/learn/packs/reban-brooder/quick-reference/"),
+            ("/learn/packs/biosekuriti/", "/learn/packs/biosekuriti/quick-reference/"),
+            (
+                "/learn/packs/pengendalian-telur/",
+                "/learn/packs/pengendalian-telur/quick-reference/",
+            ),
+        )
+
+        for pack_route, quick_route in cases:
+            with self.subTest(pack_route=pack_route):
+                page = _route_content(self.main, pack_route)
+                self.assertEqual(page.count(f'href="{quick_route}"'), 1)
+                self.assertRegex(
+                    page,
+                    rf'</section>\s*<a class="learning-action quick-reference-link" '
+                    rf'href="{re.escape(quick_route)}">SEMAK CEPAT</a>',
+                )
+
+    def test_quick_reference_pages_are_static_offline_and_source_safe(self):
+        cases = (
+            (
+                "/learn/packs/reban-brooder/quick-reference/",
+                ("A014-006-3:2022-C02", "°C", "kelembapan", "vaksin", "ubat"),
+            ),
+            (
+                "/learn/packs/biosekuriti/quick-reference/",
+                ("Warfarin", "Brodifacoum", "dosage", "ratio", "1:150", "1:300"),
+            ),
+            (
+                "/learn/packs/pengendalian-telur/quick-reference/",
+                (
+                    "fumigasi",
+                    "formalin",
+                    "potassium permanganate",
+                    "suhu penyimpanan",
+                    "kebolehtetasan",
+                    "jangka hayat",
+                ),
+            ),
+        )
+
+        for route, forbidden_terms in cases:
+            with self.subTest(route=route):
+                page = _route_content(self.main, route)
+                learner_markup = re.sub(r"<style[^>]*>.*?</style>", "", page, flags=re.S | re.I)
+                for forbidden in forbidden_terms:
+                    self.assertNotIn(forbidden.casefold(), learner_markup.casefold())
+                for forbidden_markup in (
+                    "<form",
+                    "<script",
+                    "fetch(",
+                    "localStorage",
+                    "sessionStorage",
+                    "data-progress",
+                    "score",
+                    '<link rel="stylesheet"',
+                    '<script src=',
+                ):
+                    self.assertNotIn(forbidden_markup, page)
+                self.assertNotRegex(page, r'(?:src|href)="https?://')
+
+    def test_static_pack_end_panels_use_neutral_completion_wording(self):
+        neutral_heading = "Anda telah sampai ke penghujung kandungan Learning Pack ini."
+        neutral_support = "Anda boleh ulang mana-mana bahagian untuk semakan semula."
+        for route in (
+            "/learn/packs/reban-brooder/",
+            "/learn/packs/biosekuriti/",
+            "/learn/packs/pengendalian-telur/",
+        ):
+            with self.subTest(route=route):
+                page = _route_content(self.main, route)
+                self.assertIn("TAMAT LEARNING PACK", page)
+                self.assertIn(neutral_heading, page)
+                self.assertIn(neutral_support, page)
+                self.assertNotIn("Anda telah selesai Learning Pack", page)
+                self.assertNotIn("Learning Pack Selesai", page)
+
+        scenario_page = _route_content(
+            self.main,
+            "/learn/packs/biosekuriti/scenario/",
+        )
+        self.assertIn("Audit Biosekuriti Ladang selesai", scenario_page)
+        self.assertIn("Anda telah meneliti 5 situasi Audit Biosekuriti Ladang.", scenario_page)
+
     def test_egg_handling_pack_returns_200_with_validated_eight_section_structure(self):
         handler = next(
             (
@@ -624,7 +797,7 @@ class LearningHubTests(unittest.TestCase):
             "05 Simpan, Hantar dan Rekod",
             "06 Telur Tetasan",
             "07 Semak Kefahaman",
-            "08 Tamat Pack",
+            "TAMAT LEARNING PACK",
         ):
             with self.subTest(heading=heading):
                 self.assertIn(heading, page)
@@ -766,7 +939,14 @@ class LearningHubTests(unittest.TestCase):
 
         self.assertIn("WIM A014-006-3:2022-C08", page)
         self.assertIn("Laksana Sistem Biosekuriti Ladang Poltri", page)
-        self.assertIn("Diadaptasi untuk mikro-pembelajaran ASTH", page)
+        self.assertEqual(
+            page.count(
+                "Rujukan: WIM A014-006-3:2022-C08 — "
+                "Laksana Sistem Biosekuriti Ladang Poltri."
+            ),
+            2,
+        )
+        self.assertNotIn("Diadaptasi", page)
         self.assertIn('content: "\\2713"', page)
 
     def test_biosecurity_pack_launches_dedicated_scenario_activity(self):
@@ -847,10 +1027,11 @@ class LearningHubTests(unittest.TestCase):
             page,
         )
         self.assertIn(
-            "Diadaptasi daripada WIM A014-006-3:2022-C08 &mdash; "
+            "Rujukan: WIM A014-006-3:2022-C08 &mdash; "
             "Laksana Sistem Biosekuriti Ladang Poltri.",
             page,
         )
+        self.assertNotIn("Diadaptasi daripada", page)
         self.assertNotIn("fetch(", page)
         self.assertNotIn("localStorage", page)
         self.assertNotIn("sessionStorage", page)
@@ -975,7 +1156,8 @@ class LearningHubTests(unittest.TestCase):
     def test_biosecurity_pack_completion_is_non_persistent_and_excludes_unapproved_content(self):
         page = _route_content(self.main, "/learn/packs/biosekuriti/")
 
-        self.assertIn("Learning Pack Selesai", page)
+        self.assertIn("TAMAT LEARNING PACK", page)
+        self.assertIn("Anda boleh ulang mana-mana bahagian untuk semakan semula.", page)
         self.assertIn("Nyah kuman personel dan kenderaan", page)
         self.assertIn("Kawalan makhluk perosak", page)
         self.assertIn("Penyelenggaraan parit dan pagar", page)
@@ -1014,7 +1196,7 @@ class LearningHubTests(unittest.TestCase):
             "04 Video Demo",
             "05 Aktiviti Interaktif",
             "06 Quick Quiz",
-            "07 Tamat Learning Pack",
+            "TAMAT LEARNING PACK",
         ):
             with self.subTest(heading=heading):
                 self.assertIn(heading, page)
@@ -1084,7 +1266,7 @@ class LearningHubTests(unittest.TestCase):
         page = _route_content(self.main, "/learn/packs/reban-brooder/")
 
         self.assertIn(
-            "Anda telah selesai Learning Pack: Persediaan Reban &amp; Brooder.",
+            "Anda telah sampai ke penghujung kandungan Learning Pack ini.",
             page,
         )
         self.assertIn("Kemajuan tidak direkodkan", page)

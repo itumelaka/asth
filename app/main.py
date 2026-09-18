@@ -1311,6 +1311,151 @@ LEARNING_SUBPAGE_STYLE = """
 """
 
 
+def render_quick_reference_page(config, sections):
+    def escaped(value):
+        return html.escape(str(value), quote=True).replace("—", "&mdash;")
+
+    section_markup = []
+    for section in sections:
+        tone = section.get("tone", "standard")
+        if tone not in ("standard", "attention", "remember"):
+            tone = "standard"
+        items = "".join(f"<li>{escaped(item)}</li>" for item in section["items"])
+        section_markup.append(
+            f'<section class="quick-card quick-card-{tone}" id="{escaped(section["id"])}">'
+            f'<h2>{escaped(section["title"])}</h2>'
+            f'<ul class="quick-list">{items}</ul>'
+            "</section>"
+        )
+
+    remember_markup = ""
+    if config.get("remember_text"):
+        remember_markup = (
+            '<aside class="quick-remember">'
+            "<h2>INGAT</h2>"
+            f'<p>{escaped(config["remember_text"])}</p>'
+            "</aside>"
+        )
+
+    return (
+        """
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"""
+        + escaped(config["title"])
+        + """ | ASTH Learning Hub</title>
+    <style>
+"""
+        + LEARNING_SUBPAGE_STYLE
+        + """
+    .quick-intro { background: linear-gradient(145deg, #fff2b7, #ffd275); }
+    .quick-intro p { margin: 0; color: #51421f; }
+    .quick-label {
+        display: inline-block; margin-bottom: 9px; padding: 7px 11px; border-radius: 999px;
+        color: #17335b; background: #ffd45c; font-size: .72rem; font-weight: 950;
+        letter-spacing: .08em;
+    }
+    .quick-card, .quick-remember, .quick-reference {
+        margin-top: 16px; padding: clamp(18px, 4vw, 25px); border: 3px solid #9fb6d8;
+        border-radius: 21px; background: white; box-shadow: var(--shadow);
+    }
+    .quick-card-attention { border-color: #d39a28; background: #fff8dc; }
+    .quick-card h2, .quick-remember h2 { margin: 0 0 12px; font-size: 1.12rem; }
+    .quick-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+    .quick-list li {
+        position: relative; min-height: 44px; padding: 11px 13px 11px 42px;
+        border: 2px solid #b6c8e2; border-radius: 14px; color: #243b5b;
+        background: #f7faff; line-height: 1.45;
+    }
+    .quick-list li::before {
+        content: "\\2713"; position: absolute; top: 11px; left: 12px; display: grid;
+        width: 22px; height: 22px; place-items: center; border-radius: 50%;
+        color: white; background: #147647; font-size: .75rem; font-weight: 900;
+    }
+    .quick-card-attention .quick-list li::before { content: "!"; background: #a76a0a; }
+    .quick-remember { border-color: #3977f6; background: #edf4ff; }
+    .quick-remember p, .quick-reference p { margin: 0; color: #334d70; line-height: 1.55; }
+    .quick-reference { border-color: #8f6e17; background: #fff8d9; }
+    .quick-bottom { margin-top: 18px; text-align: center; }
+    .quick-bottom .learning-action { min-height: 44px; }
+    .quick-nav { min-height: 44px; }
+    @media (max-width: 420px) {
+        .learning-page { width: min(100% - 20px, 980px); padding-top: 10px; }
+        .quick-card, .quick-remember, .quick-reference { padding: 16px; }
+        .quick-bottom .learning-action { width: 100%; }
+    }
+    @media print {
+        body { background: white; }
+        .learning-page { width: 100%; padding: 0; }
+        .learning-header, .learning-panel, .quick-card, .quick-remember, .quick-reference {
+            border-color: #8c99aa; background: white; box-shadow: none;
+        }
+        .quick-card, .quick-remember, .quick-reference { break-inside: avoid; }
+        .quick-nav { display: none !important; }
+    }
+    </style>
+</head>
+<body>
+    <main class="learning-page">
+        <header class="learning-header">
+            <div class="learning-brand">
+                <div class="learning-logos">
+                    <div class="learning-logo"><img src="/assets/logo-dvs.png" alt="Logo DVS"></div>
+                    <div class="learning-logo"><img src="/assets/logo-asth.png" alt="Logo ASTH"></div>
+                </div>
+                <div>
+                    <p class="learning-eyebrow">ASTH Quick Reference</p>
+                    <h1>"""
+        + escaped(config["title"])
+        + """</h1>
+                    <p class="learning-subtitle">"""
+        + escaped(config["pack_title"])
+        + """</p>
+                </div>
+            </div>
+            <a class="learning-back quick-nav" href="""
+        + '"'
+        + escaped(config["return_url"])
+        + '"'
+        + """>&#8592; """
+        + escaped(config["return_label"])
+        + """</a>
+        </header>
+
+        <section class="learning-panel quick-intro">
+            <span class="quick-label">SEMAK CEPAT</span>
+            <p>"""
+        + escaped(config["intro"])
+        + """</p>
+        </section>
+
+"""
+        + "".join(section_markup)
+        + remember_markup
+        + """
+        <aside class="quick-reference"><p>"""
+        + escaped(config["reference_text"])
+        + """</p></aside>
+        <nav class="quick-bottom quick-nav" aria-label="Kembali ke Learning Pack">
+            <a class="learning-action" href="""
+        + '"'
+        + escaped(config["return_url"])
+        + '"'
+        + """>"""
+        + escaped(config["return_label"])
+        + """</a>
+        </nav>
+        <footer>ASTH Learning Hub &#183; Institut Teknologi Unggas</footer>
+    </main>
+</body>
+</html>
+"""
+    )
+
+
 MODULE_LIST_PAGE = """
 <!DOCTYPE html>
 <html lang="ms">
@@ -1569,6 +1714,8 @@ REBAN_BROODER_PACK_PAGE = """
             </p>
         </section>
 
+        <a class="learning-action quick-reference-link" href="/learn/packs/reban-brooder/quick-reference/">SEMAK CEPAT</a>
+
         <section class="pack-section">
             <p class="section-kicker">02 Checklist Persediaan</p>
             <h2>Semak sebelum kemasukan</h2>
@@ -1671,11 +1818,12 @@ REBAN_BROODER_PACK_PAGE = """
         </section>
 
         <section class="pack-section completion">
-            <p class="section-kicker">07 Tamat Learning Pack</p>
-            <h2>Anda telah selesai Learning Pack: Persediaan Reban &amp; Brooder.</h2>
+            <p class="section-kicker">TAMAT LEARNING PACK</p>
+            <h2>Anda telah sampai ke penghujung kandungan Learning Pack ini.</h2>
             <p>
-                Anda telah melihat asas persediaan kawasan brooder, checklist sebelum kemasukan anak ayam,
-                cara membaca tingkah laku awal anak ayam serta pemeriksaan asas selepas kemasukan.
+                Anda boleh ulang mana-mana bahagian untuk semakan semula. Kandungan ini merangkumi asas persediaan
+                kawasan brooder, checklist sebelum kemasukan anak ayam, cara membaca tingkah laku awal anak ayam
+                serta pemeriksaan asas selepas kemasukan.
                 Kemajuan tidak direkodkan.
             </p>
             <a class="learning-action" href="/learn/">KEMBALI KE LEARNING HUB</a>
@@ -2291,7 +2439,7 @@ BIOSECURITY_SCENARIO_PAGE = render_scenario_learning_page(
             "SOP ladang dan rekod kerja untuk menyokong tindakan biosekuriti yang konsisten."
         ),
         "source_attribution": (
-            "Diadaptasi daripada WIM A014-006-3:2022-C08 — "
+            "Rujukan: WIM A014-006-3:2022-C08 — "
             "Laksana Sistem Biosekuriti Ladang Poltri."
         ),
         "completion_back_label": "KEMBALI KE PACK 2",
@@ -2413,11 +2561,10 @@ BIOSECURITY_PACK_PAGE = """
             <div class="zone-grid" aria-label="Tiga kawasan ladang">
                 <span>kawasan luar</span><span>kawasan bukan produksi</span><span>kawasan produksi</span>
             </div>
-            <div class="source-note">
-                Diadaptasi untuk mikro-pembelajaran ASTH daripada WIM A014-006-3:2022-C08 —
-                Laksana Sistem Biosekuriti Ladang Poltri.
-            </div>
+            <div class="source-note">Rujukan: WIM A014-006-3:2022-C08 — Laksana Sistem Biosekuriti Ladang Poltri.</div>
         </section>
+
+        <a class="learning-action quick-reference-link" href="/learn/packs/biosekuriti/quick-reference/">SEMAK CEPAT</a>
 
         <section class="pack-section">
             <p class="section-kicker">02 Kawalan Kemasukan Personel &amp; Kenderaan</p>
@@ -2538,18 +2685,15 @@ BIOSECURITY_PACK_PAGE = """
         </section>
 
         <section class="pack-section completion">
-            <p class="section-kicker">Learning Pack Selesai</p>
-            <h2>Anda telah selesai Learning Pack: Biosekuriti Asas Ladang.</h2>
-            <p>Tiga aktiviti utama C08 yang telah dipelajari:</p>
+            <p class="section-kicker">TAMAT LEARNING PACK</p>
+            <h2>Anda telah sampai ke penghujung kandungan Learning Pack ini.</h2>
+            <p>Anda boleh ulang mana-mana bahagian untuk semakan semula. Tiga aktiviti utama C08 dalam kandungan ini:</p>
             <ul>
                 <li>Nyah kuman personel dan kenderaan</li>
                 <li>Kawalan makhluk perosak</li>
                 <li>Penyelenggaraan parit dan pagar</li>
             </ul>
-            <div class="source-note">
-                Diadaptasi untuk mikro-pembelajaran ASTH daripada WIM A014-006-3:2022-C08 —
-                Laksana Sistem Biosekuriti Ladang Poltri.
-            </div>
+            <div class="source-note">Rujukan: WIM A014-006-3:2022-C08 — Laksana Sistem Biosekuriti Ladang Poltri.</div>
             <div class="official-note">Learning Pack ASTH ini ialah mikro-pembelajaran dan bukan pengganti WIM atau penilaian kompetensi rasmi.</div>
             <a class="learning-action" href="/learn/">KEMBALI KE LEARNING HUB</a>
         </section>
@@ -2726,6 +2870,8 @@ EGG_HANDLING_PACK_PAGE = """
             <div class="source-note">Diadaptasi daripada WIM A014-006-3:2022-C05 — Laksana Pengendalian Telur Poltri.</div>
             <div class="scope-note">Skop sumber merangkumi telur sajian dan telur tetasan. Modul ini tidak menentukan kesuburan telur.</div>
         </section>
+
+        <a class="learning-action quick-reference-link" href="/learn/packs/pengendalian-telur/quick-reference/">SEMAK CEPAT</a>
 
         <section class="pack-section">
             <p class="section-kicker">02 Telur Sajian &amp; Telur Tetasan</p>
@@ -2935,9 +3081,9 @@ EGG_HANDLING_PACK_PAGE = """
         </section>
 
         <section class="pack-section completion">
-            <p class="section-kicker">08 Tamat Pack</p>
-            <h2>Anda telah selesai Learning Pack: Pengendalian Telur Sajian &amp; Telur Tetasan.</h2>
-            <p>Anda telah melihat kutipan, pengasingan, penggredan, pelabelan dan rekod telur berdasarkan kandungan C05 yang disahkan.</p>
+            <p class="section-kicker">TAMAT LEARNING PACK</p>
+            <h2>Anda telah sampai ke penghujung kandungan Learning Pack ini.</h2>
+            <p>Anda boleh ulang mana-mana bahagian untuk semakan semula. Kandungan ini merangkumi kutipan, pengasingan, penggredan, pelabelan dan rekod telur berdasarkan kandungan C05 yang disahkan.</p>
             <div class="source-note">Sumber: WIM A014-006-3:2022-C05</div>
             <div class="official-note">Bahan ASTH ini ialah adaptasi microlearning untuk pengukuhan pengetahuan. Ia bukan bahan WIM rasmi dan tidak menggantikan latihan amali, SOP tempat kerja atau penilaian kompetensi rasmi.</div>
             <a class="learning-action" href="/learn/">KEMBALI KE LEARNING HUB</a>
@@ -3019,6 +3165,155 @@ EGG_HANDLING_PACK_PAGE = """
 """
 
 
+REBAN_BROODER_QUICK_REFERENCE_PAGE = render_quick_reference_page(
+    {
+        "title": "Semak Cepat: Persediaan Reban & Brooder",
+        "pack_title": "Persediaan Reban & Brooder",
+        "return_url": "/learn/packs/reban-brooder/",
+        "return_label": "KEMBALI KE PACK 1",
+        "intro": "Gunakan senarai ringkas ini untuk menyemak persediaan reban dan brooder.",
+        "reference_text": "Rujukan: Learning Pack ASTH — Persediaan Reban & Brooder.",
+        "remember_text": (
+            "Gunakan taburan dan tingkah laku sebagai petunjuk awal untuk memeriksa persekitaran, "
+            "bukan sebagai diagnosis kesihatan."
+        ),
+    },
+    [
+        {
+            "id": "sebelum-mula",
+            "title": "SEBELUM MULA",
+            "tone": "standard",
+            "items": [
+                "Pastikan reban telah dibersihkan dan kawasan brooder bebas daripada sisa lama.",
+                "Sediakan litter yang bersih, kering dan rata.",
+                "Pasang serta uji pemanas/brooder sebelum anak ayam tiba.",
+                "Sediakan bekas minuman dan makanan secukupnya serta mudah dicapai. Pastikan air minuman telah tersedia.",
+                "Periksa pencahayaan, pengudaraan, peralatan, kabel, pemanas dan kawasan sekeliling.",
+            ],
+        },
+        {
+            "id": "perkara-utama",
+            "title": "PERKARA UTAMA UNTUK DIPERIKSA",
+            "tone": "standard",
+            "items": [
+                "Pastikan kawasan brooder tidak terkena tiupan angin terus.",
+            ],
+        },
+        {
+            "id": "tanda-perhatian",
+            "title": "TANDA YANG PERLU DIBERI PERHATIAN",
+            "tone": "attention",
+            "items": [
+                "Berkumpul rapat bawah pemanas — kemungkinan terlalu sejuk.",
+                "Menjauh daripada sumber haba — kemungkinan terlalu panas.",
+                "Berkumpul pada satu bahagian — semak tiupan angin atau keadaan persekitaran.",
+                "Tersebar sekata dan aktif — petunjuk keadaan lebih selesa.",
+            ],
+        },
+    ],
+)
+
+
+BIOSECURITY_QUICK_REFERENCE_PAGE = render_quick_reference_page(
+    {
+        "title": "Semak Cepat: Biosekuriti Asas Ladang",
+        "pack_title": "Biosekuriti Asas Ladang",
+        "return_url": "/learn/packs/biosekuriti/",
+        "return_label": "KEMBALI KE PACK 2",
+        "intro": "Gunakan senarai ringkas ini untuk menyemak amalan asas biosekuriti ladang.",
+        "reference_text": "Rujukan: WIM A014-006-3:2022-C08 — Laksana Sistem Biosekuriti Ladang Poltri.",
+        "remember_text": "Ikut SOP ladang, gunakan PPE apabila diperlukan, dan lengkapkan rekod kerja.",
+    },
+    [
+        {
+            "id": "sebelum-mula",
+            "title": "SEBELUM MULA",
+            "tone": "standard",
+            "items": [
+                "Dapatkan kebenaran pengurusan dan gunakan laluan keluar-masuk yang dikawal.",
+                "Pastikan personel dan kenderaan melalui proses nyah kuman sebelum memasuki kawasan produksi.",
+                "Bersihkan lumpur, jerami dan kotoran yang kelihatan sebelum proses nyah kuman.",
+                "Gunakan PPE mengikut keperluan kerja.",
+            ],
+        },
+        {
+            "id": "perkara-utama",
+            "title": "PERKARA UTAMA UNTUK DIPERIKSA",
+            "tone": "standard",
+            "items": [
+                "Pantau proses dan rekodkan aktiviti yang dilakukan.",
+                "Kenal pasti jenis dan lokasi makhluk perosak sebelum tindakan kawalan.",
+                "Pastikan kawasan bersih; keluarkan sampah, bahan terkumpul dan peralatan yang tidak digunakan.",
+                "Periksa parit; buang rumput, tumbuhan, dahan, sampah dan tanah yang menghalang aliran. Bersihkan perangkap sampah.",
+                "Periksa pagar; baiki lubang atau bahagian roboh, bersihkan tumbuhan dan timbus lubang tanah.",
+            ],
+        },
+        {
+            "id": "tanda-perhatian",
+            "title": "TANDA YANG PERLU DIBERI PERHATIAN",
+            "tone": "attention",
+            "items": [
+                "Kotoran jelas pada personel, peralatan atau kenderaan.",
+                "Tanda aktiviti makhluk perosak yang jenis atau lokasinya belum dikenal pasti.",
+                "Parit tersumbat atau perangkap sampah tidak bersih.",
+                "Pagar berlubang, roboh, dilitupi tumbuhan atau mempunyai lubang tanah.",
+            ],
+        },
+    ],
+)
+
+
+EGG_HANDLING_QUICK_REFERENCE_PAGE = render_quick_reference_page(
+    {
+        "title": "Semak Cepat: Pengendalian Telur Sajian & Telur Tetasan",
+        "pack_title": "Pengendalian Telur Sajian & Telur Tetasan",
+        "return_url": "/learn/packs/pengendalian-telur/",
+        "return_label": "KEMBALI KE PACK 3",
+        "intro": "Gunakan senarai ringkas ini untuk menyemak pengendalian telur sajian dan telur tetasan.",
+        "reference_text": "Rujukan: WIM A014-006-3:2022-C05 — Laksana Pengendalian Telur Poltri.",
+        "remember_text": "Asingkan dahulu, susun dengan betul, label dengan jelas dan lengkapkan rekod.",
+    },
+    [
+        {
+            "id": "sebelum-mula",
+            "title": "SEBELUM MULA",
+            "tone": "standard",
+            "items": [
+                "Sediakan tray dan troli secukupnya sebelum kutipan.",
+                "Kendalikan dan pindahkan telur dengan cermat untuk mengelakkan retak atau pecah.",
+            ],
+        },
+        {
+            "id": "perkara-utama",
+            "title": "PERKARA UTAMA UNTUK DIPERIKSA",
+            "tone": "standard",
+            "items": [
+                "Asingkan telur kotor, retak atau pecah, abnormal, terlalu besar atau kecil, serta warna yang tidak menepati baka.",
+                "Susun telur dengan bahagian runcing atau kecil di bawah dan bahagian besar di atas.",
+                "Semak jumlah telur diterima terhadap rekod penghantaran sebelum penerimaan disahkan.",
+                "Gunakan pendianan untuk mengesan retak halus dan cangkerang nipis.",
+                "Gred telur sajian mengikut berat C05: AA ≥70 g; A 64–69 g; B 59–63 g; C 54–58 g; D 49–53 g; E ≤48 g.",
+                "Label telur sajian mengikut gred.",
+                "Label minimum telur tetasan ialah tarikh, baka dan nombor reban.",
+                "Lengkapkan rekod pengeluaran, penerimaan, penggredan, penyimpanan dan penghantaran.",
+                "Hantar telur tetasan menggunakan pengangkutan yang bersih dan kendalikan dengan cermat.",
+            ],
+        },
+        {
+            "id": "tanda-perhatian",
+            "title": "TANDA YANG PERLU DIBERI PERHATIAN",
+            "tone": "attention",
+            "items": [
+                "Kekotoran seperti najis atau darah.",
+                "Cangkerang retak atau pecah.",
+                "Bentuk herot atau lonjong, cangkerang menggerutu atau lembut.",
+                "Saiz terlalu besar atau kecil, atau warna tidak menepati baka.",
+            ],
+        },
+    ],
+)
+
+
 def _request_hostname(request):
     raw_host = request.headers.get("host", "").strip().lower()
     if raw_host.startswith("[") and "]" in raw_host:
@@ -3062,9 +3357,19 @@ def learning_pack_reban_brooder() -> HTMLResponse:
     return HTMLResponse(content=REBAN_BROODER_PACK_PAGE)
 
 
+@app.get("/learn/packs/reban-brooder/quick-reference/", response_class=HTMLResponse)
+def learning_pack_reban_brooder_quick_reference() -> HTMLResponse:
+    return HTMLResponse(content=REBAN_BROODER_QUICK_REFERENCE_PAGE)
+
+
 @app.get("/learn/packs/biosekuriti/", response_class=HTMLResponse)
 def learning_pack_biosecurity() -> HTMLResponse:
     return HTMLResponse(content=BIOSECURITY_PACK_PAGE)
+
+
+@app.get("/learn/packs/biosekuriti/quick-reference/", response_class=HTMLResponse)
+def learning_pack_biosecurity_quick_reference() -> HTMLResponse:
+    return HTMLResponse(content=BIOSECURITY_QUICK_REFERENCE_PAGE)
 
 
 @app.get("/learn/packs/biosekuriti/scenario/", response_class=HTMLResponse)
@@ -3075,6 +3380,11 @@ def learning_pack_biosecurity_scenario() -> HTMLResponse:
 @app.get("/learn/packs/pengendalian-telur/", response_class=HTMLResponse)
 def learning_pack_egg_handling() -> HTMLResponse:
     return HTMLResponse(content=EGG_HANDLING_PACK_PAGE)
+
+
+@app.get("/learn/packs/pengendalian-telur/quick-reference/", response_class=HTMLResponse)
+def learning_pack_egg_handling_quick_reference() -> HTMLResponse:
+    return HTMLResponse(content=EGG_HANDLING_QUICK_REFERENCE_PAGE)
 
 
 @app.get("/learn/modules/", response_class=HTMLResponse)
